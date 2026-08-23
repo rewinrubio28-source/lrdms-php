@@ -1,0 +1,65 @@
+name: CI
+
+# Automates the "Merge Code -> Manual Build -> Manual Testing" part of the
+# pipeline. Runs on every push/PR to main and dev.
+#
+# NOTE: Deploy-to-server steps are intentionally NOT included yet — the
+# project doesn't have a domain/production server to deploy to yet. Once
+# there's a real host (with SFTP/SSH access), add a "deploy" job here that
+# only runs after this one passes on the main branch.
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  build-and-test:
+    name: Build & Test (PHP + Python services)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ---------- PHP app ----------
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, pdo_mysql, gd, curl
+          coverage: none
+
+      - name: Validate composer.json
+        run: composer validate --no-check-publish
+
+      - name: Install PHP dependencies (composer)
+        run: composer install --no-progress --prefer-dist
+
+      - name: PHP syntax check (lint every .php file)
+        run: |
+          find . \
+            -path ./vendor -prune -o \
+            -path ./Arsha -prune -o \
+            -name "*.php" -print \
+            | xargs -n1 -P4 php -l
+
+      # ---------- Python microservices ----------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install & syntax-check ocr_service
+        run: |
+          pip install -r ocr_service/requirements.txt
+          python -m py_compile ocr_service/app.py
+
+      - name: Install & syntax-check bert_service
+        run: |
+          pip install -r bert_service/requirements.txt
+          python -m py_compile bert_service/app.py
+
+      - name: Build summary
+        run: echo "✅ PHP lint, composer install, and Python service checks all passed."
