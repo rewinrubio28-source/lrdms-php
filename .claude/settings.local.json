@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -b /tmp/lrdms-c.txt http://127.0.0.1:8899/users.php)",
+      "Bash(php -r \"require 'config/database.php'; get_db\\(\\)->exec\\(\\\\\"DELETE FROM users WHERE username='ztest_http'\\\\\"\\);\")",
+      "Bash(pkill -f \"php -S 127.0.0.1:8899\")"
+    ]
+  }
+}

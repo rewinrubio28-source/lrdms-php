@@ -1,0 +1,27 @@
+# Dependencies (installed via composer install / pip install)
+/vendor/
+/ocr_service/venv/
+/bert_service/venv/
+__pycache__/
+*.pyc
+
+# Uploaded files (keep the folder, ignore its contents)
+/uploads/*
+!/uploads/.gitkeep
+
+# Config files with real credentials — never commit these.
+# Ship the .example versions instead; each dev/server copies + fills in
+# their own.
+/config/database.php
+/config/email.php
+
+# Local overrides / secrets
+config/local.php
+.env
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

@@ -1,0 +1,295 @@
+/* ========================================
+   LRDMS Dashboard Styles
+   ======================================== */
+
+:root {
+  --primary: #37517e;
+  --primary-dark: #2a3f63;
+  --accent: #47b2e4;
+  --gold: #c9a227;
+  --gold-light: #e0c15a;
+  --success: #28a745;
+  --warning: #ffc107;
+  --danger: #dc3545;
+  --light: #f8f9fa;
+  --dark: #212529;
+  --gray: #6c757d;
+  --border: #e0e0e0;
+  --sidebar-width: 260px;
+  --topbar-height: 70px;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: #f5f6f8;
+  color: #444;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* App Shell */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-width);
+  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+.brand {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.brand__seal {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  padding: 2px;
+}
+
+.brand__name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.brand__sub {
+  font-size: 11px;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.user-box {
+  padding: 16px 20px;
+  background: rgba(0,0,0,0.15);
+}
+
+.user-box__name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.user-box__role {
+  font-size: 12px;
+  opacity: 0.7;
+  text-transform: capitalize;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 12px 0;
+  margin: 0;
+  flex: 1;
+}
+
+.nav-item {
+  display: block;
+  padding: 12px 20px;
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.nav-item.is-active {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border-left-color: var(--gold);
+}
+
+.sidebar__footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.btn-reset {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.btn-reset:hover {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+
+/* Main Content */
+.main {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  padding: 24px;
+  min-height: 100vh;
+}
+
+/* Topbar */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar__eyebrow {
+  font-size: 12px;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.topbar__title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* Role Badge */
+.role-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.role-badge--administrator { background: #e8f4fd; color: #0d6efd; }
+.role-badge--recordsofficer { background: #e8f5e9; color: #198754; }
+.role-badge--legislativestaff { background: #fff3e0; color: #fd7e14; }
+.role-badge--committeesecretary { background: #f3e5f5; color: #6f42c1; }
+.role-badge--publicviewer { background: #f8f9fa; color: #6c757d; }
+
+/* Stat Row */
+.stat-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.stat-chip {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  min-width: 100px;
+}
+
+.stat-chip__num {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.stat-chip__label {
+  font-size: 11px;
+  color: var(--gray);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* Card */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
+}
+
+.card h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.card p { margin: 0 0 16px; color: var(--gray); }
+.text-muted { color: var(--gray) !important; }
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-dark); color: #fff; }
+.btn-outline-primary { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+.btn-outline-primary:hover { background: var(--primary); color: #fff; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* Audit List */
+.audit-list { list-style: none; padding: 0; margin: 0; }
+.audit-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+}
+.audit-list li:last-child { border-bottom: none; }
+.audit-list time { color: var(--gray); white-space: nowrap; min-width: 100px; }
+.audit-list .actor { font-weight: 600; color: var(--primary); min-width: 100px; }
+
+/* Utility */
+.d-none { display: none !important; }
+.d-flex { display: flex !important; }
+.mb-2 { margin-bottom: 8px; }
+.mb-3 { margin-bottom: 12px; }
+.mb-4 { margin-bottom: 16px; }
+.mt-3 { margin-top: 12px; }
+.mt-4 { margin-top: 16px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { width: 100%; position: relative; height: auto; }
+  .main { margin-left: 0; }
+  .stat-row { overflow-x: auto; flex-wrap: nowrap; }
+  .stat-chip { min-width: 120px; flex-shrink: 0; }
+}
