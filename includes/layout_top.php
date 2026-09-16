@@ -38,11 +38,7 @@ $__sys = (int)($_GET['sys'] ?? 0);
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= isset($__inSubfolder) ? '../' : '' ?>assets/css/style.css">
-<<<<<<< HEAD
 <link rel="stylesheet" href="<?= isset($__inSubfolder) ? '../' : '' ?>assets/css/orbit.css?v=14">
-=======
-<link rel="stylesheet" href="<?= isset($__inSubfolder) ? '../' : '' ?>assets/css/orbit.css?v=6">
->>>>>>> origin/main
 </head>
 <body>
 <div class="app-shell">
@@ -66,24 +62,13 @@ $__sys = (int)($_GET['sys'] ?? 0);
       <?php if (has_permission('encoding', 'create')): ?>
         <li class="d-flex align-items-center gap-1">
           <a class="nav-item flex-grow-1 <?= current_page('encoding') ?>" href="encoding.php">Encoding &amp; Submission</a>
-<<<<<<< HEAD
           <?php if (current_user()): $navPdo = get_db(); $navAwaiting = $navPdo->query("SELECT COUNT(*) FROM documents WHERE verified_at IS NULL AND source_system <> 'Manual Encoding'")->fetchColumn(); if ($navAwaiting > 0): ?>
             <a href="encoding.php#awaiting-verification" class="badge text-bg-warning flex-shrink-0" style="font-size:10px; text-decoration:none; padding:3px 7px;"><?= (int)$navAwaiting ?> waiting</a>
-=======
-          <?php if (current_user()): $navPdo = get_db(); $navDrafts = $navPdo->query("SELECT COUNT(*) FROM documents WHERE status = 'Draft' AND owner_id = " . (int)current_user()['id'])->fetchColumn(); if ($navDrafts > 0): ?>
-            <a href="repository.php?status=Draft" class="badge text-bg-warning flex-shrink-0" style="font-size:10px; text-decoration:none; padding:3px 7px;"><?= (int)$navDrafts ?> draft<?= $navDrafts > 1 ? 's' : '' ?></a>
->>>>>>> origin/main
           <?php endif; endif; ?>
         </li>
       <?php endif; ?>
       <li class="d-flex align-items-center gap-1">
         <a class="nav-item flex-grow-1 <?= current_page('version') ?>" href="version.php">Version Control</a>
-<<<<<<< HEAD
-=======
-        <?php if (current_user()): $navReview = get_db()->query("SELECT COUNT(*) FROM documents WHERE status = 'Under Review'")->fetchColumn(); if ($navReview > 0): ?>
-          <span class="badge text-bg-info flex-shrink-0" style="font-size:10px; padding:3px 7px;"><?= (int)$navReview ?></span>
-        <?php endif; endif; ?>
->>>>>>> origin/main
       </li>
       <li>
         <details class="nav-group" <?= $__repoOpen ? 'open' : '' ?>>
@@ -122,19 +107,14 @@ $__sys = (int)($_GET['sys'] ?? 0);
 
   <?php if ($__user): ?>
   <!--
-<<<<<<< HEAD
     Notification bell (documents received / review requests) + account
     menu (avatar → My Profile / Dark Mode / Log out).
-=======
-    Account menu (avatar → My Profile / Dark Mode / Log out).
->>>>>>> origin/main
     Kept as an inert <template> here so it lives inside the shared layout,
     but is relocated by JS (see layout_bottom.php) into whichever page's
     topbar / dash-header actions row is on screen, next to buttons like
     "+ New Encoding". The <template> content is never rendered in place.
   -->
   <template id="account-menu-tpl">
-<<<<<<< HEAD
     <div class="header-actions-group">
       <div class="notif-bell" id="notif-bell">
         <button type="button" class="notif-bell__toggle" id="notif-bell-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Notifications">
@@ -172,28 +152,6 @@ $__sys = (int)($_GET['sys'] ?? 0);
             <i class="bi bi-box-arrow-right"></i> Log out
           </a>
         </div>
-=======
-    <div class="account-menu">
-      <button type="button" class="account-menu__toggle" id="account-menu-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
-        <i class="bi bi-person-circle"></i>
-      </button>
-      <div class="account-menu__dropdown" id="account-menu-dropdown" role="menu">
-        <div class="account-menu__header">
-          <div class="account-menu__name"><?= htmlspecialchars($__user['full_name']) ?></div>
-          <div class="account-menu__role"><?= htmlspecialchars($__user['role_name']) ?></div>
-        </div>
-        <a href="<?= isset($__inSubfolder) ? '../' : '' ?>profile.php" class="account-menu__item" role="menuitem">
-          <i class="bi bi-person"></i> My Profile
-        </a>
-        <button type="button" class="account-menu__item account-menu__item--button" id="theme-toggle" role="menuitem" aria-label="Toggle dark / light theme">
-          <i class="bi bi-moon-stars-fill" id="account-menu-theme-icon"></i>
-          <span>Dark Mode</span>
-          <span class="account-menu__switch" id="account-menu-switch" aria-hidden="true"><span class="account-menu__switch-knob"></span></span>
-        </button>
-        <a href="<?= isset($__inSubfolder) ? '../' : '' ?>logout.php" class="account-menu__item account-menu__item--danger" role="menuitem">
-          <i class="bi bi-box-arrow-right"></i> Log out
-        </a>
->>>>>>> origin/main
       </div>
     </div>
   </template>

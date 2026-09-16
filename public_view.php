@@ -1,7 +1,6 @@
 <?php
 /**
  * Public document reader — no login required.
-<<<<<<< HEAD
  * Same public-visibility rule as public.php's landing section and
  * includes/rbac.php's document_visibility_clause() for anonymous
  * visitors — is_public is the persistent "was this authorized to be
@@ -9,10 +8,6 @@
  * Amended/Withdrawn/Superseded/Rejected (that's the point of a
  * records archive), just never at the pre-filing stage
  * (Draft/Submitted/Under Review), which isn't LRDMS's to show.
-=======
- * Only finalized & public documents are shown (is_public = 1 AND
- * status IN Enacted/Amended/Superseded), matching the landing section.
->>>>>>> origin/main
  */
 require_once __DIR__ . '/config/database.php';
 
@@ -30,11 +25,7 @@ if ($id > 0) {
     $stmt = get_db()->prepare(
         "SELECT d.* FROM documents d
          WHERE d.id = ? AND d.is_public = 1
-<<<<<<< HEAD
            AND d.status NOT IN ('Draft','Submitted','Under Review')"
-=======
-           AND d.status IN ('Enacted','Amended','Superseded')"
->>>>>>> origin/main
     );
     $stmt->execute([$id]);
     $doc = $stmt->fetch();
@@ -62,7 +53,6 @@ if ($doc) {
         $cmt->execute([$doc['committee_id']]);
         $committeeName = $cmt->fetchColumn();
     }
-<<<<<<< HEAD
 
     // Attached file(s) — scanned copy / supporting images for this document.
     // Same pattern as document.php: prefer document_attachments (supports
@@ -77,8 +67,6 @@ if ($doc) {
     if (!$docFiles && !empty($doc['file_path'])) {
         $docFiles = [['file_path' => $doc['file_path'], 'display_name' => null]];
     }
-=======
->>>>>>> origin/main
 } else {
     http_response_code(404);
     $title = 'Document not found';
@@ -121,7 +109,6 @@ if ($doc) {
   .doc-body h3 { color:var(--lrdms-navy); margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.6px; }
   .doc-text { font-size:15px; color:#3a4356; white-space:pre-wrap; }
 
-<<<<<<< HEAD
   .doc-attachments { margin-bottom:24px; }
   .doc-attachments__title { color:var(--lrdms-navy); margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.6px; }
   .doc-attachments__grid { display:flex; flex-wrap:wrap; gap:12px; }
@@ -151,20 +138,6 @@ if ($doc) {
   .lightbox__body iframe { width:100%; height:78vh; border:none; }
   .lightbox__footer { padding:10px 16px; border-top:1px solid #e7ecf4; text-align:right; }
   .lightbox__footer a { font-weight:600; font-size:13px; }
-=======
-  .doc-file { margin-top:16px; }
-  .doc-file a {
-    display:inline-block;
-    background:var(--lrdms-navy);
-    color:#fff;
-    padding:10px 18px;
-    border-radius:8px;
-    text-decoration:none;
-    font-weight:600;
-    font-size:14px;
-  }
-  .doc-file a:hover { background:var(--lrdms-navy-dark); }
->>>>>>> origin/main
 
   .not-found { text-align:center; padding:60px 20px; }
   .not-found h1 { font-size:24px; margin-bottom:8px; }
@@ -221,11 +194,7 @@ if ($doc) {
 
   /* ── Print styles ── */
   @media print {
-<<<<<<< HEAD
     .topbar, .back-to-top, .doc-actions, .doc-attachments, .lightbox { display:none !important; }
-=======
-    .topbar, .back-to-top, .doc-actions { display:none !important; }
->>>>>>> origin/main
     body { background:#fff; -webkit-print-color-adjust:exact; }
     .doc-wrap { padding:0; max-width:100%; margin:0; }
     .doc-body { border:none; box-shadow:none; padding:0; background:transparent; }
@@ -308,7 +277,6 @@ if ($doc) {
       </div>
     </div>
 
-<<<<<<< HEAD
     <?php if ($docFiles): ?>
       <div class="doc-attachments">
         <h3 class="doc-attachments__title"><i class="bi bi-paperclip"></i> Attached File<?= count($docFiles) > 1 ? 's' : '' ?> (<?= count($docFiles) ?>)</h3>
@@ -332,8 +300,6 @@ if ($doc) {
       </div>
     <?php endif; ?>
 
-=======
->>>>>>> origin/main
     <div class="doc-actions">
       <button type="button" class="doc-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
       <button type="button" class="doc-btn" id="copyBtn" onclick="copyLink()"><i class="bi bi-link-45deg"></i> Copy link</button>
@@ -360,7 +326,6 @@ if ($doc) {
   </div>
 <?php endif; ?>
 
-<<<<<<< HEAD
 <?php if (!empty($docFiles)): ?>
 <!-- Attachment lightbox -->
 <div class="lightbox" id="filePreview" aria-hidden="true">
@@ -383,13 +348,10 @@ if ($doc) {
 </div>
 <?php endif; ?>
 
-=======
->>>>>>> origin/main
 <!-- Back to top -->
 <button type="button" class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})"><i class="bi bi-arrow-up"></i></button>
 
 <script>
-<<<<<<< HEAD
 <?php if (!empty($docFiles)): ?>
 // Attached files for this document, in display order.
 var docFiles = <?= json_encode(array_column($docFiles, 'file_path'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
@@ -458,8 +420,6 @@ document.addEventListener('keydown', function (e) {
 });
 <?php endif; ?>
 
-=======
->>>>>>> origin/main
 // Copy link to clipboard
 function copyLink() {
   navigator.clipboard.writeText(window.location.href).then(function () {
@@ -479,8 +439,4 @@ window.addEventListener('scroll', function () {
 </script>
 
 </body>
-<<<<<<< HEAD
 </html>
-=======
-</html>
->>>>>>> origin/main

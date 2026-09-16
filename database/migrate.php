@@ -74,7 +74,6 @@ if (column_exists($pdo, 'user_sessions', 'session_token')) {
     $ran[] = 'Created user_sessions table';
 }
 
-<<<<<<< HEAD
 // Recently viewed documents table
 $pdo->exec(
     'CREATE TABLE IF NOT EXISTS recently_viewed_documents (
@@ -94,8 +93,6 @@ if (column_exists($pdo, 'recently_viewed_documents', 'viewed_at')) {
     $ran[] = 'Created recently_viewed_documents table';
 }
 
-=======
->>>>>>> origin/main
 // New access permissions
 $newPermissions = [
     ['access', 'manage_roles',       'Create/edit roles and assign permissions'],

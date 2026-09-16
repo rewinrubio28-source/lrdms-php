@@ -25,7 +25,6 @@ $page = min($page, $totalPages);
 $offset = ($page - 1) * $perPage;
 
 // Current page of logs ($perPage/$offset are PHP ints → safe to inline)
-<<<<<<< HEAD
 $sql = 'SELECT a.*, u.full_name AS actor_full_name, r.name AS actor_role
         FROM audit_log a
         LEFT JOIN users u ON u.id = a.user_id
@@ -34,13 +33,6 @@ if ($moduleFilter !== 'All') {
     $sql .= ' WHERE a.module = ?';
 }
 $sql .= ' ORDER BY a.created_at DESC LIMIT ' . $perPage . ' OFFSET ' . $offset;
-=======
-$sql = 'SELECT * FROM audit_log';
-if ($moduleFilter !== 'All') {
-    $sql .= ' WHERE module = ?';
-}
-$sql .= ' ORDER BY created_at DESC LIMIT ' . $perPage . ' OFFSET ' . $offset;
->>>>>>> origin/main
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $logs = $stmt->fetchAll();
@@ -78,7 +70,6 @@ include __DIR__ . '/includes/layout_top.php';
   </form>
 
   <div class="audit-scroll">
-<<<<<<< HEAD
   <table class="table table-sm audit-table">
     <thead>
       <tr>
@@ -114,21 +105,6 @@ include __DIR__ . '/includes/layout_top.php';
     <?php if (!$logs): ?><tr><td colspan="7" class="text-muted small">No activity logged yet.</td></tr><?php endif; ?>
     </tbody>
   </table>
-=======
-  <ul class="audit-list">
-    <?php foreach ($logs as $a):
-      $detail = $a['detail'] ?? '';
-      $detailShort = mb_strlen($detail) > 80 ? mb_substr($detail, 0, 80) . '...' : $detail;
-    ?>
-      <li>
-        <time><?= htmlspecialchars(date('M j, Y \a\t g:i A', strtotime($a['created_at']))) ?></time>
-        <span class="actor"><?= htmlspecialchars($a['username_snapshot'] ?? 'system') ?></span>
-        <span><?= htmlspecialchars($a['module']) ?> — <?= htmlspecialchars($a['action']) ?><?= $detailShort ? ' — ' . htmlspecialchars($detailShort) : '' ?></span>
-      </li>
-    <?php endforeach; ?>
-    <?php if (!$logs): ?><li class="text-muted small">No activity logged yet.</li><?php endif; ?>
-  </ul>
->>>>>>> origin/main
   </div>
 
   <?php if ($total > 0): ?>
@@ -161,8 +137,4 @@ include __DIR__ . '/includes/layout_top.php';
   <?php endif; ?>
 </div>
 
-<<<<<<< HEAD
 <?php include __DIR__ . '/includes/layout_bottom.php'; ?>
-=======
-<?php include __DIR__ . '/includes/layout_bottom.php'; ?>
->>>>>>> origin/main

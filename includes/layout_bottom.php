@@ -19,16 +19,10 @@
   })();
 </script>
 <script>
-<<<<<<< HEAD
   // Header actions group: relocate the notification bell + avatar/profile/
   // dark-mode/logout template into the current page's action row (next to
   // "+ New Encoding" on the dashboard, or at the end of the .topbar on
   // every other page), then wire both up.
-=======
-  // Account menu: relocate the avatar/profile/dark-mode/logout template into
-  // the current page's action row (next to "+ New Encoding" on the dashboard,
-  // or at the end of the .topbar on every other page), then wire it up.
->>>>>>> origin/main
   (function () {
     var tpl = document.getElementById('account-menu-tpl');
     if (!tpl) return;
@@ -36,11 +30,7 @@
     var node = tpl.content.firstElementChild.cloneNode(true);
     // Prefer an explicit action row (dashboard's header actions, or a
     // page's own .topbar__actions button group like on users.php) so the
-<<<<<<< HEAD
     // group lands next to those buttons. Falling back straight to
-=======
-    // avatar lands next to those buttons. Falling back straight to
->>>>>>> origin/main
     // .topbar would make it a 3rd flex child there, and with
     // justify-content: space-between that shoves the existing button
     // group away from the edge instead of sitting flush next to it.
@@ -101,7 +91,6 @@
         syncThemeIcon();
       });
     }
-<<<<<<< HEAD
 
     // ── Notification bell ──────────────────────────────────────────
     var bell         = node.querySelector('#notif-bell');
@@ -242,8 +231,6 @@
 
     refreshCount();
     setInterval(refreshCount, 60000);
-=======
->>>>>>> origin/main
   })();
 </script>
 <script>

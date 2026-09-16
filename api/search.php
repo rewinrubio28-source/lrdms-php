@@ -22,15 +22,11 @@ require_once __DIR__ . '/../includes/audit.php';
 
 header('Content-Type: application/json');
 
-<<<<<<< HEAD
 // Shared secret comes from the API_SHARED_KEY environment variable —
 // same value as api/upload_document.php uses. Never hardcode it here.
 require_once __DIR__ . '/../config/env.php';
 load_env_file();
 define('API_SHARED_KEY', env_required('API_SHARED_KEY'));
-=======
-define('API_SHARED_KEY', 'change-this-shared-key');
->>>>>>> origin/main
 
 $providedKey = $_SERVER['HTTP_X_API_KEY'] ?? '';
 if (!hash_equals(API_SHARED_KEY, $providedKey)) {
@@ -49,16 +45,12 @@ if ($query === '') {
 $mode = ($_GET['mode'] ?? 'keyword') === 'semantic' ? 'semantic' : 'keyword';
 
 $pdo = get_db();
-<<<<<<< HEAD
 // Same public-visibility rule as includes/rbac.php's document_visibility_clause()
 // for an anonymous caller — is_public is the persistent "was this authorized to
 // be public" flag; a document keeps showing here after being Amended/Withdrawn/
 // Superseded (that's the point of a records archive), just never at the
 // pre-filing stage (Draft/Submitted/Under Review), which isn't LRDMS's to show.
 $visClause = "is_public = 1 AND status NOT IN ('Draft','Submitted','Under Review')";
-=======
-$visClause = "status = 'Enacted' AND is_public = 1";
->>>>>>> origin/main
 $results = $mode === 'semantic'
     ? semantic_search($pdo, $query, $visClause, [])
     : keyword_search($pdo, $query, $visClause, []);

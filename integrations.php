@@ -73,7 +73,6 @@ if (!isset($subsystems[$sys])) {
 }
 $sub = $subsystems[$sys];
 
-<<<<<<< HEAD
 $q = trim($_GET['q'] ?? '');
 $statusFilter = $_GET['status'] ?? 'All';
 $committeeFilter = $_GET['committee'] ?? 'All';
@@ -105,31 +104,20 @@ if ($dateTo !== '') {
     $params[] = $dateTo;
 }
 
-=======
-
-list($clause, $params) = document_visibility_clause($user);
->>>>>>> origin/main
 $stmt = $pdo->prepare("SELECT d.*, u.full_name AS owner_name, c.name AS committee_name
                        FROM documents d
                        JOIN users u ON u.id = d.owner_id
                        LEFT JOIN committees c ON c.id = d.committee_id
-<<<<<<< HEAD
                        WHERE " . implode(' AND ', $where) . "
-=======
-                       WHERE $clause AND ({$sub['filter']})
->>>>>>> origin/main
                        ORDER BY d.enactment_date DESC, d.created_at DESC, d.id DESC
                        LIMIT 200");
 $stmt->execute($params);
 $records = $stmt->fetchAll();
 $count = count($records);
 
-<<<<<<< HEAD
 $committees = $pdo->query('SELECT id, name FROM committees ORDER BY name')->fetchAll();
 $statusOptions = ['Draft', 'Submitted', 'Under Review', 'Enacted', 'Amended', 'Superseded', 'Withdrawn', 'Rejected'];
 
-=======
->>>>>>> origin/main
 include __DIR__ . '/includes/layout_top.php';
 ?>
 <div class="topbar">
@@ -155,7 +143,6 @@ include __DIR__ . '/includes/layout_top.php';
         <?php endforeach; ?>
       </select>
     </div>
-<<<<<<< HEAD
     <div class="col-md-7 text-md-end">
       <a class="btn btn-outline-primary btn-sm" href="repository.php">Browse full repository</a>
     </div>
@@ -199,11 +186,6 @@ include __DIR__ . '/includes/layout_top.php';
         <a href="integrations.php?sys=<?= $sys ?>" class="btn btn-outline-secondary btn-sm">Reset filters</a>
       </div>
     <?php endif; ?>
-=======
-    <div class="col-md-7">
-      <a class="btn btn-outline-primary btn-sm" href="repository.php">Browse full repository</a>
-    </div>
->>>>>>> origin/main
   </form>
 
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
@@ -216,15 +198,6 @@ include __DIR__ . '/includes/layout_top.php';
     </div>
   </div>
 
-<<<<<<< HEAD
-=======
-  <div class="int-fns" style="padding-top: 0; margin-bottom: 16px;">
-    <?php foreach ($sub['fns'] as $fn): ?>
-      <span class="int-fn"><?= htmlspecialchars($fn) ?></span>
-    <?php endforeach; ?>
-  </div>
-
->>>>>>> origin/main
   <?php if ($records): ?>
     <div class="table-responsive">
       <table class="table table-hover align-middle">
@@ -254,11 +227,8 @@ include __DIR__ . '/includes/layout_top.php';
         </tbody>
       </table>
     </div>
-<<<<<<< HEAD
   <?php elseif ($q !== '' || $statusFilter !== 'All' || $committeeFilter !== 'All' || $dateFrom !== '' || $dateTo !== ''): ?>
     <p class="text-muted">No records match these filters.</p>
-=======
->>>>>>> origin/main
   <?php else: ?>
     <div class="module-note">
       <span>Coming soon</span>
@@ -266,8 +236,4 @@ include __DIR__ . '/includes/layout_top.php';
   <?php endif; ?>
 </div>
 
-<<<<<<< HEAD
 <?php include __DIR__ . '/includes/layout_bottom.php'; ?>
-=======
-<?php include __DIR__ . '/includes/layout_bottom.php'; ?>
->>>>>>> origin/main

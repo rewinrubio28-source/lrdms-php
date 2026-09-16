@@ -2,7 +2,6 @@
 /**
  * Email Configuration
  *
-<<<<<<< HEAD
  * EXAMPLE FILE — copy to email.php (git-ignored) if you need a
  * committed reference. SMTP settings come from environment variables — see .env.example for
  * local dev, or set them in HostForge's Environment Variables tab for
@@ -13,14 +12,6 @@
  */
 require_once __DIR__ . '/env.php';
 load_env_file();
-=======
- * Configure your SMTP settings here for sending emails.
- * Currently used for password reset functionality.
- *
- * For Gmail: Use App Password (not your regular password)
- * Go to Google Account > Security > App passwords
- */
->>>>>>> origin/main
 
 // Load PHPMailer
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -29,7 +20,6 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-<<<<<<< HEAD
 // SMTP Settings — username/password are required: fail loudly instead of
 // silently sending nothing (password resets, 2FA codes depend on this).
 define('SMTP_HOST', env_optional('SMTP_HOST', 'smtp.gmail.com'));
@@ -41,18 +31,6 @@ define('SMTP_FROM_NAME', env_optional('SMTP_FROM_NAME', 'LRDMS System'));
 
 // Base URL for generating links
 define('BASE_URL', env_optional('BASE_URL', 'http://localhost/lrdms-php'));
-=======
-// SMTP Settings
-define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_PORT', 587);
-define('SMTP_USERNAME', 'your_email@gmail.com');
-define('SMTP_PASSWORD', 'your_gmail_app_password');
-define('SMTP_FROM_EMAIL', 'your_email@gmail.com');
-define('SMTP_FROM_NAME', 'LRDMS System');
-
-// Base URL for generating links
-define('BASE_URL', 'http://localhost/lrdms-php');
->>>>>>> origin/main
 
 /**
  * Send an email using PHPMailer with SMTP

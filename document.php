@@ -26,7 +26,6 @@ if (!$doc || !can_view_document($user, $doc)) {
     exit;
 }
 
-<<<<<<< HEAD
 // A document that has never been verified doesn't belong on this page yet —
 // document.php's status-change and amend panels assume the document is
 // already a confirmed part of the repository. Point to the dedicated review
@@ -53,23 +52,14 @@ $pdo->prepare(
      ON DUPLICATE KEY UPDATE viewed_at = NOW()'
 )->execute([$user['id'], $doc['id']]);
 
-=======
->>>>>>> origin/main
 $message = '';
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-<<<<<<< HEAD
     $csrfValid = validate_csrf();
     if (!$csrfValid) {
         $errors[] = 'Security token expired. Please refresh the page and try again.';
     } else {
-=======
-    if (!validate_csrf()) {
-        $errors[] = 'Security token expired. Please refresh the page and try again.';
-    }
-    if (validate_csrf()) {
->>>>>>> origin/main
     $action = $_POST['action'] ?? '';
 
     if ($action === 'add_note' && trim($_POST['note'] ?? '') !== '') {
@@ -79,7 +69,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = 'Note added.';
         $doc = fetch_document($pdo, $id);
 
-<<<<<<< HEAD
     } elseif ($action === 'update_visibility') {
         // Deliberately NOT a status-change action anymore. Whether an
         // enacted record is "Amended," "Withdrawn," or "Superseded" is a
@@ -100,25 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             log_action('repository', 'updated_visibility', $doc['doc_number'] . ' → ' . ($isPublic ? 'public' : 'private'));
             $message = 'Visibility updated.';
             $doc = fetch_document($pdo, $id);
-=======
-    } elseif ($action === 'change_status') {
-        if (!has_permission('repository', 'edit_metadata')) {
-            $errors[] = 'Your role cannot change document status.';
-        } else {
-            $newStatus = $_POST['new_status'] ?? $doc['status'];
-            if (!can_transition_status($doc['status'], $newStatus)) {
-                $errors[] = 'Cannot change status from "' . $doc['status'] . '" to "' . $newStatus . '". This transition is not allowed.';
-            } else {
-                $oldStatus = $doc['status'];
-                $isPublic = isset($_POST['is_public']) ? 1 : 0;
-                $stmt = $pdo->prepare('UPDATE documents SET status = ?, is_public = ? WHERE id = ?');
-                $stmt->execute([$newStatus, $isPublic, $doc['id']]);
-                log_action('repository', 'changed_status', $doc['doc_number'] . ' → ' . $newStatus);
-                notify_status_change($doc, $oldStatus, $newStatus, $user);
-                $message = 'Status updated to ' . $newStatus . '.';
-                $doc = fetch_document($pdo, $id);
-            }
->>>>>>> origin/main
         }
 
     } elseif ($action === 'amend') {
@@ -127,7 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (in_array($doc['status'], ['Superseded', 'Withdrawn'], true)) {
             $errors[] = 'This document is closed and cannot be amended further.';
         } else {
-<<<<<<< HEAD
             $newDocNumber = trim($_POST['new_doc_number'] ?? '');
             $newTitle = trim($_POST['new_title'] ?? '') !== '' ? trim($_POST['new_title']) : $doc['title'];
             $newDate = ($_POST['amendment_date'] ?? '') !== '' ? $_POST['amendment_date'] : date('Y-m-d');
@@ -140,12 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // content. Carry the prior content forward unchanged; only OCR (below) may
             // update it, and only if a real replacement file was attached.
             $newBody = $doc['body'] ?? '';
-=======
-            $newTitle = trim($_POST['new_title'] ?? '') !== '' ? trim($_POST['new_title']) : $doc['title'];
-            $newDate = ($_POST['amendment_date'] ?? '') !== '' ? $_POST['amendment_date'] : date('Y-m-d');
-            $note = trim($_POST['amend_note'] ?? '');
-            $newBody = trim($_POST['new_body'] ?? '') !== '' ? trim($_POST['new_body']) : ($doc['body'] ?? '');
->>>>>>> origin/main
 
             $filePath = $doc['file_path'];
             $ocrText = $doc['ocr_text'];
@@ -160,7 +123,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-<<<<<<< HEAD
             // Guard: the new doc_number is what makes this a real, distinct legislative
             // instrument (e.g. "Ordinance No. 25-02 amending Ordinance No. 24-11") —
             // it's required, and it must not collide with any existing doc_number,
@@ -188,13 +150,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$errors) {
 
-=======
->>>>>>> origin/main
             $pdo->beginTransaction();
             try {
                 $stmt = $pdo->prepare(
                     'INSERT INTO documents
-<<<<<<< HEAD
                        (doc_number, title, doc_type, sponsor, committee_id, owner_id, status, is_public, verified_at,
                         source_system, enactment_date, file_path, ocr_text, body, previous_version_id)
                      VALUES (?,?,?,?,?,?,?,?,NOW(),?,?,?,?,?,?)'
@@ -207,14 +166,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // at yet.
                 $stmt->execute([
                     $newDocNumber, $newTitle, $doc['doc_type'], $doc['sponsor'], $doc['committee_id'],
-=======
-                       (doc_number, title, doc_type, sponsor, committee_id, owner_id, status, is_public,
-                        source_system, enactment_date, file_path, ocr_text, body, previous_version_id)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-                );
-                $stmt->execute([
-                    $doc['doc_number'], $newTitle, $doc['doc_type'], $doc['sponsor'], $doc['committee_id'],
->>>>>>> origin/main
                     $user['id'], 'Enacted', $doc['is_public'], $doc['source_system'], $newDate,
                     $filePath, $ocrText, $newBody, $doc['id'],
                 ]);
@@ -235,7 +186,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (!empty($newId)) {
-<<<<<<< HEAD
                 log_action('version', 'amended_document', $doc['doc_number'] . ' → new document ' . $newDocNumber . ' (#' . $newId . ')');
                 $_SESSION['flash_amended'] = true;
                 header('Location: document.php?id=' . $newId);
@@ -243,12 +193,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             }
-=======
-                log_action('version', 'amended_document', $doc['doc_number'] . ' → new version #' . $newId);
-                header('Location: document.php?id=' . $newId . '&amended=1');
-                exit;
-            }
->>>>>>> origin/main
         }
     }
     }
@@ -274,7 +218,6 @@ $docAuditStmt = $pdo->prepare('SELECT * FROM audit_log WHERE detail LIKE ? ORDER
 $docAuditStmt->execute(['%' . $doc['doc_number'] . '%']);
 $docAudit = $docAuditStmt->fetchAll();
 
-<<<<<<< HEAD
 // Load all attachment files for this document. Fall back to the legacy file_path
 // column so older records remain fully compatible.
 $attStmt = $pdo->prepare('SELECT file_path FROM document_attachments WHERE document_id = ? ORDER BY sort_order');
@@ -282,8 +225,6 @@ $attStmt->execute([$doc['id']]);
 $docFiles = array_column($attStmt->fetchAll(), 'file_path');
 if (!$docFiles && $doc['file_path']) $docFiles = [$doc['file_path']];
 
-=======
->>>>>>> origin/main
 include __DIR__ . '/includes/layout_top.php';
 
 // Show flash success message (set by encoding.php after save)
@@ -299,12 +240,9 @@ if ($flashSuccess) {
     <style>@keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}</style>';
 }
 ?>
-<<<<<<< HEAD
 <div class="mb-2">
   <a href="repository.php" class="text-decoration-none small text-muted"><i class="bi bi-arrow-left"></i> Back to Repository</a>
 </div>
-=======
->>>>>>> origin/main
 <div class="topbar">
   <div class="d-flex align-items-center gap-2">
     <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu">
@@ -319,11 +257,7 @@ if ($flashSuccess) {
 </div>
 
 <?php if ($message): ?><div class="alert alert-success"><?= htmlspecialchars($message) ?></div><?php endif; ?>
-<<<<<<< HEAD
 <?php if (!empty($_SESSION['flash_amended'])): unset($_SESSION['flash_amended']); ?><div class="alert alert-success">New amending document saved and linked to the original.</div><?php endif; ?>
-=======
-<?php if (isset($_GET['amended'])): ?><div class="alert alert-success">New version saved and linked to the previous one.</div><?php endif; ?>
->>>>>>> origin/main
 <?php if ($errors): ?><div class="alert alert-danger"><?php foreach ($errors as $e) echo htmlspecialchars($e) . '<br>'; ?></div><?php endif; ?>
 
 <div class="row g-3">
@@ -336,48 +270,30 @@ if ($flashSuccess) {
         <div><dt>Owner</dt><dd><?= htmlspecialchars($doc['owner_name']) ?></dd></div>
         <div><dt>Source system</dt><dd><?= htmlspecialchars($doc['source_system']) ?></dd></div>
         <div><dt>Public</dt><dd><?= $doc['is_public'] ? 'Yes' : 'No' ?></dd></div>
-<<<<<<< HEAD
         <div><dt>File</dt><dd><?= $docFiles ? '<a href="#" data-files="' . htmlspecialchars(json_encode($docFiles), ENT_QUOTES, 'UTF-8') . '" data-bs-toggle="modal" data-bs-target="#filePreviewModal" class="open-file-modal">Open file' . (count($docFiles) > 1 ? 's (' . count($docFiles) . ')' : '') . '</a>' : '—' ?></dd></div>
-=======
-        <div><dt>File</dt><dd><?= $doc['file_path'] ? '<a href="' . htmlspecialchars($doc['file_path']) . '" data-file="' . htmlspecialchars($doc['file_path']) . '" data-bs-toggle="modal" data-bs-target="#filePreviewModal" class="open-file-modal">Open file</a>' : '—' ?></dd></div>
->>>>>>> origin/main
       </dl>
       <?php if (!empty($doc['body'])): ?>
       <h3 style="font-size:14px;">Document content</h3>
       <div class="ocr-box"><?= nl2br(htmlspecialchars($doc['body'])) ?></div>
       <?php endif; ?>
-<<<<<<< HEAD
       <div class="d-flex justify-content-between align-items-center">
         <h3 style="font-size:14px;" class="mb-0">OCR / extracted text</h3>
         <?php if (!empty($doc['ocr_text'])): ?>
           <a href="document_text.php?id=<?= (int)$doc['id'] ?>" class="btn btn-outline-secondary btn-sm">View Full Text (As Filed)</a>
         <?php endif; ?>
       </div>
-=======
-      <h3 style="font-size:14px;">OCR / extracted text</h3>
->>>>>>> origin/main
       <div class="ocr-box"><?= nl2br(htmlspecialchars($doc['ocr_text'] ?: 'No extracted text on file.')) ?></div>
     </div>
 
     <div class="card">
-<<<<<<< HEAD
       <h3 style="font-size:16px;">Amendment history</h3>
       <?php if (count($chain) <= 1): ?>
         <p class="text-muted small">No amending instruments on file yet.</p>
-=======
-      <h3 style="font-size:16px;">Version history</h3>
-      <?php if (count($chain) <= 1): ?>
-        <p class="text-muted small">Only one version on file — no amendments yet.</p>
->>>>>>> origin/main
       <?php else: ?>
         <div class="chain">
           <?php foreach ($chain as $i => $node): ?>
             <a class="chain__node <?= $node['id'] == $doc['id'] ? 'chain__node--current' : '' ?>" href="document.php?id=<?= $node['id'] ?>">
-<<<<<<< HEAD
               <span class="doc-title" style="font-size:13px;"><?= htmlspecialchars($node['doc_number']) ?> — <?= htmlspecialchars($node['title']) ?></span>
-=======
-              <span class="doc-title" style="font-size:13px;"><?= htmlspecialchars($node['title']) ?></span>
->>>>>>> origin/main
               <div class="doc-number"><?= $node['enactment_date'] ? htmlspecialchars(date('M j, Y', strtotime($node['enactment_date']))) : '—' ?></div>
               <div style="margin-top:6px;"><span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $node['status'])) ?>"><?= htmlspecialchars($node['status']) ?></span></div>
             </a>
@@ -409,31 +325,15 @@ if ($flashSuccess) {
   <div class="col-lg-5">
     <?php if (has_permission('repository', 'edit_metadata')): ?>
     <div class="card">
-<<<<<<< HEAD
       <h3 style="font-size:15px;">Public visibility</h3>
       <p class="text-muted small">This document's status (<?= htmlspecialchars($doc['status']) ?>) is a legislative fact — it can only come from the upstream system that owns it, not from LRDMS. What LRDMS does control is whether its own copy is shown in the public repository.</p>
       <form method="post">
         <input type="hidden" name="action" value="update_visibility">
-=======
-      <h3 style="font-size:15px;">Change status</h3>
-      <form method="post">
-        <input type="hidden" name="action" value="change_status">
-        <select name="new_status" class="form-select form-select-sm mb-2">
-          <option value="<?= htmlspecialchars($doc['status']) ?>" disabled><?= htmlspecialchars($doc['status']) ?> (current)</option>
-          <?php foreach (valid_next_statuses($doc['status']) as $s): ?>
-            <option value="<?= htmlspecialchars($s) ?>"><?= htmlspecialchars($s) ?></option>
-          <?php endforeach; ?>
-        </select>
->>>>>>> origin/main
         <div class="form-check mb-2">
           <input type="checkbox" name="is_public" value="1" class="form-check-input" id="pub" <?= $doc['is_public'] ? 'checked' : '' ?>>
           <label class="form-check-label small" for="pub">Publicly visible</label>
         </div>
-<<<<<<< HEAD
         <button class="btn btn-outline-primary btn-sm w-100">Update visibility</button>
-=======
-        <button class="btn btn-outline-primary btn-sm w-100">Update status</button>
->>>>>>> origin/main
       </form>
     </div>
     <?php endif; ?>
@@ -444,14 +344,11 @@ if ($flashSuccess) {
       <form method="post" enctype="multipart/form-data">
         <input type="hidden" name="action" value="amend">
         <div class="mb-2">
-<<<<<<< HEAD
           <label class="form-label small">New document number</label>
           <input type="text" name="new_doc_number" class="form-control form-control-sm" placeholder="e.g. 2026-045" required>
           <div class="form-text">The amendment is its own instrument (e.g. "Ordinance No. 2026-045 amending Ordinance No. <?= htmlspecialchars($doc['doc_number']) ?>") — it needs its own number, not <?= htmlspecialchars($doc['doc_number']) ?> again.</div>
         </div>
         <div class="mb-2">
-=======
->>>>>>> origin/main
           <label class="form-label small">New title</label>
           <input type="text" name="new_title" class="form-control form-control-sm" value="<?= htmlspecialchars($doc['title']) ?>">
         </div>
@@ -467,16 +364,8 @@ if ($flashSuccess) {
           <label class="form-label small">What changed?</label>
           <textarea name="amend_note" class="form-control form-control-sm" rows="2"></textarea>
         </div>
-<<<<<<< HEAD
         <div class="form-text mb-2">Content updates automatically from the replacement file's extracted text — this form doesn't edit the document's content directly.</div>
         <button class="btn btn-primary btn-sm w-100">Save as new amending document</button>
-=======
-        <div class="mb-2">
-          <label class="form-label small">Document content <span class="text-muted">(pre-filled — edit kung nagbago)</span></label>
-          <textarea name="new_body" class="form-control form-control-sm" rows="6"><?= htmlspecialchars($doc['body'] ?? '') ?></textarea>
-        </div>
-        <button class="btn btn-primary btn-sm w-100">Save new version</button>
->>>>>>> origin/main
       </form>
     </div>
     <?php endif; ?>
@@ -500,7 +389,6 @@ if ($flashSuccess) {
 </div>
 
 <div class="modal fade" id="filePreviewModal" tabindex="-1" aria-labelledby="filePreviewModalLabel" aria-hidden="true">
-<<<<<<< HEAD
   <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-md-down" style="height:min(95dvh, 95vh);">
     <div class="modal-content" style="height:100%; display:flex; flex-direction:column;">
       <div class="modal-header" style="flex:0 0 auto;">
@@ -517,19 +405,6 @@ if ($flashSuccess) {
         <img id="filePreviewImg" style="max-width:100%; max-height:100%; object-fit:contain; display:none;" alt="Document image preview">
       </div>
       <div class="modal-footer" style="flex:0 0 auto;">
-=======
-  <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-md-down">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="filePreviewModalLabel">Document file</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-0 d-flex justify-content-center align-items-center" style="min-height:70vh;">
-        <iframe id="filePreviewIframe" style="width:100%; height:70vh; border:none; display:none;" title="Document file preview"></iframe>
-        <img id="filePreviewImg" style="max-width:100%; max-height:70vh; object-fit:contain; display:none;" alt="Document image preview">
-      </div>
-      <div class="modal-footer">
->>>>>>> origin/main
         <a id="filePreviewFullLink" href="#" target="_blank" class="btn btn-outline-primary btn-sm">Open in new tab</a>
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
       </div>
@@ -542,18 +417,14 @@ if ($flashSuccess) {
 (function () {
   var modalEl = document.getElementById('filePreviewModal');
   if (!modalEl) return;
-<<<<<<< HEAD
 
   var files = [];
   var currentIndex = 0;
 
-=======
->>>>>>> origin/main
   function isImage(fp) {
     var ext = fp.split('.').pop().toLowerCase();
     return ['jpg','jpeg','png','gif','webp','bmp','svg'].indexOf(ext) !== -1;
   }
-<<<<<<< HEAD
 
   function showFile(index) {
     if (!files.length) return;
@@ -567,14 +438,6 @@ if ($flashSuccess) {
     var prev = document.getElementById('filePreviewPrev');
     var next = document.getElementById('filePreviewNext');
     var counter = document.getElementById('filePreviewCounter');
-=======
-  modalEl.addEventListener('show.bs.modal', function (event) {
-    var trigger = event.relatedTarget;
-    var filePath = trigger.getAttribute('data-file');
-    var iframe = document.getElementById('filePreviewIframe');
-    var img = document.getElementById('filePreviewImg');
-    var fullLink = document.getElementById('filePreviewFullLink');
->>>>>>> origin/main
 
     if (isImage(filePath)) {
       img.src = filePath;
@@ -587,7 +450,6 @@ if ($flashSuccess) {
       img.style.display = 'none';
       img.src = '';
     }
-<<<<<<< HEAD
 
     fullLink.href = filePath;
 
@@ -628,23 +490,13 @@ if ($flashSuccess) {
     showFile(currentIndex + 1);
   });
 
-=======
-    fullLink.href = filePath;
-  });
->>>>>>> origin/main
   modalEl.addEventListener('hidden.bs.modal', function () {
     var iframe = document.getElementById('filePreviewIframe');
     var img = document.getElementById('filePreviewImg');
     iframe.src = 'about:blank';
     img.src = '';
-<<<<<<< HEAD
     files = [];
     currentIndex = 0;
   });
 })();
 </script>
-=======
-  });
-})();
-</script>
->>>>>>> origin/main

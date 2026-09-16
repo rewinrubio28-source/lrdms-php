@@ -2,7 +2,6 @@
 /**
  * Document status workflow — enforces valid transitions.
  *
-<<<<<<< HEAD
  * Simplified lifecycle: LRDMS is the system of record for FINALIZED
  * documents only (see README's integration boundary). Every document that
  * enters this system — via the API push in api/upload_document.php, or the
@@ -26,25 +25,6 @@
  * outgoing transition here, since there's no LRDMS-owned workflow to move
  * it forward. That's correct, not a bug: those statuses aren't LRDMS's to
  * progress.
-=======
- * A legislative document moves through a defined lifecycle. Not every
- * status can jump to every other status. This module encodes those rules
- * so the UI, encoding form, and admin status-change form all share one
- * source of truth.
- *
- * Transition rules (who can do what):
- *   Draft       → Submitted, Withdrawn               (owner / staff)
- *   Submitted   → Under Review, Draft                (secretary sends back)
- *   Under Review → Enacted, Submitted, Withdrawn     (secretary approves)
- *   Enacted     → (none directly; amend creates a new version)
- *   Amended     → (terminal)
- *   Superseded  → (terminal)
- *   Withdrawn   → Draft                              (resubmit)
- *
- * "Amended" and "Superseded" are terminal — they're only set by the
- * version control system (document.php amend, version.php rollback), never
- * by the status-change dropdown.
->>>>>>> origin/main
  */
 
 /**
@@ -52,7 +32,6 @@
  */
 function valid_document_transitions() {
     return [
-<<<<<<< HEAD
         'Draft'        => [],
         'Submitted'    => [],
         'Under Review' => [],
@@ -60,15 +39,6 @@ function valid_document_transitions() {
         'Amended'      => [],
         'Superseded'   => [],
         'Withdrawn'    => [],
-=======
-        'Draft'        => ['Submitted', 'Withdrawn'],
-        'Submitted'    => ['Under Review', 'Draft'],
-        'Under Review' => ['Enacted', 'Submitted', 'Withdrawn'],
-        'Enacted'      => [],
-        'Amended'      => [],
-        'Superseded'   => [],
-        'Withdrawn'    => ['Draft'],
->>>>>>> origin/main
     ];
 }
 
@@ -103,10 +73,7 @@ function valid_next_statuses($currentStatus) {
  */
 function notify_status_change($doc, $oldStatus, $newStatus, $changedByUser) {
     require_once __DIR__ . '/../config/email.php';
-<<<<<<< HEAD
     require_once __DIR__ . '/notifications.php';
-=======
->>>>>>> origin/main
 
     $pdo = get_db();
     $recipients = [];
@@ -119,7 +86,6 @@ function notify_status_change($doc, $oldStatus, $newStatus, $changedByUser) {
 
     // 2. When entering "Under Review", also notify the committee secretary
     //    (the user assigned to the document's committee with the
-<<<<<<< HEAD
     //    Committee Secretary role). This is the moment someone is, in
     //    effect, requesting that secretary's review — so it's also
     //    where the in-app "review request" bell notification fires
@@ -127,12 +93,6 @@ function notify_status_change($doc, $oldStatus, $newStatus, $changedByUser) {
     if ($newStatus === 'Under Review' && !empty($doc['committee_id'])) {
         $stmt = $pdo->prepare(
             'SELECT u.id, u.email, u.full_name FROM users u
-=======
-    //    Committee Secretary role).
-    if ($newStatus === 'Under Review' && !empty($doc['committee_id'])) {
-        $stmt = $pdo->prepare(
-            'SELECT u.email, u.full_name FROM users u
->>>>>>> origin/main
              JOIN roles r ON r.id = u.role_id
              WHERE u.committee_id = ? AND r.name = ? AND u.is_active = 1 AND u.email IS NOT NULL'
         );
@@ -141,7 +101,6 @@ function notify_status_change($doc, $oldStatus, $newStatus, $changedByUser) {
         if ($sec && !isset($recipients[$sec['email']])) {
             $recipients[$sec['email']] = $sec['full_name'];
         }
-<<<<<<< HEAD
         if ($sec) {
             create_notification(
                 $sec['id'],
@@ -151,8 +110,6 @@ function notify_status_change($doc, $oldStatus, $newStatus, $changedByUser) {
                     . ($doc['doc_number'] ?? 'a document') . ' — ' . ($doc['title'] ?? '')
             );
         }
-=======
->>>>>>> origin/main
     }
 
     // 3. When enacted, also notify Records Officers.
@@ -212,7 +169,6 @@ function notify_status_change($doc, $oldStatus, $newStatus, $changedByUser) {
         @send_email($email, "LRDMS: {$docNumber} — {$newStatus}", $body);
     }
 }
-<<<<<<< HEAD
 
 /**
  * Send an alert to all active Records Officers when a document arrives
@@ -286,5 +242,3 @@ function notify_incoming_document($doc, $sourceSystem) {
         @send_email($email, "LRDMS: {$docNumber} awaiting verification", $body);
     }
 }
-=======
->>>>>>> origin/main
