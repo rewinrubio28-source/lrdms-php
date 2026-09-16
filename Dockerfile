@@ -7,17 +7,11 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
 # --- Stage 2: the actual PHP + Apache runtime ---
 FROM php:8.2-apache
 
-# System libraries needed to build the PHP extensions below
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        libpng-dev \
-        libjpeg62-turbo-dev \
-        libfreetype6-dev \
-        libonig-dev \
-        libcurl4-openssl-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) pdo pdo_mysql mbstring gd curl \
-    && a2enmod rewrite \
-    && rm -rf /var/lib/apt/lists/*
+# Fast PHP extension installer (uses pre-built binaries when available,
+# instead of compiling every extension from source — much faster builds).
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions pdo_mysql mbstring gd curl \
+    && a2enmod rewrite
 
 WORKDIR /var/www/html
 
