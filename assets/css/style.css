@@ -293,6 +293,7 @@ body {
   .stat-row { overflow-x: auto; flex-wrap: nowrap; }
   .stat-chip { min-width: 120px; flex-shrink: 0; }
 }
+<<<<<<< HEAD
 
 /* ========================================
    Notification Bell
@@ -568,3 +569,5 @@ html.dark .notif-dropdown__mark-all { color: #47b2e4; }
     right: -8px;
   }
 }
+=======
+>>>>>>> origin/main

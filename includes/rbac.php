@@ -126,6 +126,7 @@ function require_permission($module, $action) {
  * have a committee_id column.
  */
 function document_visibility_clause($user) {
+<<<<<<< HEAD
     // "Public" visibility keys off is_public alone, not status = 'Enacted'.
     // is_public is never touched by amend/rollback/withdraw (see document.php
     // and version.php's status-change action) — it only ever changes via an
@@ -143,11 +144,16 @@ function document_visibility_clause($user) {
 
     if (!$user) {
         return [$publicClause, []];
+=======
+    if (!$user) {
+        return ["d.status = 'Enacted' AND d.is_public = 1", []];
+>>>>>>> origin/main
     }
 
     // Check the broadest scope first; the grants are mutually exclusive per
     // role (see seed data), so the first match is the whole answer.
     if (_role_has_permission($user['role_id'], 'repository', 'view_all')) {
+<<<<<<< HEAD
         // "view_all" means every reviewed record — not the intake tray.
         // A document that hasn't been verified yet isn't really "in the
         // repository" yet; it belongs in encoding.php's Awaiting
@@ -172,17 +178,34 @@ function document_visibility_clause($user) {
             "(d.committee_id = ? AND d.verified_at IS NOT NULL)
              OR d.owner_id = ?
              OR ($publicClause)",
+=======
+        return ['1=1', []];
+    }
+    if (_role_has_permission($user['role_id'], 'repository', 'view_committee')) {
+        return [
+            "(d.status IN ('Submitted','Under Review') AND (d.committee_id = ? OR d.committee_id IS NULL))
+             OR d.owner_id = ?
+             OR (d.status = 'Enacted' AND d.is_public = 1)",
+>>>>>>> origin/main
             [$user['committee_id'], $user['id']],
         ];
     }
     if (_role_has_permission($user['role_id'], 'repository', 'view_own')) {
         return [
+<<<<<<< HEAD
             "d.owner_id = ? OR ($publicClause)",
+=======
+            "d.owner_id = ? OR (d.status = 'Enacted' AND d.is_public = 1)",
+>>>>>>> origin/main
             [$user['id']],
         ];
     }
     // view_public, and any role with no repository grant, sees public docs only.
+<<<<<<< HEAD
     return [$publicClause, []];
+=======
+    return ["d.status = 'Enacted' AND d.is_public = 1", []];
+>>>>>>> origin/main
 }
 
 /**
@@ -190,16 +213,22 @@ function document_visibility_clause($user) {
  * a single row you've already fetched by ID (e.g. document.php?id=).
  */
 function can_view_document($user, $doc) {
+<<<<<<< HEAD
     $isPublic = (int)$doc['is_public'] === 1
         && !in_array($doc['status'], ['Draft', 'Submitted', 'Under Review'], true);
 
     if (!$user) {
         return $isPublic;
+=======
+    if (!$user) {
+        return $doc['status'] === 'Enacted' && (int)$doc['is_public'] === 1;
+>>>>>>> origin/main
     }
     if (_role_has_permission($user['role_id'], 'repository', 'view_all')) {
         return true;
     }
     if (_role_has_permission($user['role_id'], 'repository', 'view_committee')) {
+<<<<<<< HEAD
         return ($doc['committee_id'] !== null
                 && (int)$doc['committee_id'] === (int)$user['committee_id']
                 && $doc['verified_at'] !== null)
@@ -212,3 +241,17 @@ function can_view_document($user, $doc) {
     }
     return $isPublic;
 }
+=======
+        return (in_array($doc['status'], ['Submitted', 'Under Review'], true)
+                && ($doc['committee_id'] === null || (int)$doc['committee_id'] === (int)$user['committee_id']))
+            || (int)$doc['owner_id'] === (int)$user['id']
+            || ($doc['status'] === 'Enacted' && (int)$doc['is_public'] === 1);
+    }
+    if (_role_has_permission($user['role_id'], 'repository', 'view_own')) {
+        return (int)$doc['owner_id'] === (int)$user['id']
+            || ($doc['status'] === 'Enacted' && (int)$doc['is_public'] === 1);
+    }
+    return $doc['status'] === 'Enacted' && (int)$doc['is_public'] === 1;
+}
+
+>>>>>>> origin/main

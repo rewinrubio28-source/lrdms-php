@@ -6,10 +6,14 @@
  *
  * POST /api/upload_document.php
  * Header: X-API-Key: <shared secret>
+<<<<<<< HEAD
  *
  * Accepts EITHER of two request shapes:
  *
  * 1) JSON body (the real System 1 / System 2 integration shape):
+=======
+ * Body (JSON):
+>>>>>>> origin/main
  *   {
  *     "title": "...",            required
  *     "doc_number": "...",       required
@@ -18,6 +22,7 @@
  *     "committee_id": 1,         optional
  *     "enactment_date": "2026-07-20", optional
  *     "source_system": "System 1 – Ordinance & Resolution Lifecycle",
+<<<<<<< HEAD
  *     "is_public": true,         optional, defaults to true (see note below)
  *     "ocr_text": "..."          optional
  *   }
@@ -33,6 +38,12 @@
  *    here; files are just stored as-is. (If OCR text is wanted for a test
  *    push, pass it directly via the ocr_text field, same as the JSON shape.)
  *
+=======
+ *     "is_public": true,         optional, defaults to true
+ *     "ocr_text": "..."          optional
+ *   }
+ *
+>>>>>>> origin/main
  * Per the integration boundary in README.md, this system is the system
  * of record for FINALIZED documents only — it receives them already
  * enacted. Draft/review workflow stays owned by System 1.
@@ -42,12 +53,18 @@ require_once __DIR__ . '/../includes/audit.php';
 
 header('Content-Type: application/json');
 
+<<<<<<< HEAD
 // Shared secret comes from the API_SHARED_KEY environment variable — set
 // it in your local .env for testing, or in HostForge's Environment
 // Variables tab for production. Never hardcode it here.
 require_once __DIR__ . '/../config/env.php';
 load_env_file();
 define('API_SHARED_KEY', env_required('API_SHARED_KEY'));
+=======
+// Move this to an environment variable / untracked config file before
+// any real deployment — it's here in plain text only for this starter build.
+define('API_SHARED_KEY', 'change-this-shared-key');
+>>>>>>> origin/main
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -62,6 +79,7 @@ if (!hash_equals(API_SHARED_KEY, $providedKey)) {
     exit;
 }
 
+<<<<<<< HEAD
 $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
 $isMultipart = stripos($contentType, 'multipart/form-data') !== false;
 
@@ -76,6 +94,9 @@ if ($isMultipart) {
     $input = json_decode(file_get_contents('php://input'), true);
 }
 
+=======
+$input = json_decode(file_get_contents('php://input'), true);
+>>>>>>> origin/main
 if (!$input || empty($input['title']) || empty($input['doc_number'])) {
     http_response_code(422);
     echo json_encode(['error' => 'title and doc_number are required.']);
@@ -95,6 +116,7 @@ if (!$systemUserId) {
     exit;
 }
 
+<<<<<<< HEAD
 // Idempotency gate: doc_number is this system's real-world identity for a
 // legislative document (not title — two measures can share a title, but a
 // doc_number is only ever reused when the same push is retried or resent
@@ -155,12 +177,20 @@ if ($isMultipart && isset($_FILES['attachment'])) {
         }
     }
 }
+=======
+$isPublic = array_key_exists('is_public', $input) ? (int)(bool)$input['is_public'] : 1;
+>>>>>>> origin/main
 
 $stmt = $pdo->prepare(
     'INSERT INTO documents
        (doc_number, title, doc_type, sponsor, committee_id, owner_id, status, is_public,
+<<<<<<< HEAD
         source_system, enactment_date, ocr_text, file_path)
      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+=======
+        source_system, enactment_date, ocr_text)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+>>>>>>> origin/main
 );
 $stmt->execute([
     $input['doc_number'],
@@ -171,6 +201,7 @@ $stmt->execute([
     $systemUserId,
     'Enacted',
     $isPublic,
+<<<<<<< HEAD
     $sourceSystem,
     $input['enactment_date'] ?? null,
     $input['ocr_text'] ?? null,
@@ -198,3 +229,14 @@ notify_incoming_document([
 ], $sourceSystem);
 
 echo json_encode(['document_id' => (int)$newId, 'status' => 'Enacted', 'is_public' => false, 'file_path' => $filePath, 'attachment_count' => count($allFilePaths)]);
+=======
+    $input['source_system'] ?? 'System 1 – Ordinance & Resolution Lifecycle',
+    $input['enactment_date'] ?? null,
+    $input['ocr_text'] ?? null,
+]);
+$newId = $pdo->lastInsertId();
+
+log_action('encoding', 'api_ingest', ($input['source_system'] ?? 'external system') . ' → ' . $input['doc_number']);
+
+echo json_encode(['document_id' => (int)$newId, 'status' => 'Enacted']);
+>>>>>>> origin/main

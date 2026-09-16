@@ -89,10 +89,15 @@ function attempt_login($username, $password) {
     $stmt->execute([$user['role_id']]);
     $user['role_name'] = $stmt->fetchColumn();
 
+<<<<<<< HEAD
     // 2FA gate: hold the login until a valid emailed code is entered.
     // (2FA is now set up purely by email — an account can have
     // totp_enabled = 1 with no totp_secret at all.)
     if (!empty($user['totp_enabled'])) {
+=======
+    // 2FA gate: hold the login until a valid TOTP code is entered.
+    if (!empty($user['totp_enabled']) && $user['totp_secret'] !== null && $user['totp_secret'] !== '') {
+>>>>>>> origin/main
         $_SESSION['2fa_user_id'] = (int)$user['id'];
         return '2fa';
     }
@@ -346,6 +351,7 @@ function user_agent_label($userAgent) {
 }
 
 /* ============================================================
+<<<<<<< HEAD
    Login-step email OTP (alternative to the authenticator TOTP
    code on verify_2fa.php)
    ============================================================ */
@@ -401,6 +407,8 @@ function verify_login_otp($user_id, $code) {
 }
 
 /* ============================================================
+=======
+>>>>>>> origin/main
    Password reset (original flows, plus the security flags)
    ============================================================ */
 
@@ -472,6 +480,7 @@ function validate_password_reset_code($email, $code) {
 }
 
 /**
+<<<<<<< HEAD
  * Validate a password reset token (the link-based flow used by
  * reset_password.php). Returns user data if valid, or null if
  * invalid/expired/already used.
@@ -504,6 +513,8 @@ function validate_password_reset_token($token) {
 }
 
 /**
+=======
+>>>>>>> origin/main
  * Reset user password using a verification code.
  * Returns true on success, or false on failure.
  * Clearing the reset clears any forced-change flag and the lockout counters.
@@ -591,4 +602,8 @@ function validate_csrf() {
     ensure_csrf_token();
     $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
     return hash_equals($_SESSION['csrf_token'], $token);
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/main

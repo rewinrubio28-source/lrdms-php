@@ -27,6 +27,7 @@ foreach ($stmt->fetchAll() as $row) {
 }
 $totalDocs     = array_sum($statusCounts);
 $enactedCount  = $statusCounts['Enacted'] ?? 0;
+<<<<<<< HEAD
 $withdrawnCount = $statusCounts['Withdrawn'] ?? 0;
 
 // Replaces the old "In Pipeline" (Draft+Submitted+Under Review) tile — that
@@ -41,6 +42,9 @@ if ($canEncode) {
         "SELECT COUNT(*) FROM documents WHERE verified_at IS NULL AND source_system <> 'Manual Encoding'"
     )->fetchColumn();
 }
+=======
+$pipelineCount = ($statusCounts['Draft'] ?? 0) + ($statusCounts['Submitted'] ?? 0) + ($statusCounts['Under Review'] ?? 0);
+>>>>>>> origin/main
 
 $stmt = $pdo->prepare("SELECT COUNT(*) FROM documents d WHERE $clause AND status = 'Enacted' AND is_public = 1");
 $stmt->execute($params);
@@ -225,8 +229,14 @@ include __DIR__ . '/includes/layout_top.php';
   </div>
   <div class="dash-header__actions">
     <?php if (has_permission('encoding', 'create')): ?>
+<<<<<<< HEAD
       <a href="encoding.php#awaiting-verification" class="btn btn-primary btn-sm">Review Incoming Documents</a>
     <?php endif; ?>
+=======
+      <a href="encoding.php" class="btn btn-primary btn-sm">＋ New Encoding</a>
+    <?php endif; ?>
+    <a href="search.php" class="btn btn-outline-primary btn-sm">Search documents</a>
+>>>>>>> origin/main
   </div>
 </div>
 
@@ -251,6 +261,7 @@ include __DIR__ . '/includes/layout_top.php';
 
   <div class="stat-tile kpi-accent">
     <div class="stat-tile__icon">
+<<<<<<< HEAD
       <?php if ($canEncode): ?>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
       <?php else: ?>
@@ -266,6 +277,13 @@ include __DIR__ . '/includes/layout_top.php';
       <div class="stat-tile__value"><?= number_format($withdrawnCount) ?></div>
       <div class="stat-tile__sub">Formally withdrawn from file</div>
     <?php endif; ?>
+=======
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+    </div>
+    <div class="stat-tile__label">In Pipeline</div>
+    <div class="stat-tile__value"><?= number_format($pipelineCount) ?></div>
+    <div class="stat-tile__sub">Draft + Submitted + Review</div>
+>>>>>>> origin/main
   </div>
 
   <?php if ($canAccess): ?>
@@ -301,7 +319,11 @@ include __DIR__ . '/includes/layout_top.php';
     </header>
     <div class="module-card__body">
       <div class="status-chips">
+<<<<<<< HEAD
         <?php foreach (['Enacted', 'Amended', 'Superseded', 'Withdrawn', 'Rejected'] as $i => $s): ?>
+=======
+        <?php foreach (['Draft', 'Submitted', 'Under Review', 'Enacted', 'Amended', 'Superseded', 'Withdrawn'] as $i => $s): ?>
+>>>>>>> origin/main
           <div class="status-chip <?= $s === 'Enacted' ? 'is-emphasis' : '' ?>">
             <span class="status-chip__num"><?= $statusCounts[$s] ?? 0 ?></span>
             <span class="status-chip__label"><?= htmlspecialchars($s) ?></span>
@@ -595,6 +617,12 @@ include __DIR__ . '/includes/layout_top.php';
         <div class="int-stat"><?= number_format($intOrdsRes) ?></div>
         <div class="int-stat__label">Ordinances &amp; resolutions on file</div>
         <a class="int-link" href="integrations.php?sys=1">View records →</a>
+<<<<<<< HEAD
+=======
+        <div class="int-fns">
+          <span class="int-fn">Encoding</span><span class="int-fn">Repository</span><span class="int-fn">Version Control</span><span class="int-fn">Audit</span>
+        </div>
+>>>>>>> origin/main
       </div>
 
       <!-- Subsystem #2 — Session Management -->
@@ -607,6 +635,12 @@ include __DIR__ . '/includes/layout_top.php';
         <div class="int-stat"><?= number_format($intMinutes) ?></div>
         <div class="int-stat__label">Minutes of session on file</div>
         <a class="int-link" href="integrations.php?sys=2">View records →</a>
+<<<<<<< HEAD
+=======
+        <div class="int-fns">
+          <span class="int-fn">Encoding</span><span class="int-fn">Repository</span><span class="int-fn">Audit</span>
+        </div>
+>>>>>>> origin/main
       </div>
 
       <!-- Subsystem #3 — Agenda & Calendar -->
@@ -618,6 +652,12 @@ include __DIR__ . '/includes/layout_top.php';
         <p class="int-card__desc">Agenda references and linked legislative matters arriving for repository linking.</p>
         <div class="int-empty">Coming soon</div>
         <a class="int-link" href="integrations.php?sys=3">View records →</a>
+<<<<<<< HEAD
+=======
+        <div class="int-fns">
+          <span class="int-fn">Repository</span><span class="int-fn">Retrieval</span><span class="int-fn">Search</span>
+        </div>
+>>>>>>> origin/main
       </div>
 
       <!-- Subsystem #4 — Committee Management -->
@@ -630,6 +670,12 @@ include __DIR__ . '/includes/layout_top.php';
         <div class="int-stat"><?= number_format($intCommitteeReports) ?></div>
         <div class="int-stat__label">Committee reports on file</div>
         <a class="int-link" href="integrations.php?sys=4">View records →</a>
+<<<<<<< HEAD
+=======
+        <div class="int-fns">
+          <span class="int-fn">Repository</span><span class="int-fn">Version Control</span><span class="int-fn">Audit</span>
+        </div>
+>>>>>>> origin/main
       </div>
 
       <!-- Subsystem #5 — Voting & Decision -->
@@ -641,6 +687,12 @@ include __DIR__ . '/includes/layout_top.php';
         <p class="int-card__desc">Decision records and validated vote results stored for future reference.</p>
         <div class="int-empty">Coming soon</div>
         <a class="int-link" href="integrations.php?sys=5">View records →</a>
+<<<<<<< HEAD
+=======
+        <div class="int-fns">
+          <span class="int-fn">Repository</span><span class="int-fn">Audit</span>
+        </div>
+>>>>>>> origin/main
       </div>
 
       <!-- Subsystem #7 — Public Hearing -->
@@ -652,6 +704,12 @@ include __DIR__ . '/includes/layout_top.php';
         <p class="int-card__desc">Hearing records, stakeholder feedback, and response tracking.</p>
         <div class="int-empty">Coming soon</div>
         <a class="int-link" href="integrations.php?sys=7">View records →</a>
+<<<<<<< HEAD
+=======
+        <div class="int-fns">
+          <span class="int-fn">Storage</span><span class="int-fn">Search</span><span class="int-fn">Audit</span>
+        </div>
+>>>>>>> origin/main
       </div>
 
       <!-- Subsystem #8 — Archives (outbound) -->
@@ -664,6 +722,12 @@ include __DIR__ . '/includes/layout_top.php';
         <div class="int-stat"><?= number_format($readyArchival) ?></div>
         <div class="int-stat__label">Enacted records ready to archive</div>
         <a class="int-link" href="integrations.php?sys=8">View records →</a>
+<<<<<<< HEAD
+=======
+        <div class="int-fns">
+          <span class="int-fn">Archival</span><span class="int-fn">Retention</span>
+        </div>
+>>>>>>> origin/main
       </div>
 
       <!-- Subsystem #9 — Research (two-way) -->
@@ -675,6 +739,12 @@ include __DIR__ . '/includes/layout_top.php';
         <p class="int-card__desc">Retrieves records from #6 for analysis, then returns research &amp; analysis reports.</p>
         <div class="int-empty">Coming soon</div>
         <a class="int-link" href="integrations.php?sys=9">View records →</a>
+<<<<<<< HEAD
+=======
+        <div class="int-fns">
+          <span class="int-fn">Search</span><span class="int-fn">Retrieval</span><span class="int-fn">Repository</span>
+        </div>
+>>>>>>> origin/main
       </div>
 
       <!-- Subsystem #10 — Citizen Engagement -->
@@ -686,6 +756,12 @@ include __DIR__ . '/includes/layout_top.php';
         <p class="int-card__desc">Public feedback, proposals, and complaints associated to a legislative matter.</p>
         <div class="int-empty">Coming soon</div>
         <a class="int-link" href="integrations.php?sys=10">View records →</a>
+<<<<<<< HEAD
+=======
+        <div class="int-fns">
+          <span class="int-fn">Record Association</span><span class="int-fn">Storage</span><span class="int-fn">Audit</span>
+        </div>
+>>>>>>> origin/main
       </div>
 
       <!-- Source system summary -->
@@ -712,6 +788,7 @@ include __DIR__ . '/includes/layout_top.php';
   </div>
 </section>
 
+<<<<<<< HEAD
 <!-- Notification Bell Dropdown Panel -->
 <div class="notif-dropdown" id="notif-dropdown">
   <div class="notif-dropdown__header">
@@ -731,6 +808,8 @@ include __DIR__ . '/includes/layout_top.php';
   </div>
 </div>
 
+=======
+>>>>>>> origin/main
 <script>
   // Live dashboard clock + greeting — ticks every 15s so the greeting
   // and time stay correct even if the page is left open all day.
@@ -754,4 +833,9 @@ include __DIR__ . '/includes/layout_top.php';
     setInterval(tick, 15000);
   })();
 </script>
+<<<<<<< HEAD
 <?php include __DIR__ . '/includes/layout_bottom.php'; ?>
+=======
+<?php include __DIR__ . '/includes/layout_bottom.php'; ?>
+
+>>>>>>> origin/main

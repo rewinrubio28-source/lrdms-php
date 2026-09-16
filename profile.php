@@ -68,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = 'Password changed.';
         }
 
+<<<<<<< HEAD
     } elseif ($formAction === 'setup_2fa' || $formAction === 'resend_2fa_email') {
         // No more QR/authenticator app — a 6-digit code is emailed to the
         // account's own address, and entering it confirms & enables 2FA.
@@ -128,13 +129,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare('UPDATE users SET totp_secret = NULL, totp_enabled = 1 WHERE id = ?')
                 ->execute([$user['id']]);
             unset($_SESSION['2fa_pending_email']);
+=======
+    } elseif ($formAction === 'setup_2fa') {
+        // Generate a secret and hold it in the session until a valid code confirms it.
+        $_SESSION['2fa_pending_secret'] = totp_generate_secret();
+
+    } elseif ($formAction === 'confirm_2fa') {
+        $code = trim($_POST['totp_code'] ?? '');
+        $pendingSecret = $_SESSION['2fa_pending_secret'] ?? '';
+        if ($pendingSecret !== '' && verify_totp($pendingSecret, $code)) {
+            $pdo->prepare('UPDATE users SET totp_secret = ?, totp_enabled = 1 WHERE id = ?')
+                ->execute([$pendingSecret, $user['id']]);
+            unset($_SESSION['2fa_pending_secret']);
+>>>>>>> origin/main
             log_action('auth', '2fa_enabled', $user['username']);
             global $__lrdms_current_user;
             $__lrdms_current_user = false;
             $user = current_user();
             $success = 'Two-factor authentication is now enabled.';
         } else {
+<<<<<<< HEAD
             $errors[] = 'That code did not match or has expired. Try again or resend the email.';
+=======
+            $errors[] = 'That code did not match. Check the time on your device and try again.';
+>>>>>>> origin/main
         }
 
     } elseif ($formAction === 'disable_2fa') {
@@ -148,7 +166,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $pdo->prepare('UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?')
                 ->execute([$user['id']]);
+<<<<<<< HEAD
             unset($_SESSION['2fa_pending_email']);
+=======
+>>>>>>> origin/main
             log_action('auth', '2fa_disabled', $user['username']);
             global $__lrdms_current_user;
             $__lrdms_current_user = false;
@@ -183,6 +204,7 @@ $sessions = $pdo->prepare('SELECT * FROM user_sessions WHERE user_id = ? AND is_
 $sessions->execute([$user['id']]);
 $sessions = $sessions->fetchAll();
 
+<<<<<<< HEAD
 $pendingEmail2fa = !empty($_SESSION['2fa_pending_email']);
 
 /**
@@ -194,6 +216,9 @@ function mask_email_for_display_profile($email) {
     $visible = mb_substr($local, 0, 1);
     return $visible . str_repeat('*', max(3, mb_strlen($local) - 1)) . '@' . $domain;
 }
+=======
+$pendingSecret = $_SESSION['2fa_pending_secret'] ?? '';
+>>>>>>> origin/main
 
 include __DIR__ . '/includes/layout_top.php';
 ?>
@@ -263,7 +288,11 @@ include __DIR__ . '/includes/layout_top.php';
       <h3 style="font-size:16px;">Two-factor authentication</h3>
       <?php if ($user['totp_enabled']): ?>
         <div class="d-flex justify-content-between align-items-center">
+<<<<<<< HEAD
           <span class="small">Email code at sign-in: <span class="badge text-bg-success">Enabled</span></span>
+=======
+          <span class="small">Authenticator app: <span class="badge text-bg-success">Enabled</span></span>
+>>>>>>> origin/main
         </div>
         <form method="post" onsubmit="return confirm('Disable two-factor authentication? Your account will only require a password.');">
           <?php csrf_field(); ?>
@@ -271,6 +300,7 @@ include __DIR__ . '/includes/layout_top.php';
           <div class="mb-2"><label class="form-label small">Confirm password to disable 2FA</label><input type="password" name="current_password" class="form-control form-control-sm" required></div>
           <button class="btn btn-outline-danger btn-sm w-100">Disable 2FA</button>
         </form>
+<<<<<<< HEAD
         <p class="text-muted small mt-2 mb-0">On your next sign-in you will be asked for a 6-digit code emailed to you.</p>
       <?php elseif ($pendingEmail2fa): ?>
         <p class="small text-muted mb-3">We emailed a 6-digit code to <strong><?= htmlspecialchars(mask_email_for_display_profile($user['email'])) ?></strong>. Enter it below to enable 2FA. It expires in 10 minutes.</p>
@@ -285,11 +315,31 @@ include __DIR__ . '/includes/layout_top.php';
           <input type="hidden" name="form_action" value="resend_2fa_email">
           <button class="btn btn-outline-secondary btn-sm w-100">Resend code to my email</button>
         </form>
+=======
+        <p class="text-muted small mt-2 mb-0">On your next sign-in you will be asked for a 6-digit code from your authenticator app.</p>
+      <?php elseif ($pendingSecret): ?>
+        <?php $otpauth = totp_uri($user['username'], $pendingSecret); ?>
+        <div class="text-center mb-3">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<?= rawurlencode($otpauth) ?>" alt="QR code" class="img-thumbnail" style="max-width:180px;">
+          <p class="small text-muted mt-2 mb-0">Scan with Google Authenticator (or any TOTP app). If the QR won't load, enter the secret below manually:</p>
+          <code class="d-inline-block mt-1 p-1 rounded bg-body-secondary"><?= htmlspecialchars($pendingSecret) ?></code>
+        </div>
+        <form method="post">
+          <input type="hidden" name="form_action" value="confirm_2fa">
+          <div class="mb-2"><label class="form-label small">Enter the 6-digit code from your app</label><input type="text" name="totp_code" class="form-control form-control-sm" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required></div>
+          <button class="btn btn-success btn-sm w-100">Verify &amp; enable</button>
+          <?php csrf_field(); ?>
+        </form>
+>>>>>>> origin/main
       <?php else: ?>
         <form method="post">
           <?php csrf_field(); ?>
           <input type="hidden" name="form_action" value="setup_2fa">
+<<<<<<< HEAD
           <p class="text-muted small">Add an extra layer of security. A 6-digit code will be sent to your email each time you sign in.</p>
+=======
+          <p class="text-muted small">Add an extra layer of security with an authenticator app.</p>
+>>>>>>> origin/main
           <button class="btn btn-primary btn-sm w-100">Set up 2FA</button>
         </form>
       <?php endif; ?>
@@ -355,4 +405,8 @@ include __DIR__ . '/includes/layout_top.php';
 })();
 </script>
 
+<<<<<<< HEAD
 <?php include __DIR__ . '/includes/layout_bottom.php'; ?>
+=======
+<?php include __DIR__ . '/includes/layout_bottom.php'; ?>
+>>>>>>> origin/main

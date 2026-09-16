@@ -110,9 +110,14 @@ CREATE TABLE documents (
   sponsor             VARCHAR(150),
   committee_id        INT NULL,
   owner_id            INT NOT NULL,
+<<<<<<< HEAD
   status              ENUM('Draft','Submitted','Under Review','Enacted','Amended','Superseded','Withdrawn','Rejected') NOT NULL DEFAULT 'Draft',
   is_public           TINYINT(1) NOT NULL DEFAULT 0,
   verified_at         DATETIME NULL,   -- NULL = not yet reviewed by a Records Officer (Awaiting Verification queue)
+=======
+  status              ENUM('Draft','Submitted','Under Review','Enacted','Amended','Superseded','Withdrawn') NOT NULL DEFAULT 'Draft',
+  is_public           TINYINT(1) NOT NULL DEFAULT 0,
+>>>>>>> origin/main
   source_system       VARCHAR(100) NOT NULL DEFAULT 'Manual Encoding',
   enactment_date      DATE NULL,
   file_path           VARCHAR(500),
@@ -129,6 +134,7 @@ CREATE TABLE documents (
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
+<<<<<<< HEAD
 -- RECENTLY VIEWED DOCUMENTS
 -- Tracks documents recently viewed by each authenticated user.
 -- Uses UPSERT (ON DUPLICATE KEY UPDATE) to keep only the latest
@@ -147,6 +153,8 @@ CREATE TABLE recently_viewed_documents (
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
+=======
+>>>>>>> origin/main
 -- CHANGE ANNOTATIONS  ("why was this revised")
 -- ------------------------------------------------------------
 CREATE TABLE document_change_notes (
@@ -160,6 +168,7 @@ CREATE TABLE document_change_notes (
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
+<<<<<<< HEAD
 -- DOCUMENT ATTACHMENTS  (multiple files per document, e.g. a
 -- multi-page bill scanned as separate images)
 -- documents.file_path stays the primary/first file and is untouched by
@@ -178,6 +187,8 @@ CREATE TABLE document_attachments (
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
+=======
+>>>>>>> origin/main
 -- DOCUMENT RELATIONSHIPS
 -- Legislative relationships between documents (Amends, Repeals,
 -- Substitutes, Consolidates, or simply Related). Recorded once from
@@ -276,6 +287,7 @@ CREATE TABLE password_reset_codes (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+<<<<<<< HEAD
 -- ------------------------------------------------------------
 -- LOGIN OTP CODES
 -- Email-delivered one-time codes, used as an alternative to the
@@ -318,6 +330,8 @@ CREATE TABLE notifications (
   KEY idx_user_unread (user_id, is_read, created_at)
 ) ENGINE=InnoDB;
 
+=======
+>>>>>>> origin/main
 -- ============================================================
 -- SEED: static lookup data
 -- ============================================================
@@ -397,4 +411,8 @@ SELECT r.id, p.id FROM roles r JOIN permissions p ON
   (p.module = 'repository' AND p.action = 'view_committee') OR
   (p.module = 'encoding' AND p.action = 'create') OR
   (p.module = 'search' AND p.action = 'run')
+<<<<<<< HEAD
 WHERE r.name = 'Committee Secretary';
+=======
+WHERE r.name = 'Committee Secretary';
+>>>>>>> origin/main

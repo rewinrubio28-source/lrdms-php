@@ -84,6 +84,7 @@ foreach ($demoUsers as [$username, $fullName, $password, $roleName, $committeeNa
     $createdIds[$username] = $pdo->lastInsertId();
 }
 
+<<<<<<< HEAD
 // ------------------------------------------------------------
 // Reserved "system integration" account.
 // Used only as the owner_id attribution for documents pushed in by an
@@ -113,18 +114,25 @@ if (!$sysUserId) {
 }
 $createdIds['system.integration'] = $sysUserId;
 
+=======
+>>>>>>> origin/main
 // Sample documents — only inserted if the repository is currently empty,
 // so re-running this script is safe and won't duplicate data.
 $count = $pdo->query('SELECT COUNT(*) FROM documents')->fetchColumn();
 if ($count == 0) {
     $officerId = $createdIds['rofficer'];
+<<<<<<< HEAD
     $sysUserId = $createdIds['system.integration'];
+=======
+    $staffId = $createdIds['staff'];
+>>>>>>> origin/main
 
     $samples = [
         ['2024-077', 'Ordinance No. 2024-077 — An Ordinance Establishing a Local Traffic Management Scheme', 'Ordinance', 'Councilor R. Santos', 'Amended', 1, '2024-11-08'],
         ['2026-014', 'Ordinance No. 2026-014 — An Ordinance Amending the Traffic Management Scheme', 'Ordinance', 'Councilor R. Santos', 'Enacted', 1, '2026-02-20'],
         ['2026-045', 'Ordinance No. 2026-045 — An Ordinance Regulating Fare Adjustments for Public Utility Vehicles', 'Ordinance', 'Councilor A. Reyes', 'Enacted', 1, '2026-05-04'],
         ['2026-021', "Resolution No. 2026-021 — A Resolution Expressing Support for the City's Urban Greening Program", 'Resolution', 'Councilor L. Dizon', 'Enacted', 1, '2026-04-02'],
+<<<<<<< HEAD
     ];
 
     $stmt = $pdo->prepare(
@@ -156,6 +164,21 @@ if ($count == 0) {
         'System 1 – Ordinance & Resolution Lifecycle', '2026-06-30',
     ]);
 
+=======
+        ['2026-090', 'Resolution No. 2026-090 — A Resolution on Youth Development Programs (Draft)', 'Resolution', 'Councilor L. Dizon', 'Draft', 0, null],
+    ];
+
+    $stmt = $pdo->prepare(
+        'INSERT INTO documents (doc_number, title, doc_type, sponsor, owner_id, status, is_public, source_system, enactment_date)
+         VALUES (?,?,?,?,?,?,?,?,?)'
+    );
+    foreach ($samples as $s) {
+        [$num, $title, $type, $sponsor, $status, $public, $date] = $s;
+        $owner = $status === 'Draft' ? $staffId : $officerId;
+        $stmt->execute([$num, $title, $type, $sponsor, $owner, $status, $public, 'Manual Encoding', $date]);
+    }
+
+>>>>>>> origin/main
     // Link the amendment chain: 2024-077 was amended into 2026-014.
     $oldId = $pdo->query("SELECT id FROM documents WHERE doc_number = '2024-077'")->fetchColumn();
     $newId = $pdo->query("SELECT id FROM documents WHERE doc_number = '2026-014'")->fetchColumn();
@@ -174,7 +197,13 @@ if ($count == 0) {
   <li><strong><?= htmlspecialchars($username) ?></strong> / <?= htmlspecialchars($password) ?> — <?= htmlspecialchars($roleName) ?></li>
 <?php endforeach; ?>
 </ul>
+<<<<<<< HEAD
 <p><strong>system.integration</strong> — reserved account, not a login (used as owner_id for documents auto-ingested via <code>api/upload_document.php</code>).</p>
 <p><a href="../login.php">Go to login →</a></p>
 <p style="color:#C62828;"><strong>Delete this file (database/seed.php), or move it outside the web root, once you're done with it.</strong></p>
 </body></html>
+=======
+<p><a href="../login.php">Go to login →</a></p>
+<p style="color:#C62828;"><strong>Delete this file (database/seed.php), or move it outside the web root, once you're done with it.</strong></p>
+</body></html>
+>>>>>>> origin/main

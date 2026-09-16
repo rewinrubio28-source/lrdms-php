@@ -43,7 +43,10 @@
 
   --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   --glow-primary: rgba(74, 130, 188, 0.16);
+<<<<<<< HEAD
   --glow-radiant: rgba(79, 172, 232, 0.14);
+=======
+>>>>>>> origin/main
 
   /* Soft (translucent) chips — used by stamps, badges, stat icons */
   --primary-soft-bg:    rgba(74, 130, 188, 0.22);
@@ -102,7 +105,10 @@ html:not(.dark) {
 
   --card-shadow: 0 1px 3px rgba(17, 45, 78, 0.08);
   --glow-primary: rgba(63, 114, 175, 0.08);
+<<<<<<< HEAD
   --glow-radiant: rgba(58, 150, 220, 0.12);
+=======
+>>>>>>> origin/main
 
   /* Palette — reuses style.css variable names so those rules recolor */
   --primary:       #3F72AF;
@@ -237,6 +243,7 @@ a:hover { color: var(--bs-link-hover-color); }
   border-left-color: #F9F7F7;
 }
 
+<<<<<<< HEAD
 /* ─── Header actions group (bell + account menu) ────────────── */
 .header-actions-group {
   display: flex;
@@ -369,6 +376,8 @@ a:hover { color: var(--bs-link-hover-color); }
 .notif-bell__item--unread:hover { background: var(--hover-bg2); }
 .notif-bell__item--unread .notif-bell__item-msg { font-weight: 600; color: var(--text-primary); }
 
+=======
+>>>>>>> origin/main
 /* ─── Account menu (avatar → profile / dark mode / logout) ─── */
 .account-menu {
   position: relative;
@@ -491,6 +500,7 @@ html.dark .account-menu__switch-knob { transform: translateX(14px); }
   margin-left: var(--sidebar-width, 260px);
   padding: 24px;
   min-height: 100vh;
+<<<<<<< HEAD
   min-width: 0; /* flex children default to min-width:auto, which refuses to
                    shrink below their content's intrinsic width — that's
                    what was forcing the whole page wider than the viewport
@@ -499,6 +509,10 @@ html.dark .account-menu__switch-knob { transform: translateX(14px); }
     radial-gradient(1600px 1100px at 50% 30%, var(--glow-radiant), transparent 75%);
   background-repeat: no-repeat;
   background-attachment: fixed;
+=======
+  background-image: radial-gradient(1100px 480px at 50% -120px, var(--glow-primary), transparent 70%);
+  background-repeat: no-repeat;
+>>>>>>> origin/main
 }
 
 .topbar { border-bottom-color: var(--border); }
@@ -516,6 +530,7 @@ html.dark .account-menu__switch-knob { transform: translateX(14px); }
 .card p { color: var(--text-muted); }
 .text-muted { color: var(--text-muted) !important; }
 
+<<<<<<< HEAD
 /* ─── Document cards (repository list) ───────────────────────
    Card-per-document layout for repository.php, styled after the
    client's own bill-tracker reference: header bar with the doc
@@ -536,6 +551,8 @@ html.dark .account-menu__switch-knob { transform: translateX(14px); }
 .doc-card__value--title { font-weight: 700; color: var(--text-primary); }
 .doc-card__actions { padding: 10px 18px 16px; display: flex; gap: 8px; }
 
+=======
+>>>>>>> origin/main
 /* ─── Buttons ─────────────────────────────────────────────── */
 .btn { border-radius: 8px; }
 .btn-primary { background: var(--primary); color: #fff; border: 1px solid var(--primary); }
@@ -624,12 +641,20 @@ html.dark .account-menu__switch-knob { transform: translateX(14px); }
 .stamp--amended        { background: var(--warning-soft-bg); color: var(--warning-soft-text); }
 .stamp--superseded     { background: var(--danger-soft-bg);  color: var(--danger-soft-text); }
 .stamp--withdrawn      { background: var(--surface3);        color: var(--text-subtle); }
+<<<<<<< HEAD
 .stamp--rejected       { background: var(--danger-soft-bg);  color: var(--danger-soft-text); }
 
 /* ─── Document list / search result items ─────────────────── */
 .doc-title { color: var(--text-primary); font-weight: 600; text-decoration: none; overflow-wrap: anywhere; word-break: break-word; }
 .doc-title:hover { color: var(--primary-light); }
 .doc-number { font-size: 12px; color: var(--text-subtle); font-family: 'JetBrains Mono', ui-monospace, monospace; overflow-wrap: anywhere; word-break: break-word; }
+=======
+
+/* ─── Document list / search result items ─────────────────── */
+.doc-title { color: var(--text-primary); font-weight: 600; text-decoration: none; }
+.doc-title:hover { color: var(--primary-light); }
+.doc-number { font-size: 12px; color: var(--text-subtle); font-family: 'JetBrains Mono', ui-monospace, monospace; }
+>>>>>>> origin/main
 
 .result-item {
   padding: 14px 0;
@@ -647,10 +672,13 @@ html.dark .account-menu__switch-knob { transform: translateX(14px); }
 .audit-list time { color: var(--text-subtle); }
 .audit-list .actor { color: var(--text-secondary); }
 
+<<<<<<< HEAD
 .audit-table { font-size: 13px; margin-bottom: 0; }
 .audit-table thead th { position: sticky; top: 0; background: var(--surface, #fff); border-bottom: 1px solid var(--border); }
 .audit-table td, .audit-table th { vertical-align: top; }
 
+=======
+>>>>>>> origin/main
 /* ─── Pagination (audit trail) ──────────────────────────── */
 .audit-pagination {
   display: flex;
@@ -1029,6 +1057,19 @@ html.dark .account-menu__switch-knob { transform: translateX(14px); }
   text-decoration: none;
 }
 .int-link:hover { color: var(--accent-light); }
+<<<<<<< HEAD
+=======
+.int-fns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 12px; }
+.int-fn {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-subtle);
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+>>>>>>> origin/main
 
 /* ─── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1100px) {
@@ -1216,6 +1257,7 @@ html.dark .modal .btn-close { filter: invert(1); }
   .lrdms-result-actions { flex-direction: row; }
   .lrdms-profile-head { flex-direction: column; }
   .lrdms-profile-status { text-align: left; }
+<<<<<<< HEAD
 }
 
 /* ── Repository live filters (auto-updating results) ── */
@@ -1231,4 +1273,6 @@ html.dark .modal .btn-close { filter: invert(1); }
   border-color: #16a34a !important;
   background-color: rgba(22, 163, 74, .06);
   box-shadow: 0 0 0 1px rgba(22, 163, 74, .2);
+=======
+>>>>>>> origin/main
 }

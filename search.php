@@ -162,7 +162,11 @@ include __DIR__ . '/includes/layout_top.php';
     <div class="col-md-2">
       <select name="status" class="form-select form-select-sm">
         <option value="">All Status</option>
+<<<<<<< HEAD
         <?php foreach (['Enacted','Amended','Superseded','Withdrawn','Rejected'] as $s): ?>
+=======
+        <?php foreach (['Draft','Submitted','Under Review','Enacted','Amended','Superseded','Withdrawn'] as $s): ?>
+>>>>>>> origin/main
           <option value="<?= $s ?>" <?= $statusFilter === $s ? 'selected' : '' ?>><?= $s ?></option>
         <?php endforeach; ?>
       </select>

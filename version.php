@@ -37,16 +37,25 @@ function fetch_doc_row($pdo, $id) {
 /** Walks previous_version_id back to the root, then next_version_id forward. Returns oldest -> newest. */
 function version_chain($pdo, $doc) {
     $head = $doc;
+<<<<<<< HEAD
     while (!empty($head['previous_version_id'])) {
         $prev = fetch_doc_row($pdo, $head['previous_version_id']);
         if (!$prev) break; // broken link (points to a row that no longer exists) — stop walking back from here
         $head = $prev;
+=======
+    while ($head['previous_version_id']) {
+        $head = fetch_doc_row($pdo, $head['previous_version_id']);
+>>>>>>> origin/main
     }
     $chain = [];
     $walker = $head;
     while ($walker) {
         $chain[] = $walker;
+<<<<<<< HEAD
         $walker = !empty($walker['next_version_id']) ? fetch_doc_row($pdo, $walker['next_version_id']) : null;
+=======
+        $walker = $walker['next_version_id'] ? fetch_doc_row($pdo, $walker['next_version_id']) : null;
+>>>>>>> origin/main
     }
     return $chain;
 }
@@ -115,7 +124,11 @@ function _render_diff($diff) {
 $message = '';
 $errors = [];
 
+<<<<<<< HEAD
 if (isset($_GET['restored'])) $message = 'Restored earlier content as a new, separately-numbered document.';
+=======
+if (isset($_GET['restored'])) $message = 'Restored an earlier version as the new current version.';
+>>>>>>> origin/main
 
 // ------------------------------------------------------------
 // ROLLBACK / RESTORE
@@ -140,6 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'rollb
             } elseif (in_array($head['status'], ['Superseded', 'Withdrawn'], true)) {
                 $errors[] = 'This document is closed and cannot be restored.';
             } else {
+<<<<<<< HEAD
                 // A restore still files a new legislative instrument (it just happens to
                 // carry forward old content), so it needs its own doc_number too — same
                 // rule as document.php's amend action, never a copy of an existing number.
@@ -155,11 +169,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'rollb
                 }
 
                 if (!$errors) {
+=======
+>>>>>>> origin/main
                 $newId = null;
                 $pdo->beginTransaction();
                 try {
                     $stmt = $pdo->prepare(
                         'INSERT INTO documents
+<<<<<<< HEAD
                            (doc_number, title, doc_type, sponsor, committee_id, owner_id, status, is_public, verified_at,
                             source_system, enactment_date, file_path, ocr_text, previous_version_id)
                          VALUES (?,?,?,?,?,?,?,?,NOW(),?,?,?,?,?)'
@@ -170,6 +187,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'rollb
                     // encoding.php's "Awaiting Verification" queue.
                     $stmt->execute([
                         $newDocNumber, $target['title'], $target['doc_type'], $target['sponsor'],
+=======
+                           (doc_number, title, doc_type, sponsor, committee_id, owner_id, status, is_public,
+                            source_system, enactment_date, file_path, ocr_text, previous_version_id)
+                         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'
+                    );
+                    $stmt->execute([
+                        $target['doc_number'], $target['title'], $target['doc_type'], $target['sponsor'],
+>>>>>>> origin/main
                         $target['committee_id'], $user['id'], 'Enacted', $head['is_public'],
                         $head['source_system'], $target['enactment_date'], $target['file_path'], $target['ocr_text'],
                         $head['id'],
@@ -182,7 +207,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'rollb
                     $userNote = trim($_POST['rollback_note'] ?? '');
                     $noteText = $userNote !== ''
                         ? $userNote
+<<<<<<< HEAD
                         : 'Restored content from ' . $target['doc_number'] . ', enacted '
+=======
+                        : 'Restored content from the version enacted '
+>>>>>>> origin/main
                             . ($target['enactment_date'] ? date('M j, Y', strtotime($target['enactment_date'])) : 'on an earlier, undated version') . '.';
                     $pdo->prepare('INSERT INTO document_change_notes (document_id, note, created_by) VALUES (?,?,?)')
                         ->execute([$newId, $noteText, $user['id']]);
@@ -195,11 +224,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'rollb
                 }
 
                 if (!empty($newId)) {
+<<<<<<< HEAD
                     log_action('version', 'rolled_back', $target['doc_number'] . ' — restored as new document ' . $newDocNumber . ' (#' . $newId . '), replacing current #' . $head['id']);
                     header('Location: version.php?doc=' . $newId . '&tab=rollback&restored=1#version-tabs');
                     exit;
                 }
                 }
+=======
+                    log_action('version', 'rolled_back', $target['doc_number'] . ' — restored version #' . $targetId . ' as new current version #' . $newId);
+                    header('Location: version.php?doc=' . $newId . '&tab=rollback&restored=1#version-tabs');
+                    exit;
+                }
+>>>>>>> origin/main
             }
         }
     }
@@ -268,6 +304,7 @@ $heads = $stmt->fetchAll();
 $selectedId = (int)($_GET['doc'] ?? 0);
 $selected = null;
 foreach ($heads as $h) { if ((int)$h['id'] === $selectedId) { $selected = $h; break; } }
+<<<<<<< HEAD
 // No auto-fallback to $heads[0] here on purpose: landing on this page with no
 // ?doc= (no search performed, no picker selection yet) must show an empty
 // state, not silently reveal whichever document sorts first.
@@ -283,6 +320,9 @@ if ($selected) {
     $selectedFiles = array_column($attStmt->fetchAll(), 'file_path');
     if (!$selectedFiles && $selected['file_path']) $selectedFiles = [$selected['file_path']];
 }
+=======
+if (!$selected && $heads) $selected = $heads[0];
+>>>>>>> origin/main
 
 $committeeName = null;
 if ($selected && $selected['committee_id']) {
@@ -340,9 +380,12 @@ include __DIR__ . '/includes/layout_top.php';
   .vtimeline__icon--original { background:#6366f1; }
   .vtimeline__icon--amend { background:var(--lrdms-gold); }
   .vtimeline__icon--rollback { background:#10b981; }
+<<<<<<< HEAD
 
   /* ── AJAX tab switch feedback ── */
   #version-tabs.lrdms-tab-loading { opacity:.55; transition:opacity .12s ease; pointer-events:none; }
+=======
+>>>>>>> origin/main
 </style>
 
 <?php if ($message): ?><div class="alert alert-success"><?= htmlspecialchars($message) ?></div><?php endif; ?>
@@ -369,7 +412,11 @@ include __DIR__ . '/includes/layout_top.php';
     </select>
     <select id="lrdms-filter-status" class="form-select form-select-sm">
       <option value="">All Status</option>
+<<<<<<< HEAD
       <?php foreach (['Enacted','Amended','Superseded','Withdrawn','Rejected'] as $s): ?>
+=======
+      <?php foreach (['Draft','Submitted','Under Review','Enacted','Amended','Superseded','Withdrawn'] as $s): ?>
+>>>>>>> origin/main
         <option value="<?= $s ?>"><?= $s ?></option>
       <?php endforeach; ?>
     </select>
@@ -532,10 +579,18 @@ include __DIR__ . '/includes/layout_top.php';
           <?php endif; ?>
 
           <h4 class="lrdms-subhead mt-3">Document file</h4>
+<<<<<<< HEAD
           <?php if ($selectedFiles): ?>
             <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filePreviewModal" data-files="<?= htmlspecialchars(json_encode($selectedFiles), ENT_QUOTES, 'UTF-8') ?>">
               <i class="bi bi-file-earmark-text"></i> Preview current version<?= count($selectedFiles) > 1 ? ' (' . count($selectedFiles) . ' files)' : '' ?>
             </button>
+=======
+          <?php if ($selected['file_path']): ?>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filePreviewModal" data-file="<?= htmlspecialchars($selected['file_path']) ?>">
+              <i class="bi bi-file-earmark-text"></i> Preview current version
+            </button>
+            <a href="<?= htmlspecialchars($selected['file_path']) ?>" class="btn btn-sm btn-outline-secondary" target="_blank">Download</a>
+>>>>>>> origin/main
           <?php else: ?>
             <p class="text-muted small">No file attached to the current version.</p>
           <?php endif; ?>
@@ -716,25 +771,43 @@ include __DIR__ . '/includes/layout_top.php';
       <?php if (!has_permission('version', 'rollback')): ?>
         <div class="alert alert-warning mb-0">🔒 Your role cannot restore prior versions. This action is limited to Records Officers.</div>
       <?php else: ?>
+<<<<<<< HEAD
         <p class="text-muted small">Restoring a version files it as a new, separately-numbered document — it does not delete history.</p>
         <?php foreach ($chainDesc as $i => $node): $vNum = $chainTotal - $i; $isCurrent = $i === 0; ?>
           <div class="rollback-row <?= $isCurrent ? 'is-current' : '' ?>">
             <div>
               <strong>v<?= $vNum ?>.0</strong> — <?= htmlspecialchars($node['doc_number']) ?> · <?= $node['enactment_date'] ? htmlspecialchars(date('M j, Y', strtotime($node['enactment_date']))) : '—' ?>
+=======
+        <p class="text-muted small">Restoring a version does not delete history.</p>
+        <?php foreach ($chainDesc as $i => $node): $vNum = $chainTotal - $i; $isCurrent = $i === 0; ?>
+          <div class="rollback-row <?= $isCurrent ? 'is-current' : '' ?>">
+            <div>
+              <strong>v<?= $vNum ?>.0</strong> — <?= $node['enactment_date'] ? htmlspecialchars(date('M j, Y', strtotime($node['enactment_date']))) : '—' ?>
+>>>>>>> origin/main
               · <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $node['status'])) ?>"><?= htmlspecialchars($node['status']) ?></span>
             </div>
             <?php if ($isCurrent): ?>
               <span class="text-muted small">This is the current version.</span>
             <?php else: ?>
+<<<<<<< HEAD
               <form method="post" onsubmit="return confirm('Restore v<?= $vNum ?>.0 (<?= htmlspecialchars($node['doc_number']) ?>) as a new document? This will be filed as a new instrument in the history.');">
+=======
+              <form method="post" onsubmit="return confirm('Restore v<?= $vNum ?>.0 as the new current version? This will be recorded as a new version in the history.');">
+>>>>>>> origin/main
                 <?php csrf_field(); ?>
                 <input type="hidden" name="action" value="rollback">
                 <input type="hidden" name="target_id" value="<?= $node['id'] ?>">
                 <div class="mt-2 mb-2">
+<<<<<<< HEAD
                   <input type="text" name="new_doc_number" class="form-control form-control-sm mb-2" placeholder="New document number (e.g. 2026-045)" required>
                   <textarea name="rollback_note" class="form-control form-control-sm" rows="2" placeholder="Reason for restoring this version (optional)" style="resize:vertical;"></textarea>
                 </div>
                 <button class="btn btn-outline-primary btn-sm">Restore as new document</button>
+=======
+                  <textarea name="rollback_note" class="form-control form-control-sm" rows="2" placeholder="Reason for restoring this version (optional)" style="resize:vertical;"></textarea>
+                </div>
+                <button class="btn btn-outline-primary btn-sm">Restore this version</button>
+>>>>>>> origin/main
               </form>
             <?php endif; ?>
           </div>
@@ -742,6 +815,7 @@ include __DIR__ . '/includes/layout_top.php';
       <?php endif; ?>
     <?php endif; ?>
     </div>
+<<<<<<< HEAD
   <?php elseif ($heads): ?>
     <div class="card lrdms-profile-card">
       <p class="text-muted mb-0">
@@ -749,6 +823,8 @@ include __DIR__ . '/includes/layout_top.php';
         Search or pick a document above to view its version details, files, and history.
       </p>
     </div>
+=======
+>>>>>>> origin/main
   <?php endif; ?>
 
 <div class="modal fade" id="filePreviewModal" tabindex="-1" aria-labelledby="filePreviewModalLabel" aria-hidden="true">
@@ -758,11 +834,14 @@ include __DIR__ . '/includes/layout_top.php';
         <h5 class="modal-title" id="filePreviewModalLabel">Document file</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+<<<<<<< HEAD
       <div id="filePreviewNav" class="justify-content-between align-items-center px-3 py-2 border-bottom" style="display:none;">
         <button type="button" id="filePreviewPrev" class="btn btn-outline-secondary btn-sm">&larr; Prev</button>
         <span id="filePreviewCounter" class="small text-muted"></span>
         <button type="button" id="filePreviewNext" class="btn btn-outline-secondary btn-sm">Next &rarr;</button>
       </div>
+=======
+>>>>>>> origin/main
       <div class="modal-body p-0 d-flex justify-content-center align-items-center" style="min-height:70vh;">
         <iframe id="filePreviewIframe" style="width:100%; height:70vh; border:none; display:none;" title="Document file preview"></iframe>
         <img id="filePreviewImg" style="max-width:100%; max-height:70vh; object-fit:contain; display:none;" alt="Document image preview">
@@ -780,14 +859,18 @@ include __DIR__ . '/includes/layout_top.php';
 (function () {
   var modalEl = document.getElementById('filePreviewModal');
   if (!modalEl) return;
+<<<<<<< HEAD
 
   var files = [];
   var currentIndex = 0;
 
+=======
+>>>>>>> origin/main
   function isImage(fp) {
     var ext = fp.split('.').pop().toLowerCase();
     return ['jpg','jpeg','png','gif','webp','bmp','svg'].indexOf(ext) !== -1;
   }
+<<<<<<< HEAD
 
   function showFile(index) {
     if (!files.length) return;
@@ -801,6 +884,14 @@ include __DIR__ . '/includes/layout_top.php';
     var prev = document.getElementById('filePreviewPrev');
     var next = document.getElementById('filePreviewNext');
     var counter = document.getElementById('filePreviewCounter');
+=======
+  modalEl.addEventListener('show.bs.modal', function (event) {
+    var trigger = event.relatedTarget;
+    var filePath = trigger.getAttribute('data-file');
+    var iframe = document.getElementById('filePreviewIframe');
+    var img = document.getElementById('filePreviewImg');
+    var fullLink = document.getElementById('filePreviewFullLink');
+>>>>>>> origin/main
 
     if (isImage(filePath)) {
       img.src = filePath;
@@ -813,6 +904,7 @@ include __DIR__ . '/includes/layout_top.php';
       img.style.display = 'none';
       img.src = '';
     }
+<<<<<<< HEAD
 
     fullLink.href = filePath;
 
@@ -853,11 +945,16 @@ include __DIR__ . '/includes/layout_top.php';
     showFile(currentIndex + 1);
   });
 
+=======
+    fullLink.href = filePath;
+  });
+>>>>>>> origin/main
   modalEl.addEventListener('hidden.bs.modal', function () {
     var iframe = document.getElementById('filePreviewIframe');
     var img = document.getElementById('filePreviewImg');
     iframe.src = 'about:blank';
     img.src = '';
+<<<<<<< HEAD
     files = [];
     currentIndex = 0;
   });
@@ -935,3 +1032,8 @@ include __DIR__ . '/includes/layout_top.php';
   });
 })();
 </script>
+=======
+  });
+})();
+</script>
+>>>>>>> origin/main

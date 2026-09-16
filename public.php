@@ -36,6 +36,7 @@ $typeFilter = in_array($typeFilter, $publicTypes, true) ? $typeFilter : 'All';
 $typeLabel = $typeHeadingLabels[$typeFilter] ?? $typeFilter . 's';
 
 // Load all public documents; client-side JS handles type filtering (no page refresh).
+<<<<<<< HEAD
 // Same rule as includes/rbac.php's document_visibility_clause() for anonymous
 // visitors — is_public is the persistent "was this authorized to be public"
 // flag; a document keeps showing here after being Amended/Withdrawn/Superseded
@@ -45,6 +46,12 @@ $publicDocs = get_db()->query(
     "SELECT d.id, d.doc_number, d.title, d.doc_type, d.sponsor, d.enactment_date
      FROM documents d
      WHERE d.is_public = 1 AND d.status NOT IN ('Draft','Submitted','Under Review')
+=======
+$publicDocs = get_db()->query(
+    "SELECT d.id, d.doc_number, d.title, d.doc_type, d.sponsor, d.enactment_date
+     FROM documents d
+     WHERE d.is_public = 1 AND d.status IN ('Enacted','Amended','Superseded')
+>>>>>>> origin/main
        AND d.doc_type <> 'Other'
      ORDER BY d.enactment_date DESC, d.created_at DESC"
 )->fetchAll();
@@ -305,12 +312,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
     section, .section {
       background-color: transparent !important;
     }
+<<<<<<< HEAD
     /* About/Features/Process/Legislation/Contact still carry Arsha's
        .dark-background preset in the markup below (so their CSS variables
        default to the navy/white scheme), but the override block further
        down (search "About Us pababa") forces a plain white background on
        those five sections and flips their text/heading color to navy blue
        instead — the tinted hero photo now only shows behind Home/#hero. */
+=======
+    /* About/Features/Process/Legislation/Contact now use Arsha's own
+       .dark-background preset (added on each <section> below) instead of
+       being forced white — so the tinted hero photo keeps showing through
+       behind them via the transparent .section rule above, matching the
+       reference site's continuous colored background instead of a plain
+       white block starting at "About Us". */
+>>>>>>> origin/main
     .sitename {
       color: var(--arsha-heading) !important;
     }
@@ -339,9 +355,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       color: #ffffff !important;
       text-shadow: 1px 1px 0 #000000, -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;
     }
+<<<<<<< HEAD
     /* Section + info-item headings follow Arsha's own heading-color
        cascade, which the override below repoints to navy blue on all
        five white sections (About Us pababa). */
+=======
+    /* Section + info-item headings now follow Arsha's own heading-color
+       cascade (white, via .dark-background on each section below) instead
+       of being forced navy — navy text on the tinted photo was unreadable. */
+>>>>>>> origin/main
     .read-more {
       color: var(--arsha-accent) !important;
     }
@@ -356,6 +378,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       background-color: transparent !important;
     }
 
+<<<<<<< HEAD
     /* --- About Us pababa: white background, blue instead of white --- */
     /* From "About Us" on down (Features, Process, Legislation, Contact),
        flip the tinted-photo/dark-background look to a plain white section
@@ -373,6 +396,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       background-repeat: no-repeat !important;
       background-attachment: fixed !important;
     }
+=======
+    /* About, Features, Process, Contact now share the same dark
+       tinted-photo background as the Legislation section (via
+       .dark-background on each <section> below) instead of a plain
+       white card — Home/#hero keeps its own pure bg.jpg, untouched. */
+>>>>>>> origin/main
 
     /* Features and Process cards are informational only (no links) —
        kill the template's hover lift/movement animation on both. */
@@ -679,12 +708,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       margin-bottom: 14px;
     }
     .legis-empty-msg {
+<<<<<<< HEAD
       color: rgba(55, 81, 126, 0.65);
+=======
+      color: rgba(255, 255, 255, 0.75);
+>>>>>>> origin/main
       font-size: 15px;
       margin: 0;
     }
     #legislation .text-muted {
+<<<<<<< HEAD
       color: rgba(55, 81, 126, 0.65) !important;
+=======
+      color: rgba(255, 255, 255, 0.75) !important;
+>>>>>>> origin/main
     }
   </style>
 
@@ -1056,8 +1093,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
         <div class="modal-body">
           <div class="login-split">
             <div class="login-brand-panel">
+<<<<<<< HEAD
               <div class="login-brand-icon" style="background: transparent; padding: 0; width: 170px; height: 170px; margin-bottom: 12px;">
                 <img src="Arsha/assets/img/manila logo.png" alt="Manila City Hall" style="width: 160px; height: 160px; object-fit: contain;">
+=======
+              <div class="login-brand-icon" style="background: transparent; padding: 0;">
+                <img src="Arsha/assets/img/manila logo.png" alt="Manila City Hall" style="width: 50px; height: 50px; object-fit: contain;">
+>>>>>>> origin/main
               </div>
               <h4>LRDMS</h4>
               <p>Legal Records &amp; Document Management System for Manila City Hall. Sign in to securely access case files and records.</p>
@@ -1102,8 +1144,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
                   </div>
                   <div class="d-flex align-items-center justify-content-between mb-3">
                     <div class="form-check">
+<<<<<<< HEAD
                     
                       
+=======
+                      <input class="form-check-input" type="checkbox" id="modalRemember" name="remember">
+                      <label class="form-check-label small text-muted" for="modalRemember">Remember me</label>
+>>>>>>> origin/main
                     </div>
                     <a href="#" id="showForgotPassword" class="lrdms-link">Forgot password?</a>
                   </div>

@@ -8,7 +8,11 @@ ensure_csrf_token();
 // A password was already verified (attempt_login set this) — this page
 // only completes the login after a valid TOTP code.
 if (isset($_GET['cancel'])) {
+<<<<<<< HEAD
     unset($_SESSION['2fa_user_id'], $_SESSION['2fa_login_otp_sent']);
+=======
+    unset($_SESSION['2fa_user_id']);
+>>>>>>> origin/main
     header('Location: public.php');
     exit;
 }
@@ -24,6 +28,7 @@ if ($pendingUserId) {
 
 $error = '';
 $code = '';
+<<<<<<< HEAD
 $otpSent = false;
 $otpError = '';
 
@@ -101,10 +106,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $user && empty($_SESSION['2fa_login
         $otpError = $result;
     }
 }
+=======
+>>>>>>> origin/main
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validate_csrf()) {
         $error = 'Security token expired. Please refresh the page and try again.';
+<<<<<<< HEAD
     } elseif (isset($_POST['send_email_otp'])) {
         // User asked us to resend the code.
         if (!$user) {
@@ -118,12 +126,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } else {
+=======
+    }
+    if (validate_csrf()) {
+>>>>>>> origin/main
     $code = trim($_POST['totp_code'] ?? '');
 
     if (!$user) {
         $error = 'No sign-in in progress. Please sign in again.';
+<<<<<<< HEAD
     } elseif (verify_login_otp($user['id'], $code)) {
         unset($_SESSION['2fa_login_otp_sent']);
+=======
+    } elseif (verify_totp($user['totp_secret'], $code)) {
+>>>>>>> origin/main
         complete_login($user);
         log_action('auth', 'login_2fa_complete', $user['username']);
         $redirect = !empty(current_user()['must_change_password']) ? 'profile.php?force=1' : 'dashboard.php';
@@ -131,7 +147,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     } else {
         log_action('auth', '2fa_failed', $user['username']);
+<<<<<<< HEAD
         $error = 'That code did not match or has expired. Check your email and try again, or resend the code.';
+=======
+        $error = 'That code did not match. Check the time on your device and try again.';
+>>>>>>> origin/main
     }
     }
 }
@@ -237,7 +257,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <a href="public.php" class="btn btn-verify-submit w-100"><i class="bi bi-box-arrow-in-right me-1"></i> Go to Sign In</a>
       <?php else: ?>
         <p class="text-muted mb-3 small">
+<<<<<<< HEAD
           Hello <strong><?= htmlspecialchars($user['username']) ?></strong>. We've emailed a 6-digit code to finish signing in.
+=======
+          Hello <strong><?= htmlspecialchars($user['username']) ?></strong>. Enter the 6-digit code from your authenticator app to finish signing in.
+>>>>>>> origin/main
         </p>
 
         <?php if ($error): ?>
@@ -247,6 +271,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
         <?php endif; ?>
 
+<<<<<<< HEAD
         <?php if ($otpError): ?>
           <div class="alert alert-danger d-flex align-items-center gap-2 py-2 small mb-3" role="alert">
             <i class="bi bi-exclamation-triangle-fill"></i>
@@ -261,6 +286,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
         <?php endif; ?>
 
+=======
+>>>>>>> origin/main
         <form method="post" id="verifyForm">
           <?php csrf_field(); ?>
           <div class="mb-3">
@@ -272,6 +299,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </button>
         </form>
 
+<<<<<<< HEAD
         <form method="post" class="mt-3">
           <?php csrf_field(); ?>
           <input type="hidden" name="send_email_otp" value="1">
@@ -283,6 +311,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="text-center mt-4">
           <small class="text-muted">
             Not receiving the email? Contact your administrator to reset 2FA, or
+=======
+        <div class="text-center mt-4">
+          <small class="text-muted">
+            Lost your app? Contact your administrator to reset 2FA, or
+>>>>>>> origin/main
             <a href="verify_2fa.php?cancel=1" class="text-decoration-none">use a different account</a>.
           </small>
         </div>
@@ -306,4 +339,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </body>
 
+<<<<<<< HEAD
 </html>
+=======
+</html>
+>>>>>>> origin/main

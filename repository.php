@@ -10,9 +10,12 @@ $pdo = get_db();
 $statusFilter = $_GET['status'] ?? 'All';
 $typeFilter = $_GET['type'] ?? 'All';
 $q = trim($_GET['q'] ?? '');
+<<<<<<< HEAD
 $committeeFilter = $_GET['committee'] ?? 'All';
 $dateFrom = trim($_GET['date_from'] ?? '');
 $dateTo = trim($_GET['date_to'] ?? '');
+=======
+>>>>>>> origin/main
 
 list($visClause, $visParams) = document_visibility_clause($user);
 $where = [$visClause];
@@ -26,6 +29,7 @@ if ($typeFilter !== 'All') {
     $where[] = 'doc_type = ?';
     $params[] = $typeFilter;
 }
+<<<<<<< HEAD
 if ($committeeFilter !== 'All') {
     $where[] = 'd.committee_id = ?';
     $params[] = $committeeFilter;
@@ -38,17 +42,24 @@ if ($dateTo !== '') {
     $where[] = 'd.enactment_date <= ?';
     $params[] = $dateTo;
 }
+=======
+>>>>>>> origin/main
 if ($q !== '') {
     $where[] = '(title LIKE ? OR doc_number LIKE ? OR sponsor LIKE ?)';
     $like = "%$q%";
     array_push($params, $like, $like, $like);
 }
 
+<<<<<<< HEAD
 $committees = $pdo->query('SELECT id, name FROM committees ORDER BY name')->fetchAll();
 
 $sql = 'SELECT d.*, u.full_name AS owner_name, c.name AS committee_name FROM documents d
         JOIN users u ON u.id = d.owner_id
         LEFT JOIN committees c ON c.id = d.committee_id
+=======
+$sql = 'SELECT d.*, u.full_name AS owner_name FROM documents d
+        JOIN users u ON u.id = d.owner_id
+>>>>>>> origin/main
         WHERE ' . implode(' AND ', $where) . '
         ORDER BY d.enactment_date DESC, d.created_at DESC
         LIMIT 200';
@@ -56,6 +67,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $documents = $stmt->fetchAll();
 
+<<<<<<< HEAD
 // Load all attachments for the current page in one query to avoid N+1 queries.
 $attachmentsByDoc = [];
 if ($documents) {
@@ -157,6 +169,9 @@ if ($isAjax) {
     render_repository_results($documents, $attachmentsByDoc);
     exit;
 }
+=======
+include __DIR__ . '/includes/layout_top.php';
+>>>>>>> origin/main
 ?>
 <div class="topbar">
   <div class="d-flex align-items-center gap-2">
@@ -170,6 +185,7 @@ if ($isAjax) {
 </div>
 
 <div class="card">
+<<<<<<< HEAD
   <form method="get" class="row g-2 mb-3" id="repo-filter-form">
     <div class="col-md-4">
       <label class="form-label small text-muted mb-0" for="repo-q">Search</label>
@@ -180,19 +196,34 @@ if ($isAjax) {
       <select name="status" id="repo-status" class="form-select">
         <option value="All">All statuses</option>
         <?php foreach (['Enacted', 'Amended', 'Superseded', 'Withdrawn', 'Rejected'] as $s): ?>
+=======
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+      <input type="text" name="q" value="<?= htmlspecialchars($q) ?>" class="form-control" placeholder="Filter by title, number, or sponsor…">
+    </div>
+    <div class="col-md-3">
+      <select name="status" class="form-select">
+        <option value="All">All statuses</option>
+        <?php foreach (['Draft', 'Submitted', 'Under Review', 'Enacted', 'Amended', 'Superseded', 'Withdrawn'] as $s): ?>
+>>>>>>> origin/main
           <option value="<?= $s ?>" <?= $statusFilter === $s ? 'selected' : '' ?>><?= $s ?></option>
         <?php endforeach; ?>
       </select>
     </div>
     <div class="col-md-3">
+<<<<<<< HEAD
       <label class="form-label small text-muted mb-0" for="repo-type">Type</label>
       <select name="type" id="repo-type" class="form-select">
+=======
+      <select name="type" class="form-select">
+>>>>>>> origin/main
         <option value="All">All types</option>
         <?php foreach (['Ordinance', 'Resolution', 'Committee Report', 'Minutes', 'Other'] as $t): ?>
           <option value="<?= $t ?>" <?= $typeFilter === $t ? 'selected' : '' ?>><?= $t ?></option>
         <?php endforeach; ?>
       </select>
     </div>
+<<<<<<< HEAD
     <div class="col-md-2 d-flex align-items-end">
       <a href="repository.php" class="btn btn-outline-secondary w-100" id="repo-reset">Reset</a>
     </div>
@@ -370,3 +401,36 @@ if ($isAjax) {
 </script>
 
 <?php include __DIR__ . '/includes/layout_bottom.php'; ?>
+=======
+    <div class="col-md-2">
+      <button class="btn btn-outline-primary w-100">Filter</button>
+    </div>
+  </form>
+
+  <?php if (!$documents): ?>
+    <p class="text-muted">No documents match these filters (or your role's visibility rules don't allow seeing more).</p>
+  <?php else: ?>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Enacted</th><th>Owner</th></tr></thead>
+        <tbody>
+        <?php foreach ($documents as $d): ?>
+          <tr>
+            <td>
+              <a href="document.php?id=<?= $d['id'] ?>" class="doc-title"><?= htmlspecialchars($d['title']) ?></a>
+              <div class="doc-number"><?= htmlspecialchars($d['doc_number']) ?></div>
+            </td>
+            <td><?= htmlspecialchars($d['doc_type']) ?></td>
+            <td><span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $d['status'])) ?>"><?= htmlspecialchars($d['status']) ?></span></td>
+            <td><?= $d['enactment_date'] ? htmlspecialchars(date('M j, Y', strtotime($d['enactment_date']))) : '—' ?></td>
+            <td class="small text-muted"><?= htmlspecialchars($d['owner_name']) ?></td>
+          </tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+  <?php endif; ?>
+</div>
+
+<?php include __DIR__ . '/includes/layout_bottom.php'; ?>
+>>>>>>> origin/main

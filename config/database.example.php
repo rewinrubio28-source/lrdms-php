@@ -2,6 +2,7 @@
 /**
  * Database connection settings.
  *
+<<<<<<< HEAD
  * EXAMPLE FILE — copy to database.php (git-ignored) if you need a
  * committed reference. Reads from environment variables (DB_HOST, DB_NAME, DB_USER, DB_PASS).
  * Locally these come from a project-root .env file (see .env.example);
@@ -10,17 +11,29 @@
  */
 require_once __DIR__ . '/env.php';
 load_env_file();
+=======
+ * Defaults match a stock XAMPP install (MySQL running on localhost,
+ * user "root" with no password). Change these if your setup differs.
+ */
+>>>>>>> origin/main
 
 // Pin all PHP date/time output to Philippine time (the server's own
 // timezone may be UTC/Berlin/etc., which shifts greetings & timestamps).
 date_default_timezone_set('Asia/Manila');
 
+<<<<<<< HEAD
 // Defaults below match a stock XAMPP install — used only when the env
 // var isn't set at all (i.e. local dev with no .env yet).
 define('DB_HOST', env_optional('DB_HOST', 'localhost'));
 define('DB_NAME', env_optional('DB_NAME', 'lrdms_db'));
 define('DB_USER', env_optional('DB_USER', 'root'));
 define('DB_PASS', env_optional('DB_PASS', ''));
+=======
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'lrdms_db');
+define('DB_USER', 'your_db_user');
+define('DB_PASS', 'your_db_password');
+>>>>>>> origin/main
 
 /**
  * Returns a shared PDO connection. Using a single static instance avoids
@@ -41,7 +54,11 @@ function get_db() {
             );
         } catch (PDOException $e) {
             http_response_code(500);
+<<<<<<< HEAD
             die('Database connection failed. Check your DB_* environment variables and confirm the database is reachable. (' . htmlspecialchars($e->getMessage()) . ')');
+=======
+            die('Database connection failed. Check config/database.php and confirm MySQL is running in XAMPP. (' . htmlspecialchars($e->getMessage()) . ')');
+>>>>>>> origin/main
         }
     }
     return $pdo;
