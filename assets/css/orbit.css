@@ -1048,8 +1048,11 @@ html.dark .account-menu__switch-knob { transform: translateX(14px); }
   .sidebar { width: 100%; position: relative; height: auto; }
   .main { margin-left: 0; }
   .dash-header { flex-direction: column; }
-  .dash-header__actions { flex-wrap: wrap; }
-  .account-menu__dropdown { right: 0; left: auto; }
+  /* Same fix as .topbar above: once the header stacks into a column,
+     pin the actions row (Review Incoming Documents button + bell +
+     avatar) to the right instead of letting it default to the left. */
+  .dash-header__actions { flex-wrap: wrap; justify-content: flex-end; align-self: flex-end; }
+  .account-menu__dropdown { right: 0; left: auto; max-width: calc(100vw - 32px); }
 }
 
 /* ─── Bootstrap modals (theme-consistent, light + dark) ──── */
@@ -1133,6 +1136,23 @@ html.dark .modal .btn-close { filter: invert(1); }
   .sidebar-overlay.is-open { display: block; }
   .main { margin-left: 0 !important; }
   .topbar { flex-wrap: wrap; }
+  /* When the topbar wraps on a narrow screen, the bell + avatar (or the
+     whole .topbar__actions button group on pages like users.php) would
+     otherwise fall onto their own line flush against the LEFT edge,
+     since justify-content: space-between has nothing to distribute
+     around a single wrapped item. Pin it to the right instead, and keep
+     it wrapping internally rather than overflowing the viewport. */
+  .topbar > .header-actions-group,
+  .topbar > .topbar__actions {
+    margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  /* Both dropdowns anchor via `right: 0` off their own toggle button, so
+     once that button sits at the right edge (above) the panel already
+     opens fully on-screen. Just guard against a dropdown wider than a
+     very narrow phone viewport. */
+  .account-menu__dropdown { max-width: calc(100vw - 32px); }
 }
 
 /* ============================================================
