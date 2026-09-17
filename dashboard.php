@@ -219,9 +219,14 @@ $timeStr = date('g:i A');
 include __DIR__ . '/includes/layout_top.php';
 ?>
 <div class="dash-header">
-  <div>
-    <h1 class="dash-header__title"><span id="greeting"><?= htmlspecialchars($greeting) ?></span>, <?= htmlspecialchars($firstName) ?> 👋</h1>
-    <p class="dash-header__date"><?= htmlspecialchars($dateStr) ?> · <span id="clock" class="dash-header__clock"><?= htmlspecialchars($timeStr) ?></span></p>
+  <div class="d-flex align-items-start gap-2">
+    <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu">
+      <i class="bi bi-list"></i>
+    </button>
+    <div>
+      <h1 class="dash-header__title"><span id="greeting"><?= htmlspecialchars($greeting) ?></span>, <?= htmlspecialchars($firstName) ?> 👋</h1>
+      <p class="dash-header__date"><?= htmlspecialchars($dateStr) ?> · <span id="clock" class="dash-header__clock"><?= htmlspecialchars($timeStr) ?></span></p>
+    </div>
   </div>
   <div class="dash-header__actions">
     <?php if (has_permission('encoding', 'create')): ?>
