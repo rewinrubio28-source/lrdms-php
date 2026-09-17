@@ -640,7 +640,8 @@ html.dark .account-menu__switch-knob { transform: translateX(14px); }
 .snippet { color: var(--text-muted); font-size: 13px; line-height: 1.5; }
 
 /* ─── Audit list ──────────────────────────────────────────── */
-.audit-scroll { max-height: 480px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; }
+.audit-scroll { max-height: 480px; overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: 10px; }
+.audit-table { min-width: 720px; }
 .audit-list li { border-bottom-color: var(--border); }
 .audit-list li:last-child { border-bottom: none; }
 .audit-list li > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
