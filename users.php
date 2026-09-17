@@ -13,6 +13,8 @@ $committees = $pdo->query('SELECT * FROM committees ORDER BY name')->fetchAll();
 
 $errors = [];
 $success = '';
+$oldInput = [];
+$formSubmitted = $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_action'] ?? '') === 'create';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // At the very start of the POST handling (right after checking REQUEST_METHOD === 'POST' or form_action):
@@ -31,6 +33,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password = $_POST['password'] ?? '';
         $requireChange = !empty($_POST['must_change_password']);
         $sendWelcome = !empty($_POST['send_welcome_email']);
+
+        $oldInput = [
+            'fullName' => $fullName,
+            'username' => $username,
+            'email' => $email,
+            'password' => $password,
+            'roleId' => $roleId,
+            'committeeId' => $committeeId,
+            'requireChange' => $requireChange,
+            'sendWelcome' => $sendWelcome,
+        ];
 
         if ($fullName === '' || $username === '' || $password === '' || !$roleId) {
             $errors[] = 'Full name, username, password, and role are required.';
@@ -264,41 +277,41 @@ include __DIR__ . '/includes/layout_top.php';
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label small">Full name</label>
-              <input type="text" name="full_name" class="form-control" required>
+              <input type="text" name="full_name" class="form-control" value="<?= htmlspecialchars($oldInput['fullName'] ?? '') ?>" required>
             </div>
             <div class="col-md-6">
               <label class="form-label small">Username</label>
-              <input type="text" name="username" class="form-control" required>
+              <input type="text" name="username" class="form-control" value="<?= htmlspecialchars($oldInput['username'] ?? '') ?>" required>
             </div>
             <div class="col-md-6">
               <label class="form-label small">Email</label>
-              <input type="email" name="email" class="form-control">
+              <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($oldInput['email'] ?? '') ?>">
             </div>
             <div class="col-md-6">
               <label class="form-label small">Temporary password</label>
-              <input type="text" name="password" class="form-control" required>
+              <input type="text" name="password" class="form-control" value="<?= htmlspecialchars($oldInput['password'] ?? '') ?>" required>
             </div>
             <div class="col-md-6">
               <label class="form-label small">Role</label>
               <select name="role_id" class="form-select" required>
                 <option value="">— Select —</option>
-                <?php foreach ($roles as $r): ?><option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['name']) ?></option><?php endforeach; ?>
+                <?php foreach ($roles as $r): ?><option value="<?= $r['id'] ?>" <?= (isset($oldInput['roleId']) && (int)$oldInput['roleId'] === (int)$r['id']) ? 'selected' : '' ?>><?= htmlspecialchars($r['name']) ?></option><?php endforeach; ?>
               </select>
             </div>
             <div class="col-md-6">
               <label class="form-label small">Committee (if applicable)</label>
               <select name="committee_id" class="form-select">
                 <option value="">— None —</option>
-                <?php foreach ($committees as $c): ?><option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option><?php endforeach; ?>
+                <?php foreach ($committees as $c): ?><option value="<?= $c['id'] ?>" <?= (isset($oldInput['committeeId']) && $oldInput['committeeId'] !== null && (int)$oldInput['committeeId'] === (int)$c['id']) ? 'selected' : '' ?>><?= htmlspecialchars($c['name']) ?></option><?php endforeach; ?>
               </select>
             </div>
             <div class="col-12">
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="must_change_password" id="mcp" checked>
+                <input class="form-check-input" type="checkbox" name="must_change_password" id="mcp" <?= (!$formSubmitted || !empty($oldInput['requireChange'])) ? 'checked' : '' ?>>
                 <label class="form-check-label small" for="mcp">Require password change on first sign-in</label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="send_welcome_email" id="swe">
+                <input class="form-check-input" type="checkbox" name="send_welcome_email" id="swe" <?= !empty($oldInput['sendWelcome']) ? 'checked' : '' ?>>
                 <label class="form-check-label small" for="swe">Send welcome email with credentials</label>
               </div>
             </div>
