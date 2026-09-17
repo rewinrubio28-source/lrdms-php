@@ -326,6 +326,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       border-color: var(--arsha-heading);
       color: #ffffff !important;
     }
+    /* The "MANILA CITY HALL" brand text is sized for desktop (30px) — on
+       phones it wraps onto 2 lines and squeezes the Sign In pill in the
+       header until its own text wraps too ("Sign" / "In"), turning it
+       into a small circle instead of a pill. Keep the pill on one line
+       always, and shrink the brand text on narrow screens so it stops
+       eating the button's space. */
+    .header .btn-getstarted {
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    @media (max-width: 991px) {
+      .header .logo h1 { font-size: 20px; letter-spacing: 1px; }
+    }
+    @media (max-width: 576px) {
+      .header .logo h1 { font-size: 16px; letter-spacing: 0.5px; }
+    }
     .btn-getstarted:hover, .btn-get-started:hover {
       background: var(--arsha-accent);
       border-color: var(--arsha-accent);
