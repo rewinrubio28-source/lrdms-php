@@ -1,11 +1,13 @@
 FROM python:3.11-slim
 
 # tesseract-ocr is the actual OCR engine (pytesseract is just a Python
-# wrapper around it); poppler-utils is needed for PDF support via
-# pdf2image. Neither is a pip package, so it must be installed at the
-# OS level here, before pip install even runs.
+# wrapper around it); tesseract-ocr-fil adds the Filipino language data
+# needed by "-l eng+fil"; poppler-utils is needed for PDF support via
+# pdf2image. None of these are pip packages, so they are installed at
+# the OS level here, before pip install runs.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
+    tesseract-ocr-fil \
     poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
@@ -16,6 +18,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# The hosting platform injects PORT at runtime; 5001 is the local default.
+ENV PORT=5001
 EXPOSE 5001
 
-CMD ["python", "app.py"]
+# Long timeout because 300-DPI PDF OCR can take a while per request.
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT} --workers 2 --timeout 180 app:app"]
