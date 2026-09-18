@@ -13,10 +13,12 @@ text is joined together). .docx is NOT sent here — it's already a
 text-based format, not a scanned image, so PHP should keep it out of
 scope for this service (see includes/ocr.php).
 
-Run it with:
+Run it locally with:
     pip install -r requirements.txt
     python app.py
-It listens on http://localhost:5001 by default.
+It listens on http://localhost:5001 by default. In production (Docker /
+hosting platform) it reads the PORT environment variable and is served
+by gunicorn (see Dockerfile).
 """
 
 import os
@@ -28,8 +30,9 @@ import pytesseract
 
 app = Flask(__name__)
 
-# On Windows, or if tesseract isn't on PATH, uncomment and set this:
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# Only needed on Windows (local dev). On Linux/Docker, tesseract is on PATH.
+if os.name == "nt":
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 ALLOWED_IMAGE_EXT = {"png", "jpg", "jpeg"}
 ALLOWED_PDF_EXT = {"pdf"}
@@ -92,6 +95,11 @@ def ocr_pdf_file(path):
     return "\n\n".join(text_parts)
 
 
+@app.route("/", methods=["GET"])
+def index():
+    return jsonify({"service": "lrdms-ocr", "status": "ok"})
+
+
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"})
@@ -126,4 +134,5 @@ def ocr():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001)
+    # Local dev only. In production, gunicorn serves `app` (see Dockerfile).
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5001)))
