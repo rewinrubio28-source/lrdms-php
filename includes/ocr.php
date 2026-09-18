@@ -22,7 +22,7 @@
  */
 
 // Change this if the OCR service runs on a different host/port.
-define('OCR_SERVICE_URL', 'http://localhost:5001/ocr');
+define('OCR_SERVICE_URL', 'http://ocr_service/ocr');
 
 /**
  * Run real OCR on a file already saved to disk.
