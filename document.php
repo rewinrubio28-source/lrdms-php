@@ -3,6 +3,7 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/rbac.php';
 require_once __DIR__ . '/includes/audit.php';
 require_once __DIR__ . '/includes/ocr.php';
+require_once __DIR__ . '/includes/storage.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/workflow.php';
 
@@ -113,13 +114,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $filePath = $doc['file_path'];
             $ocrText = $doc['ocr_text'];
             if (isset($_FILES['new_file']) && $_FILES['new_file']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = __DIR__ . '/uploads/';
-                if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
                 $originalName = $_FILES['new_file']['name'];
                 $safeName = date('Ymd_His') . '_' . preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $originalName);
-                if (move_uploaded_file($_FILES['new_file']['tmp_name'], $uploadDir . $safeName)) {
-                    $filePath = 'uploads/' . $safeName;
-                    $ocrText = ocr_extract($uploadDir . $safeName, $originalName);
+                $localReadable = null;
+                $storedPath = storage_store_upload($_FILES['new_file']['tmp_name'], $safeName, $localReadable);
+                if ($storedPath !== null) {
+                    $filePath = $storedPath;
+                    $ocrText = ocr_extract($localReadable, $originalName);
                 }
             }
 
