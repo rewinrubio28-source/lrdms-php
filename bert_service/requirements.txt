@@ -1,4 +1,5 @@
 flask
+gunicorn
 sentence-transformers
 pymysql
 numpy
