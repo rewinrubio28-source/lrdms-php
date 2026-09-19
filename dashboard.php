@@ -58,34 +58,45 @@ if ($canAccess) {
 // ------------------------------------------------------------
 // Encoding & Submission
 // ------------------------------------------------------------
-$stmt = $pdo->prepare("SELECT d.*, u.full_name AS owner_name FROM documents d
-                       JOIN users u ON u.id = d.owner_id
-                       WHERE $clause ORDER BY d.created_at DESC, d.id DESC LIMIT 5");
-$stmt->execute($params);
-$recentDocs = $stmt->fetchAll();
+$recentDocs = [];
+$pendingDigit = 0;
+$myRecentDocs = [];
+$monthData = [];
 
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM documents d
-                       WHERE $clause AND (file_path IS NULL OR ocr_text IS NULL OR ocr_text = '')");
-$stmt->execute($params);
-$pendingDigit = (int)$stmt->fetchColumn();
+// Administrators without encoding permission should not load or see
+// encoding-specific dashboard data.
+if ($canEncode) {
+    $stmt = $pdo->prepare("SELECT d.*, u.full_name AS owner_name FROM documents d
+                           JOIN users u ON u.id = d.owner_id
+                           WHERE $clause ORDER BY d.created_at DESC, d.id DESC LIMIT 5");
+    $stmt->execute($params);
+    $recentDocs = $stmt->fetchAll();
 
-// My Recent Encodings — scoped to current user
-$myStmt = $pdo->prepare("SELECT d.id, d.doc_number, d.title, d.doc_type, d.status, d.created_at
-                         FROM documents d
-                         WHERE d.owner_id = ? AND ($clause)
-                         ORDER BY d.created_at DESC LIMIT 5");
-$myStmt->execute(array_merge([$user['id']], $params));
-$myRecentDocs = $myStmt->fetchAll();
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM documents d
+                           WHERE $clause AND (file_path IS NULL OR ocr_text IS NULL OR ocr_text = '')");
+    $stmt->execute($params);
+    $pendingDigit = (int)$stmt->fetchColumn();
 
-// Encoding Activity Trend — monthly counts (last 12 months)
-$monthStmt = $pdo->prepare("SELECT DATE_FORMAT(d.created_at, '%Y-%m') AS month, COUNT(*) AS n
-                            FROM documents d
-                            WHERE $clause
-                            GROUP BY month
-                            ORDER BY month ASC
-                            LIMIT 12");
-$monthStmt->execute($params);
-$monthData = $monthStmt->fetchAll();
+    // My Recent Encodings — scoped to current user
+    // Encoding Activity Trend — monthly counts (last 12 months)
+    // My Recent Encodings — scoped to current user
+    $myStmt = $pdo->prepare("SELECT d.id, d.doc_number, d.title, d.doc_type, d.status, d.created_at
+                             FROM documents d
+                             WHERE d.owner_id = ? AND ($clause)
+                             ORDER BY d.created_at DESC LIMIT 5");
+    $myStmt->execute(array_merge([$user['id']], $params));
+    $myRecentDocs = $myStmt->fetchAll();
+
+    // Encoding Activity Trend — monthly counts (last 12 months)
+    $monthStmt = $pdo->prepare("SELECT DATE_FORMAT(d.created_at, '%Y-%m') AS month, COUNT(*) AS n
+                                FROM documents d
+                                WHERE $clause
+                                GROUP BY month
+                                ORDER BY month ASC
+                                LIMIT 12");
+    $monthStmt->execute($params);
+    $monthData = $monthStmt->fetchAll();
+}
 
 // ------------------------------------------------------------
 // Repository — by document type
@@ -294,8 +305,9 @@ include __DIR__ . '/includes/layout_top.php';
   <?php endif; ?>
 </div>
 
-<!-- ── Row 1: Encoding & Submission + Repository ─────────── -->
+<!-- ── Row 1: Role-aware intake and repository overview ─────────── -->
 <div class="dash-grid">
+  <?php if ($canEncode): ?>
   <section class="module-card span-2">
     <header class="module-card__header">
       <div>
@@ -327,7 +339,7 @@ include __DIR__ . '/includes/layout_top.php';
           <?php endforeach; ?>
         </ul>
       <?php else: ?>
-        <p class="module-empty">No documents encoded yet.</p>
+        <p class="module-empty">No recent records available.</p>
       <?php endif; ?>
 
       <div class="module-note <?= $pendingDigit > 0 ? 'is-warning' : '' ?>">
@@ -396,8 +408,9 @@ include __DIR__ . '/includes/layout_top.php';
       <?php endif; ?>
     </div>
   </section>
+  <?php endif; ?>
 
-  <section class="module-card">
+  <section class="module-card <?= $canEncode ? '' : 'span-3' ?>">
     <header class="module-card__header">
       <div>
         <h3>Legislative Repository</h3>
