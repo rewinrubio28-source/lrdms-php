@@ -21,8 +21,20 @@
  * See ocr_service/README.md for how to install and run the service.
  */
 
-// Change this if the OCR service runs on a different host/port.
-define('OCR_SERVICE_URL', 'http://ocr_service/ocr');
+require_once __DIR__ . '/../config/env.php';
+load_env_file();
+
+// Where the OCR microservice (ocr_service/app.py) lives. In production set the
+// OCR_SERVICE_URL environment variable (HostForge -> Environment Variables, or
+// your local .env) to the deployed service, e.g. https://ocr.example.com - the
+// "/ocr" path is added automatically if it's missing. With no variable set it
+// falls back to the docker-compose hostname, so existing setups keep working.
+$__ocrUrl = rtrim((string) env_optional('OCR_SERVICE_URL', 'http://ocr_service/ocr'), '/');
+if (substr($__ocrUrl, -4) !== '/ocr') {
+    $__ocrUrl .= '/ocr';
+}
+define('OCR_SERVICE_URL', $__ocrUrl);
+unset($__ocrUrl);
 
 /**
  * Run real OCR on a file already saved to disk.
@@ -73,4 +85,14 @@ function ocr_extract($filePath, $originalFileName) {
 
     return $text !== '' ? $text : '[OCR produced no text] "' . $originalFileName . '" may be blank, '
                                  . 'very low quality, or in a script Tesseract was not trained on.';
+}
+
+/**
+ * True when ocr_extract() handed back one of its "[OCR ...]" placeholder
+ * messages (service unreachable, unsupported type, no text found, ...)
+ * instead of real recognized text. Callers that STORE OCR output should
+ * check this first so an error message never gets saved as document text.
+ */
+function ocr_result_is_placeholder($text) {
+    return strncmp((string) $text, '[OCR', 4) === 0;
 }
