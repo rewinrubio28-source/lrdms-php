@@ -14,6 +14,7 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/rbac.php';
 require_once __DIR__ . '/includes/audit.php';
 require_once __DIR__ . '/includes/notifications.php';
+require_once __DIR__ . '/includes/ocr.php';
 require_once __DIR__ . '/config/database.php';
 
 require_permission('encoding', 'create');
@@ -49,6 +50,16 @@ $docFiles = array_column($attStmt->fetchAll(), 'file_path');
 if (!$docFiles && !empty($doc['file_path'])) {
     $docFiles = [$doc['file_path']];
 }
+
+// Files the OCR service can actually read (it only accepts these types).
+$ocrFiles = array_values(array_filter($docFiles, function ($p) {
+    return in_array(strtolower(pathinfo($p, PATHINFO_EXTENSION)), ['png', 'jpg', 'jpeg', 'pdf'], true);
+}));
+
+// One-time messages left behind by a redirect (e.g. after "Run OCR").
+$flashSuccess = $_SESSION['flash_success'] ?? null;
+$flashError = $_SESSION['flash_error'] ?? null;
+unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
 $errors = [];
 
@@ -98,6 +109,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: encoding.php#awaiting-verification');
                 exit;
             }
+
+        } elseif ($action === 'run_ocr') {
+            // On-demand OCR. Files pushed by System 1 are stored as-is (no OCR at
+            // intake - see api/upload_document.php), so the Records Officer runs it
+            // here while reviewing. That keeps the push itself instant and lets a
+            // failed run be retried. Each file becomes one "page" for Text As Filed.
+            if (!$ocrFiles) {
+                $_SESSION['flash_error'] = 'This document has no PNG, JPG, or PDF file that OCR can read.';
+            } else {
+                ignore_user_abort(true); // finish and save even if the proxy stops waiting
+                @set_time_limit(90 * count($ocrFiles));
+
+                $pages = [];
+                $problems = [];
+                foreach ($ocrFiles as $relPath) {
+                    $text = ocr_extract(__DIR__ . '/' . $relPath, basename($relPath));
+                    if (ocr_result_is_placeholder($text)) {
+                        $problems[] = $text;   // never store an error message as document text
+                    } else {
+                        $pages[] = $text;
+                    }
+                }
+
+                if ($pages) {
+                    $stmt = $pdo->prepare('UPDATE documents SET ocr_text = ? WHERE id = ? AND verified_at IS NULL');
+                    $stmt->execute([implode("\n\n[PAGE BREAK]\n\n", $pages), $doc['id']]);
+                    log_action('encoding', 'ran_ocr_incoming_document', $doc['doc_number'] . ' — text read from ' . count($pages) . ' of ' . count($ocrFiles) . ' file(s).');
+                    $_SESSION['flash_success'] = 'OCR finished — text read from ' . count($pages) . ' of ' . count($ocrFiles) . ' file(s).';
+                }
+                if ($problems) {
+                    $_SESSION['flash_error'] = ($pages ? 'Some files could not be read: ' : 'OCR could not read this document: ') . implode(' ', $problems);
+                }
+            }
+            header('Location: document_review.php?id=' . (int)$doc['id']);
+            exit;
         }
     }
 }
@@ -121,6 +167,8 @@ include __DIR__ . '/includes/layout_top.php';
 </div>
 
 <?php if ($errors): ?><div class="alert alert-danger"><?php foreach ($errors as $e) echo htmlspecialchars($e) . '<br>'; ?></div><?php endif; ?>
+<?php if ($flashSuccess): ?><div class="alert alert-success"><?= htmlspecialchars($flashSuccess) ?></div><?php endif; ?>
+<?php if ($flashError): ?><div class="alert alert-warning"><?= htmlspecialchars($flashError) ?></div><?php endif; ?>
 
 
 <div class="row g-3">
@@ -135,11 +183,22 @@ include __DIR__ . '/includes/layout_top.php';
         <div><dt>Received</dt><dd><?= htmlspecialchars(date('M j, Y g:i A', strtotime($doc['created_at']))) ?></dd></div>
         <div><dt>File</dt><dd><?= $docFiles ? '<a href="#" data-files=\'' . htmlspecialchars(json_encode($docFiles), ENT_QUOTES, 'UTF-8') . '\' data-bs-toggle="modal" data-bs-target="#filePreviewModal" class="open-file-modal">Open file' . (count($docFiles) > 1 ? 's (' . count($docFiles) . ')' : '') . '</a>' : '—' ?></dd></div>
       </dl>
-      <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h3 style="font-size:14px;" class="mb-0">OCR / extracted text</h3>
-        <?php if (!empty($doc['ocr_text'])): ?>
-          <a href="document_text.php?id=<?= (int)$doc['id'] ?>" class="btn btn-outline-secondary btn-sm">View Full Text (As Filed)</a>
-        <?php endif; ?>
+        <div class="d-flex align-items-center gap-2">
+          <?php if ($ocrFiles): ?>
+            <form method="post" id="ocrForm" class="d-inline" data-has-text="<?= !empty($doc['ocr_text']) ? '1' : '0' ?>">
+              <?php csrf_field(); ?>
+              <input type="hidden" name="action" value="run_ocr">
+              <button type="submit" id="ocrBtn" class="btn btn-outline-primary btn-sm"><?= !empty($doc['ocr_text']) ? 'Re-run OCR' : 'Run OCR' ?></button>
+            </form>
+          <?php elseif ($docFiles): ?>
+            <span class="text-muted small">OCR only reads PNG, JPG, or PDF files.</span>
+          <?php endif; ?>
+          <?php if (!empty($doc['ocr_text'])): ?>
+            <a href="document_text.php?id=<?= (int)$doc['id'] ?>" class="btn btn-outline-secondary btn-sm">View Full Text (As Filed)</a>
+          <?php endif; ?>
+        </div>
       </div>
       <div class="ocr-box"><?= nl2br(htmlspecialchars($doc['ocr_text'] ?: 'No extracted text on file.')) ?></div>
     </div>
@@ -283,6 +342,24 @@ include __DIR__ . '/includes/layout_top.php';
     document.getElementById('filePreviewNav').style.display = 'none';
     files = [];
     index = 0;
+  });
+})();
+</script>
+<script>
+// "Run OCR": confirm before replacing existing text, and show progress —
+// OCR can take several seconds per file, so stop double-clicks.
+(function () {
+  var form = document.getElementById('ocrForm');
+  var btn = document.getElementById('ocrBtn');
+  if (!form || !btn) return;
+  form.addEventListener('submit', function (e) {
+    if (form.getAttribute('data-has-text') === '1' &&
+        !confirm('Re-run OCR? This replaces the text currently on file.')) {
+      e.preventDefault();
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Reading files… please wait';
   });
 })();
 </script>
