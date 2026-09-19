@@ -8,35 +8,8 @@ require_permission('access', 'manage_users');
 $user = current_user();
 $pdo = get_db();
 
-// Determine whether the current user is allowed to manage privileged roles.
-$roleStmt = $pdo->prepare('SELECT id, name FROM roles WHERE id = ?');
-$roleStmt->execute([(int)$user['role_id']]);
-$currentRole = $roleStmt->fetch();
-$isSuperAdmin = $currentRole && strcasecmp($currentRole['name'], 'Super Admin') === 0;
-
-// A privileged role is any role that has access.manage_roles.
-// This is safer than hard-coding only the role name "Super Admin".
-$roles = $pdo->query(
-    "SELECT r.*,
-            EXISTS (
-                SELECT 1
-                FROM role_permissions rp
-                JOIN permissions p ON p.id = rp.permission_id
-                WHERE rp.role_id = r.id
-                  AND p.module = 'access'
-                  AND p.action = 'manage_roles'
-            ) AS is_privileged
-     FROM roles r
-     ORDER BY r.id"
-)->fetchAll();
-
-$assignableRoles = array_values(array_filter(
-    $roles,
-    static function (array $role) use ($isSuperAdmin): bool {
-        return $isSuperAdmin || (int)$role['is_privileged'] === 0;
-    }
-));
-
+$roles = $pdo->query('SELECT * FROM roles ORDER BY id')->fetchAll();
+$assignableRoles = assignable_roles($roles); // only roles ranking below the signed-in user's own
 $committees = $pdo->query('SELECT * FROM committees ORDER BY name')->fetchAll();
 
 $errors = [];
@@ -62,23 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $requireChange = !empty($_POST['must_change_password']);
         $sendWelcome = !empty($_POST['send_welcome_email']);
 
-        // Resolve the requested role server-side. Never trust role_id from the browser.
-        $targetRoleStmt = $pdo->prepare(
-            "SELECT r.*,
-                    EXISTS (
-                        SELECT 1
-                        FROM role_permissions rp
-                        JOIN permissions p ON p.id = rp.permission_id
-                        WHERE rp.role_id = r.id
-                          AND p.module = 'access'
-                          AND p.action = 'manage_roles'
-                    ) AS is_privileged
-             FROM roles r
-             WHERE r.id = ?"
-        );
-        $targetRoleStmt->execute([$roleId]);
-        $targetRole = $targetRoleStmt->fetch();
-
         $oldInput = [
             'fullName' => $fullName,
             'username' => $username,
@@ -92,12 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($fullName === '' || $username === '' || $password === '' || !$roleId) {
             $errors[] = 'Full name, username, password, and role are required.';
-        } elseif (!$targetRole) {
-            $errors[] = 'The selected role does not exist.';
-        } elseif (!$isSuperAdmin && (int)$targetRole['is_privileged'] === 1) {
-            $errors[] = 'You are not authorized to assign a privileged role.';
         } elseif (strlen($password) < 6) {
             $errors[] = 'Password must be at least 6 characters long.';
+        } elseif (!can_assign_role_id($roleId, $roles)) {
+            $errors[] = 'You are not allowed to create a user with that role.';
         } else {
             $check = $pdo->prepare('SELECT COUNT(*) FROM users WHERE username = ?');
             $check->execute([$username]);
@@ -165,38 +119,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } elseif ($formAction === 'toggle_active') {
         $targetId = (int)($_POST['user_id'] ?? 0);
-
-        if (!$targetId || $targetId === (int)$user['id']) {
-            $errors[] = 'You cannot deactivate your own account.';
+        $tStmt = $pdo->prepare('SELECT u.id, r.name AS role_name FROM users u JOIN roles r ON r.id = u.role_id WHERE u.id = ?');
+        $tStmt->execute([$targetId]);
+        $targetRow = $tStmt->fetch();
+        if ($targetId && $targetId !== (int)$user['id'] && (!$targetRow || !can_manage_user($targetRow))) {
+            $errors[] = 'You do not have permission to change this account.';
+        } elseif ($targetId && $targetId !== (int)$user['id']) {
+            $stmt = $pdo->prepare('UPDATE users SET is_active = NOT is_active WHERE id = ?');
+            $stmt->execute([$targetId]);
+            log_action('access', 'toggled_user_active', 'user_id=' . $targetId);
+            $success = 'User status updated.';
         } else {
-            // Do not let a non-Super Admin enable/disable a privileged account.
-            $targetUserStmt = $pdo->prepare(
-                "SELECT u.id, u.username, r.name AS role_name,
-                        EXISTS (
-                            SELECT 1
-                            FROM role_permissions rp
-                            JOIN permissions p ON p.id = rp.permission_id
-                            WHERE rp.role_id = r.id
-                              AND p.module = 'access'
-                              AND p.action = 'manage_roles'
-                        ) AS is_privileged
-                 FROM users u
-                 JOIN roles r ON r.id = u.role_id
-                 WHERE u.id = ?"
-            );
-            $targetUserStmt->execute([$targetId]);
-            $targetUser = $targetUserStmt->fetch();
-
-            if (!$targetUser) {
-                $errors[] = 'Target user was not found.';
-            } elseif (!$isSuperAdmin && (int)$targetUser['is_privileged'] === 1) {
-                $errors[] = 'You are not authorized to enable or disable a privileged account.';
-            } else {
-                $stmt = $pdo->prepare('UPDATE users SET is_active = NOT is_active WHERE id = ?');
-                $stmt->execute([$targetId]);
-                log_action('access', 'toggled_user_active', 'user_id=' . $targetId);
-                $success = 'User status updated.';
-            }
+            $errors[] = 'You cannot deactivate your own account.';
         }
     }
     } /* end CSRF guard */
@@ -320,6 +254,9 @@ include __DIR__ . '/includes/layout_top.php';
               <td class="small text-muted"><?= $u['last_login_at'] ? date('M j, g:i A', strtotime($u['last_login_at'])) : 'Never' ?></td>
               <td><?= $u['totp_enabled'] ? '<span class="badge text-bg-primary">On</span>' : '<span class="text-muted">—</span>' ?></td>
               <td class="text-nowrap">
+                <?php if (!can_manage_user($u)): ?>
+                  <span class="text-muted small" title="Only a higher role can manage this account">Restricted</span>
+                <?php else: ?>
                 <a class="btn btn-outline-primary btn-sm" href="user_view.php?id=<?= (int)$u['id'] ?>">Manage</a>
                 <?php if ((int)$u['id'] !== (int)$user['id']): ?>
                 <form method="post" class="d-inline">
@@ -327,6 +264,7 @@ include __DIR__ . '/includes/layout_top.php';
                   <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
                   <button class="btn btn-outline-secondary btn-sm"><?= $u['is_active'] ? 'Disable' : 'Enable' ?></button>
                 </form>
+                <?php endif; ?>
                 <?php endif; ?>
               </td>
             </tr>
@@ -369,7 +307,7 @@ include __DIR__ . '/includes/layout_top.php';
               <label class="form-label small">Role</label>
               <select name="role_id" class="form-select" required>
                 <option value="">— Select —</option>
-                <?php foreach ($assignableRoles as $r): ?><option value="<?= (int)$r['id'] ?>" <?= (isset($oldInput['roleId']) && (int)$oldInput['roleId'] === (int)$r['id']) ? 'selected' : '' ?>><?= htmlspecialchars($r['name']) ?></option><?php endforeach; ?>
+                <?php foreach ($assignableRoles as $r): ?><option value="<?= $r['id'] ?>" <?= (isset($oldInput['roleId']) && (int)$oldInput['roleId'] === (int)$r['id']) ? 'selected' : '' ?>><?= htmlspecialchars($r['name']) ?></option><?php endforeach; ?>
               </select>
             </div>
             <div class="col-md-6">
