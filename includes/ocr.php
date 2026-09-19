@@ -51,7 +51,7 @@ function ocr_extract($filePath, $originalFileName) {
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, ['file' => $curlFile]);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 100); // was 30 — big scanned PDFs (6-7 MB) can take longer than 30s
     $response = curl_exec($ch);
     $curlError = curl_error($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -74,4 +74,3 @@ function ocr_extract($filePath, $originalFileName) {
     return $text !== '' ? $text : '[OCR produced no text] "' . $originalFileName . '" may be blank, '
                                  . 'very low quality, or in a script Tesseract was not trained on.';
 }
-
