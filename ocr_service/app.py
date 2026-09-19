@@ -24,6 +24,11 @@ by gunicorn (see Dockerfile).
 import os
 import tempfile
 
+# Tesseract hangs in containers that expose many CPUs (this host reports 12)
+# when it spawns one OpenMP thread per CPU. Force a single thread. This must be
+# set BEFORE any tesseract subprocess starts; child processes inherit it.
+os.environ["OMP_THREAD_LIMIT"] = "1"
+
 from flask import Flask, request, jsonify
 from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 import pytesseract
@@ -39,6 +44,11 @@ ALLOWED_PDF_EXT = {"pdf"}
 
 # Tesseract config: English + Filipino/Tagalog
 TESSERACT_CONFIG = "--psm 6 --oem 3 -l eng+fil"
+
+# Max seconds Tesseract may spend on ONE image/page. If it hangs, pytesseract
+# kills it and raises, so the request fails fast with a clear error instead of
+# blocking the worker until the hosting proxy returns a 504.
+TESSERACT_TIMEOUT = 50
 
 
 def preprocess_image(image):
@@ -78,7 +88,7 @@ def preprocess_image(image):
 def ocr_image_file(path):
     image = Image.open(path)
     processed = preprocess_image(image)
-    return pytesseract.image_to_string(processed, config=TESSERACT_CONFIG)
+    return pytesseract.image_to_string(processed, config=TESSERACT_CONFIG, timeout=TESSERACT_TIMEOUT)
 
 
 def ocr_pdf_file(path):
@@ -90,7 +100,7 @@ def ocr_pdf_file(path):
     text_parts = []
     for i, page_image in enumerate(pages, start=1):
         processed = preprocess_image(page_image)
-        page_text = pytesseract.image_to_string(processed, config=TESSERACT_CONFIG)
+        page_text = pytesseract.image_to_string(processed, config=TESSERACT_CONFIG, timeout=TESSERACT_TIMEOUT)
         text_parts.append(f"--- Page {i} ---\n{page_text}")
     return "\n\n".join(text_parts)
 
