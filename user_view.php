@@ -8,7 +8,33 @@ require_permission('access', 'manage_users');
 $me = current_user();
 $pdo = get_db();
 
-$roles = $pdo->query('SELECT * FROM roles ORDER BY id')->fetchAll();
+$roleStmt = $pdo->prepare('SELECT id, name FROM roles WHERE id = ?');
+$roleStmt->execute([(int)$me['role_id']]);
+$currentRole = $roleStmt->fetch();
+$isSuperAdmin = $currentRole && strcasecmp($currentRole['name'], 'Super Admin') === 0;
+
+// Privileged roles are identified by access.manage_roles, not by a hard-coded name.
+$roles = $pdo->query(
+    "SELECT r.*,
+            EXISTS (
+                SELECT 1
+                FROM role_permissions rp
+                JOIN permissions p ON p.id = rp.permission_id
+                WHERE rp.role_id = r.id
+                  AND p.module = 'access'
+                  AND p.action = 'manage_roles'
+            ) AS is_privileged
+     FROM roles r
+     ORDER BY r.id"
+)->fetchAll();
+
+$assignableRoles = array_values(array_filter(
+    $roles,
+    static function (array $role) use ($isSuperAdmin): bool {
+        return $isSuperAdmin || (int)$role['is_privileged'] === 0;
+    }
+));
+
 $committees = $pdo->query('SELECT * FROM committees ORDER BY name')->fetchAll();
 
 $errors = [];
@@ -16,6 +42,27 @@ $success = '';
 
 // Resolve the target user id (from the URL, or from a submitted form).
 $targetId = (int)($_GET['id'] ?? $_POST['user_id'] ?? 0);
+
+// Load the target's current role before processing POST operations.
+$targetPreview = null;
+if ($targetId) {
+    $targetPreviewStmt = $pdo->prepare(
+        "SELECT u.id, u.username, u.role_id, r.name AS role_name,
+                EXISTS (
+                    SELECT 1
+                    FROM role_permissions rp
+                    JOIN permissions p ON p.id = rp.permission_id
+                    WHERE rp.role_id = r.id
+                      AND p.module = 'access'
+                      AND p.action = 'manage_roles'
+                ) AS is_privileged
+         FROM users u
+         JOIN roles r ON r.id = u.role_id
+         WHERE u.id = ?"
+    );
+    $targetPreviewStmt->execute([$targetId]);
+    $targetPreview = $targetPreviewStmt->fetch() ?: null;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // At the very start of the POST handling (right after checking REQUEST_METHOD === 'POST' or form_action):
@@ -44,6 +91,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $mustChange = !empty($_POST['must_change_password']) ? 1 : 0;
 
+        // Re-load the target role at write time so the authorization decision
+        // cannot be bypassed by changing the role_id in the browser.
+        $targetRoleStmt = $pdo->prepare(
+            "SELECT r.*,
+                    EXISTS (
+                        SELECT 1
+                        FROM role_permissions rp
+                        JOIN permissions p ON p.id = rp.permission_id
+                        WHERE rp.role_id = r.id
+                          AND p.module = 'access'
+                          AND p.action = 'manage_roles'
+                    ) AS is_privileged
+             FROM roles r
+             WHERE r.id = ?"
+        );
+        $targetRoleStmt->execute([$roleId]);
+        $targetRole = $targetRoleStmt->fetch();
+
+        $targetCurrentRoleStmt = $pdo->prepare(
+            "SELECT r.*,
+                    EXISTS (
+                        SELECT 1
+                        FROM role_permissions rp
+                        JOIN permissions p ON p.id = rp.permission_id
+                        WHERE rp.role_id = r.id
+                          AND p.module = 'access'
+                          AND p.action = 'manage_roles'
+                    ) AS is_privileged
+             FROM users u
+             JOIN roles r ON r.id = u.role_id
+             WHERE u.id = ?"
+        );
+        $targetCurrentRoleStmt->execute([$uid]);
+        $targetCurrentRole = $targetCurrentRoleStmt->fetch();
+
+        if ($targetCurrentRole && !$isSuperAdmin && (int)$targetCurrentRole['is_privileged'] === 1) {
+            $errors[] = 'You are not authorized to modify a privileged account.';
+        } elseif (!$targetRole) {
+            $errors[] = 'The selected role does not exist.';
+        } elseif (!$isSuperAdmin && (int)$targetRole['is_privileged'] === 1) {
+            $errors[] = 'You are not authorized to assign a privileged role.';
+        }
+
         if ($fullName === '' || $username === '' || !$roleId) {
             $errors[] = 'Full name, username, and role are required.';
         } else {
@@ -68,11 +158,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } elseif ($formAction === 'reset_password') {
+        if ($targetPreview && !$isSuperAdmin && (int)$targetPreview['is_privileged'] === 1) {
+            $errors[] = 'You are not authorized to reset the password of a privileged account.';
+        }
         $newPassword = $_POST['new_password'] ?? '';
         $confirm = $_POST['confirm_password'] ?? '';
         $requireChange = !empty($_POST['must_change_password']) ? 1 : 0;
 
-        if (strlen($newPassword) < 6) {
+        if ($errors) {
+            // Keep the authorization error and skip the password update.
+        } elseif (strlen($newPassword) < 6) {
             $errors[] = 'Password must be at least 6 characters long.';
         } elseif ($newPassword !== $confirm) {
             $errors[] = 'Passwords do not match.';
@@ -85,14 +180,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = 'Password reset.';
         }
     } elseif ($formAction === 'reset_2fa') {
-        $pdo->prepare('UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?')->execute([$uid]);
-        log_action('access', 'reset_2fa', 'user_id=' . $uid);
-        $success = 'Two-factor authentication cleared for this user.';
+        if ($targetPreview && !$isSuperAdmin && (int)$targetPreview['is_privileged'] === 1) {
+            $errors[] = 'You are not authorized to reset 2FA for a privileged account.';
+        } else {
+            $pdo->prepare('UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?')->execute([$uid]);
+            log_action('access', 'reset_2fa', 'user_id=' . $uid);
+            $success = 'Two-factor authentication cleared for this user.';
+        }
     } elseif ($formAction === 'clear_lockout') {
-        $pdo->prepare('UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?')->execute([$uid]);
-        log_action('access', 'cleared_user_lockout', 'user_id=' . $uid);
-        $success = 'Login lockout cleared.';
+        if ($targetPreview && !$isSuperAdmin && (int)$targetPreview['is_privileged'] === 1) {
+            $errors[] = 'You are not authorized to clear the lockout of a privileged account.';
+        } else {
+            $pdo->prepare('UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?')->execute([$uid]);
+            log_action('access', 'cleared_user_lockout', 'user_id=' . $uid);
+            $success = 'Login lockout cleared.';
+        }
     } elseif ($formAction === 'revoke_session') {
+        if ($targetPreview && !$isSuperAdmin && (int)$targetPreview['is_privileged'] === 1) {
+            $errors[] = 'You are not authorized to revoke sessions for a privileged account.';
+        } else {
         $sid = (int)($_POST['session_id'] ?? 0);
         $stmt = $pdo->prepare('SELECT session_token FROM user_sessions WHERE id = ? AND user_id = ?');
         $stmt->execute([$sid, $uid]);
@@ -104,13 +210,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $errors[] = 'You cannot revoke your own current session here.';
         }
+        }
     } elseif ($formAction === 'revoke_all_sessions') {
-        $stmt = $pdo->prepare(
-            'UPDATE user_sessions SET is_active = 0 WHERE user_id = ? AND session_token <> ?'
-        );
-        $stmt->execute([$uid, $_SESSION['session_token'] ?? '']);
-        log_action('access', 'revoked_all_sessions', 'user_id=' . $uid);
-        $success = 'All other active sessions were signed out.';
+        if ($targetPreview && !$isSuperAdmin && (int)$targetPreview['is_privileged'] === 1) {
+            $errors[] = 'You are not authorized to revoke sessions for a privileged account.';
+        } else {
+            $stmt = $pdo->prepare(
+                'UPDATE user_sessions SET is_active = 0 WHERE user_id = ? AND session_token <> ?'
+            );
+            $stmt->execute([$uid, $_SESSION['session_token'] ?? '']);
+            log_action('access', 'revoked_all_sessions', 'user_id=' . $uid);
+            $success = 'All other active sessions were signed out.';
+        }
     }
     }
 }
@@ -195,6 +306,9 @@ include __DIR__ . '/includes/layout_top.php';
   <div class="col-lg-6">
     <div class="card">
       <h3 style="font-size:16px;">Account details</h3>
+      <?php if ($targetPreview && !$isSuperAdmin && (int)$targetPreview['is_privileged'] === 1): ?>
+        <div class="alert alert-warning small">This is a privileged account. Only a Super Admin can modify this account.</div>
+      <?php endif; ?>
       <form method="post">
         <input type="hidden" name="form_action" value="update_details">
         <input type="hidden" name="user_id" value="<?= (int)$target['id'] ?>">
@@ -203,9 +317,9 @@ include __DIR__ . '/includes/layout_top.php';
         <div class="mb-2"><label class="form-label small">Email</label><input type="email" name="email" class="form-control form-control-sm" value="<?= htmlspecialchars($target['email'] ?? '') ?>"></div>
         <div class="mb-2">
           <label class="form-label small">Role</label>
-          <select name="role_id" class="form-select form-select-sm" required>
-            <?php foreach ($roles as $r): ?>
-              <option value="<?= $r['id'] ?>" <?= (int)$r['id'] === (int)$target['role_id'] ? 'selected' : '' ?>><?= htmlspecialchars($r['name']) ?></option>
+          <select name="role_id" class="form-select form-select-sm" required <?= ($targetPreview && !$isSuperAdmin && (int)$targetPreview['is_privileged'] === 1) ? 'disabled' : '' ?>>
+            <?php foreach ($assignableRoles as $r): ?>
+              <option value="<?= (int)$r['id'] ?>" <?= (int)$r['id'] === (int)$target['role_id'] ? 'selected' : '' ?>><?= htmlspecialchars($r['name']) ?></option>
             <?php endforeach; ?>
           </select>
         </div>
@@ -226,7 +340,7 @@ include __DIR__ . '/includes/layout_top.php';
           <input class="form-check-input" type="checkbox" name="must_change_password" id="mcp" <?= $target['must_change_password'] ? 'checked' : '' ?>>
           <label class="form-check-label small" for="mcp">Require password change on next sign-in</label>
         </div>
-        <button class="btn btn-primary btn-sm w-100">Save details</button>
+        <button class="btn btn-primary btn-sm w-100" <?= ($targetPreview && !$isSuperAdmin && (int)$targetPreview['is_privileged'] === 1) ? 'disabled' : '' ?>>Save details</button>
       </form>
     </div>
 
@@ -261,7 +375,7 @@ include __DIR__ . '/includes/layout_top.php';
         <span class="small">Two-factor authentication:
           <?= $target['totp_enabled'] ? '<span class="badge text-bg-success">Enabled</span>' : '<span class="badge text-bg-secondary">Off</span>' ?>
         </span>
-        <?php if ($target['totp_enabled']): ?>
+        <?php if ($target['totp_enabled'] && ($isSuperAdmin || !$targetPreview || (int)$targetPreview['is_privileged'] === 0)): ?>
         <form method="post">
           <input type="hidden" name="form_action" value="reset_2fa">
           <input type="hidden" name="user_id" value="<?= (int)$target['id'] ?>">
@@ -271,7 +385,7 @@ include __DIR__ . '/includes/layout_top.php';
       </div>
       <div class="d-flex justify-content-between align-items-center">
         <span class="small">Failed logins: <strong><?= (int)$target['failed_attempts'] ?></strong> / <?= LOGIN_MAX_ATTEMPTS ?></span>
-        <?php if ($isLocked): ?>
+        <?php if ($isLocked && ($isSuperAdmin || !$targetPreview || (int)$targetPreview['is_privileged'] === 0)): ?>
           <form method="post">
             <input type="hidden" name="form_action" value="clear_lockout">
             <input type="hidden" name="user_id" value="<?= (int)$target['id'] ?>">
@@ -287,7 +401,7 @@ include __DIR__ . '/includes/layout_top.php';
   </div>
 
   <div class="col-lg-6">
-    <?php if ($canForceLogout): ?>
+    <?php if ($canForceLogout && ($isSuperAdmin || !$targetPreview || (int)$targetPreview['is_privileged'] === 0)): ?>
     <div class="card">
       <h3 style="font-size:16px;">Active sessions <span class="text-muted small">(<?= count($sessions) ?>)</span></h3>
       <?php if ($sessions): ?>
