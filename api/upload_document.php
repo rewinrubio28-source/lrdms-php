@@ -39,6 +39,7 @@
  */
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/audit.php';
+require_once __DIR__ . '/../includes/storage.php';
 
 header('Content-Type: application/json');
 
@@ -127,8 +128,6 @@ $sourceSystem = $input['source_system'] ?? 'System 1 – Ordinance & Resolution 
 $filePath = null;
 $allFilePaths = []; // [['file_path' => ..., 'display_name' => ...], ...]
 if ($isMultipart && isset($_FILES['attachment'])) {
-    $uploadDir = __DIR__ . '/../uploads/';
-    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
     // $_FILES['attachment'] is an array (attachment[]) when the form sends
     // multiple files, but PHP gives it a flat (non-array) shape when only
@@ -148,8 +147,10 @@ if ($isMultipart && isset($_FILES['attachment'])) {
         if ($f['error'] !== UPLOAD_ERR_OK || empty($f['name'])) continue;
         $originalName = $f['name'];
         $safeName = date('Ymd_His') . '_' . substr(uniqid(), -5) . '_' . preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $originalName);
-        if (move_uploaded_file($f['tmp_name'], $uploadDir . $safeName)) {
-            $storedPath = 'uploads/' . $safeName;
+        // Saves to the S3 bucket when S3_* env vars are set, else to uploads/.
+        $localReadable = null;
+        $storedPath = storage_store_upload($f['tmp_name'], $safeName, $localReadable);
+        if ($storedPath !== null) {
             $allFilePaths[] = ['file_path' => $storedPath, 'display_name' => $originalName];
             if ($filePath === null) $filePath = $storedPath; // first successful upload
         }
