@@ -15,6 +15,7 @@ require_once __DIR__ . '/includes/rbac.php';
 require_once __DIR__ . '/includes/audit.php';
 require_once __DIR__ . '/includes/notifications.php';
 require_once __DIR__ . '/includes/ocr.php';
+require_once __DIR__ . '/includes/storage.php';
 require_once __DIR__ . '/config/database.php';
 
 require_permission('encoding', 'create');
@@ -124,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pages = [];
                 $problems = [];
                 foreach ($ocrFiles as $relPath) {
-                    $text = ocr_extract(__DIR__ . '/' . $relPath, basename($relPath));
+                    $text = storage_run_ocr($relPath);   // works for local paths and bucket URLs
                     if (ocr_result_is_placeholder($text)) {
                         $problems[] = $text;   // never store an error message as document text
                     } else {
