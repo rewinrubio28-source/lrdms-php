@@ -24,6 +24,7 @@
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/email.php'; // for BASE_URL
 require_once __DIR__ . '/config/env.php';
+require_once __DIR__ . '/includes/audit.php'; // log_action(), used for debug rows below
 load_env_file();
 define('DEV_TEST_API_KEY', env_required('API_SHARED_KEY'));
 
@@ -44,6 +45,10 @@ $httpCode = null;
 $errorMsg = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // DEBUG: proves the form POST actually reached this script.
+    try { log_action('dev_test', 'post_received', 'files=' . (empty($_FILES['attachment']['name'][0]) ? 0 : count($_FILES['attachment']['name']))); }
+    catch (Throwable $e) { error_log('dev_test log failed: ' . $e->getMessage()); }
+
     $typePrefix = [
         'Ordinance' => 'ORD', 'Resolution' => 'RES',
         'Committee Report' => 'CR', 'Minutes' => 'MIN',
@@ -106,6 +111,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errorMsg = 'Could not reach the endpoint: ' . curl_error($ch);
     }
     curl_close($ch);
+
+    // DEBUG: record the outcome in audit_log (readable in the DB console /
+    // Audit Trail) so it can be checked even if the page hides the result.
+    try {
+        log_action('dev_test', 'push_result', mb_substr(
+            'HTTP ' . $httpCode . ' | ' . ($errorMsg ?? 'no curl error') . ' | '
+            . preg_replace('/\s+/', ' ', strip_tags((string) $response)), 0, 480));
+    } catch (Throwable $e) { error_log('dev_test log failed: ' . $e->getMessage()); }
 
     if ($response !== false) {
         $result = json_decode($response, true);
