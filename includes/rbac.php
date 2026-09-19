@@ -99,6 +99,58 @@ function has_permission($module, $action) {
 }
 
 /**
+ * ROLE HIERARCHY for user management.
+ *
+ *   Super Admin (3)  >  Administrator (2)  >  every other role (1)
+ *
+ * Rule: a person may only create, assign, or manage roles/accounts that rank
+ * STRICTLY BELOW their own. So:
+ *   - Super Admin  → can create/manage Administrator and everyone below
+ *                    (nobody can create another Super Admin here).
+ *   - Administrator → can only create/manage the roles below Administrator
+ *                    (never another Administrator, never a Super Admin).
+ * Any role not listed (including future custom roles) counts as rank 1.
+ */
+function role_rank($roleName) {
+    static $ranks = ['Super Admin' => 3, 'Administrator' => 2];
+    return $ranks[$roleName] ?? 1;
+}
+
+function my_role_rank() {
+    $u = current_user();
+    return $u ? role_rank($u['role_name']) : 0;
+}
+
+/** The roles (from a full roles list) the signed-in user is allowed to assign to someone else. */
+function assignable_roles(array $roles) {
+    $mine = my_role_rank();
+    return array_values(array_filter($roles, function ($r) use ($mine) {
+        return role_rank($r['name']) < $mine;
+    }));
+}
+
+/** Server-side check: may the signed-in user assign this role id to someone? */
+function can_assign_role_id($roleId, array $roles) {
+    foreach (assignable_roles($roles) as $r) {
+        if ((int)$r['id'] === (int)$roleId) return true;
+    }
+    return false;
+}
+
+/**
+ * May the signed-in user manage (edit / reset password / disable / etc.) this
+ * account? $target needs 'id' and 'role_name'. Your own account is always
+ * allowed here; changing your own role and disabling yourself are blocked
+ * separately where they happen.
+ */
+function can_manage_user(array $target) {
+    $me = current_user();
+    if (!$me) return false;
+    if ((int)$target['id'] === (int)$me['id']) return true;
+    return role_rank($target['role_name']) < role_rank($me['role_name']);
+}
+
+/**
  * Gate a whole page on a permission. Renders a 403 message and stops
  * execution if the current role doesn't have it.
  */
