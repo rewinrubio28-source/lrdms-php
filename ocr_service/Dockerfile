@@ -20,6 +20,9 @@ COPY . .
 
 # The hosting platform injects PORT at runtime; 5001 is the local default.
 ENV PORT=5001
+# Tesseract hangs in containers with a small CPU limit when it spawns many
+# OpenMP threads. One thread is enough and finishes in seconds.
+ENV OMP_THREAD_LIMIT=1
 EXPOSE 5001
 
 # Long timeout because 300-DPI PDF OCR can take a while per request.
