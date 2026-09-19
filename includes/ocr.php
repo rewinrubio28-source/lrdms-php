@@ -57,22 +57,63 @@ function ocr_extract($filePath, $originalFileName) {
         return '[OCR error] File not found on disk: ' . $originalFileName;
     }
 
-    $curlFile = new CURLFile($filePath, mime_content_type($filePath) ?: 'application/octet-stream', $originalFileName);
+    $noText = '[OCR produced no text] "' . $originalFileName . '" may be blank, '
+            . 'very low quality, or in a script Tesseract was not trained on.';
+
+    if ($ext !== 'pdf') {
+        $r = ocr_service_request($filePath, $originalFileName);
+        if (!$r['ok']) return $r['message'];
+        return $r['text'] !== '' ? $r['text'] : $noText;
+    }
+
+    // PDFs: ask the service for a few pages at a time (default 1) instead of
+    // the whole file in one call. A multi-page scan in a single request can
+    // outlive the hosting gateway's timeout and come back as
+    // "503 Gateway timeout"; short per-page calls do not. If the service is an
+    // older version that ignores the page range, it just answers with the whole
+    // document and no total_pages, and the loop ends after one call.
+    $chunk = max(1, (int) env_optional('OCR_PAGES_PER_REQUEST', 1));
+    $parts = [];
+    $first = 1;
+    do {
+        $last = $first + $chunk - 1;
+        $r = ocr_service_request($filePath, $originalFileName, ['first_page' => $first, 'last_page' => $last]);
+        if (!$r['ok']) {
+            // Never hand back half a document as if it were complete.
+            return $r['message'] . ' (stopped at page ' . $first . ')';
+        }
+        if ($r['text'] !== '') $parts[] = $r['text'];
+        $total = $r['total_pages'];
+        $first = $last + 1;
+    } while ($total !== null && $first <= $total);
+
+    $text = trim(implode("\n\n", $parts));
+    return $text !== '' ? $text : $noText;
+}
+
+/**
+ * One HTTP call to the OCR microservice.
+ * Returns ['ok' => true, 'text' => string, 'total_pages' => int|null]
+ *      or ['ok' => false, 'message' => '[OCR ...] ...'].
+ */
+function ocr_service_request($filePath, $originalFileName, array $extraFields = []) {
+    $fields = ['file' => new CURLFile($filePath, mime_content_type($filePath) ?: 'application/octet-stream', $originalFileName)]
+            + $extraFields;
 
     $ch = curl_init(OCR_SERVICE_URL);
     curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, ['file' => $curlFile]);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); // fail fast if the service can't be reached
-    curl_setopt($ch, CURLOPT_TIMEOUT, 100); // was 30 — big scanned PDFs (6-7 MB) can take longer than 30s
+    curl_setopt($ch, CURLOPT_TIMEOUT, 100);       // per request (one page by default for PDFs)
     $response = curl_exec($ch);
     $curlError = curl_error($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
     if ($response === false) {
-        return '[OCR unavailable] Could not reach the OCR service for "' . $originalFileName . '" '
-             . '(' . $curlError . '). Is ocr_service/app.py running? See ocr_service/README.md.';
+        return ['ok' => false, 'message' => '[OCR unavailable] Could not reach the OCR service for "' . $originalFileName . '" '
+             . '(' . $curlError . '). Is ocr_service/app.py running? See ocr_service/README.md.'];
     }
 
     $decoded = json_decode($response, true);
@@ -80,13 +121,14 @@ function ocr_extract($filePath, $originalFileName) {
     if ($httpCode !== 200 || !isset($decoded['text'])) {
         $errorMsg = $decoded['error'] ?? ('Unexpected response from OCR service (HTTP ' . $httpCode . '): '
                   . substr(trim(strip_tags((string) $response)), 0, 200));
-        return '[OCR failed] "' . $originalFileName . '": ' . $errorMsg;
+        return ['ok' => false, 'message' => '[OCR failed] "' . $originalFileName . '": ' . $errorMsg];
     }
 
-    $text = trim($decoded['text']);
-
-    return $text !== '' ? $text : '[OCR produced no text] "' . $originalFileName . '" may be blank, '
-                                 . 'very low quality, or in a script Tesseract was not trained on.';
+    return [
+        'ok'          => true,
+        'text'        => trim($decoded['text']),
+        'total_pages' => isset($decoded['total_pages']) ? (int) $decoded['total_pages'] : null,
+    ];
 }
 
 /**
