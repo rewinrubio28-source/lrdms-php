@@ -19,16 +19,33 @@
  * See bert_service/README.md for how to install and run the service.
  */
 
-// Change this if the BERT service runs on a different host/port.
-define('BERT_SERVICE_URL', 'http://localhost:5000/search');
+require_once __DIR__ . '/../config/env.php';
+load_env_file();
+
+// In production set BERT_SERVICE_URL (HostForge -> Environment Variables) to the
+// deployed service, e.g. https://bert.example.com - "/search" is added if missing.
+// With no variable set it falls back to localhost for local development.
+$__bertUrl = rtrim((string) env_optional('BERT_SERVICE_URL', 'http://localhost:5000'), '/');
+if (substr($__bertUrl, -7) !== '/search') {
+    $__bertUrl .= '/search';
+}
+define('BERT_SERVICE_URL', $__bertUrl);
+unset($__bertUrl);
+
+// Optional shared secret - must match BERT_API_KEY on the BERT service.
+define('BERT_API_KEY', (string) env_optional('BERT_API_KEY', ''));
 
 function semantic_search($pdo, $query, $whereClause, $whereParams) {
     $ch = curl_init(BERT_SERVICE_URL);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['query' => $query]));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    $headers = ['Content-Type: application/json'];
+    if (BERT_API_KEY !== '') {
+        $headers[] = 'X-API-Key: ' . BERT_API_KEY;
+    }
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
