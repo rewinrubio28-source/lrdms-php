@@ -63,6 +63,7 @@ function ocr_extract($filePath, $originalFileName) {
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, ['file' => $curlFile]);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); // fail fast if the service can't be reached
     curl_setopt($ch, CURLOPT_TIMEOUT, 100); // was 30 — big scanned PDFs (6-7 MB) can take longer than 30s
     $response = curl_exec($ch);
     $curlError = curl_error($ch);
@@ -77,7 +78,8 @@ function ocr_extract($filePath, $originalFileName) {
     $decoded = json_decode($response, true);
 
     if ($httpCode !== 200 || !isset($decoded['text'])) {
-        $errorMsg = $decoded['error'] ?? 'Unexpected response from OCR service.';
+        $errorMsg = $decoded['error'] ?? ('Unexpected response from OCR service (HTTP ' . $httpCode . '): '
+                  . substr(trim(strip_tags((string) $response)), 0, 200));
         return '[OCR failed] "' . $originalFileName . '": ' . $errorMsg;
     }
 
