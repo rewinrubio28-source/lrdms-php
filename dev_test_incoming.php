@@ -70,7 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // strip anything unset so curl only sends real values plus the file.
     $payload = array_filter($payload, function ($v) { return $v !== null; });
 
-    $endpoint = rtrim(BASE_URL, '/') . '/api/upload_document.php';
+    // Call the app's own Apache locally (inside the container) instead of going
+    // out through the public domain/Cloudflare and back in — avoids DNS/proxy
+    // failures (502) on the self-request.
+    $endpoint = 'http://127.0.0.1/api/upload_document.php';
 
     // Every selected file is sent now — no cap. Multiple files under the
     // same field name need distinct array-style keys ('attachment[0]',
