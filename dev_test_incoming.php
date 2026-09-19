@@ -109,6 +109,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($response !== false) {
         $result = json_decode($response, true);
+        // If the endpoint answered with something that isn't JSON (HTML error
+        // page, empty body, PHP fatal, proxy error...), don't swallow it —
+        // keep the HTTP code and the raw body so the result card shows it.
+        if ($result === null) {
+            $result = [
+                'error'     => 'Endpoint did not return JSON.',
+                'http_code' => $httpCode,
+                'raw_body'  => mb_substr((string) $response, 0, 2000),
+            ];
+        }
     }
 
     // PRG: stash the outcome in the session instead of rendering it on this
@@ -180,7 +190,7 @@ if (isset($_SESSION['dev_test_incoming_result']) || isset($_SESSION['dev_test_in
       <?php endif; ?>
       <details class="mt-2">
         <summary class="text-muted small" style="cursor:pointer;">Show raw response (for debugging)</summary>
-        <pre class="bg-light border rounded p-3 mt-2" style="white-space:pre-wrap;"><?= htmlspecialchars(json_encode($result, JSON_PRETTY_PRINT)) ?></pre>
+        <pre class="bg-light border rounded p-3 mt-2" style="white-space:pre-wrap;"><?= htmlspecialchars(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE)) ?></pre>
       </details>
     </div>
   <?php endif; ?>
