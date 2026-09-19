@@ -50,6 +50,11 @@ TESSERACT_CONFIG = "--psm 6 --oem 3 -l eng+fil"
 # blocking the worker until the hosting proxy returns a 504.
 TESSERACT_TIMEOUT = 50
 
+# PDF rasterizing resolution. 300 is the most accurate but slowest; if a single
+# page still takes too long behind the hosting gateway, set OCR_DPI=200 in this
+# app's Environment Variables (roughly 2x faster, slightly less accurate).
+OCR_DPI = int(os.environ.get("OCR_DPI", "300"))
+
 
 def preprocess_image(image):
     """Enhance image for better OCR accuracy."""
@@ -91,18 +96,32 @@ def ocr_image_file(path):
     return pytesseract.image_to_string(processed, config=TESSERACT_CONFIG, timeout=TESSERACT_TIMEOUT)
 
 
-def ocr_pdf_file(path):
+def ocr_pdf_file(path, first_page=None, last_page=None):
+    """OCR a PDF, optionally only pages first_page..last_page (1-based).
+
+    Returns (text, total_pages). PHP asks for one page (or a few) per request
+    so that no single call outlives the hosting gateway's timeout (the 503
+    "Gateway timeout" a whole multi-page scan used to hit). With no range it
+    behaves as before and reads every page.
+    """
     # Imported lazily so the service still starts even if poppler /
     # pdf2image isn't installed, for setups that only need image OCR.
-    from pdf2image import convert_from_path
+    from pdf2image import convert_from_path, pdfinfo_from_path
 
-    pages = convert_from_path(path, dpi=300)
+    total = int(pdfinfo_from_path(path)["Pages"])
+    first = max(1, first_page or 1)
+    last = min(total, last_page or total)
+    if first > total or first > last:
+        return "", total
+
+    # Only the requested pages are rasterized (also keeps RAM use low).
+    pages = convert_from_path(path, dpi=OCR_DPI, first_page=first, last_page=last)
     text_parts = []
-    for i, page_image in enumerate(pages, start=1):
+    for offset, page_image in enumerate(pages):
         processed = preprocess_image(page_image)
         page_text = pytesseract.image_to_string(processed, config=TESSERACT_CONFIG, timeout=TESSERACT_TIMEOUT)
-        text_parts.append(f"--- Page {i} ---\n{page_text}")
-    return "\n\n".join(text_parts)
+        text_parts.append(f"--- Page {first + offset} ---\n{page_text}")
+    return "\n\n".join(text_parts), total
 
 
 @app.route("/", methods=["GET"])
@@ -131,12 +150,19 @@ def ocr():
         tmp_path = tmp.name
         uploaded.save(tmp_path)
 
+    def _int_field(name):
+        try:
+            value = int(request.form.get(name, ""))
+            return value if value > 0 else None
+        except (TypeError, ValueError):
+            return None
+
     try:
         if ext in ALLOWED_IMAGE_EXT:
             text = ocr_image_file(tmp_path)
-        else:
-            text = ocr_pdf_file(tmp_path)
-        return jsonify({"text": text.strip()})
+            return jsonify({"text": text.strip()})
+        text, total_pages = ocr_pdf_file(tmp_path, _int_field("first_page"), _int_field("last_page"))
+        return jsonify({"text": text.strip(), "total_pages": total_pages})
     except Exception as exc:  # keep the service alive, report the failure to PHP
         return jsonify({"error": str(exc)}), 500
     finally:
