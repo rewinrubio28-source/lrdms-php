@@ -77,7 +77,7 @@ $__sys = (int)($_GET['sys'] ?? 0);
             <svg class="nav-group__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
           </summary>
           <div class="nav-group__sub">
-            <a class="nav-item nav-item--sub <?= !$__sys ? 'is-active' : '' ?>" href="repository.php">All Records<?php if (current_user() && has_permission('repository', 'view_all')): $navTotal = get_db()->query('SELECT COUNT(*) FROM documents')->fetchColumn(); ?> <span class="badge text-bg-primary" style="font-size:10px;"><?= (int)$navTotal ?></span><?php endif; ?></a>
+            <a class="nav-item nav-item--sub <?= !$__sys ? 'is-active' : '' ?>" href="repository.php">All Records<?php if (current_user()): list($__navClause, $__navParams) = document_visibility_clause(current_user()); $__navStmt = get_db()->prepare("SELECT COUNT(*) FROM documents d WHERE $__navClause"); $__navStmt->execute($__navParams); $navTotal = (int)$__navStmt->fetchColumn(); ?> <span class="badge text-bg-primary" style="font-size:10px;"><?= $navTotal ?></span><?php endif; ?></a>
             <a class="nav-item nav-item--sub <?= $__sys === 1 ? 'is-active' : '' ?>" href="integrations.php?sys=1">Ordinance &amp; Resolution Lifecycle</a>
             <a class="nav-item nav-item--sub <?= $__sys === 2 ? 'is-active' : '' ?>" href="integrations.php?sys=2">Session &amp; Legislative Meeting</a>
             <a class="nav-item nav-item--sub <?= $__sys === 3 ? 'is-active' : '' ?>" href="integrations.php?sys=3">Agenda &amp; Calendar</a>
