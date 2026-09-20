@@ -110,6 +110,18 @@ function notify_status_change($doc, $oldStatus, $newStatus, $changedByUser) {
                     . ($doc['doc_number'] ?? 'a document') . ' — ' . ($doc['title'] ?? '')
             );
         }
+
+        // Super Admin sees every in-app notification as an overseer,
+        // on top of whatever role-specific recipients this event has.
+        // In-app bell only — deliberately not added to the email
+        // $recipients list above, so this doesn't also spam their inbox.
+        notify_role_users(
+            'Super Admin',
+            'review_request',
+            $doc['id'] ?? null,
+            ($changedByUser['full_name'] ?? 'Someone') . ' requested review from the committee secretary for '
+                . ($doc['doc_number'] ?? 'a document') . ' — ' . ($doc['title'] ?? '')
+        );
     }
 
     // 3. When enacted, also notify Records Officers.
@@ -188,6 +200,17 @@ function notify_incoming_document($doc, $sourceSystem) {
     // audience as the email alert below.
     notify_role_users(
         'Records Officer',
+        'incoming_document',
+        $doc['id'] ?? null,
+        ($sourceSystem ?: 'An upstream system') . ' sent in ' . ($doc['doc_number'] ?? 'a document')
+            . ' — ' . ($doc['title'] ?? '') . '. Awaiting verification.'
+    );
+
+    // Super Admin sees every in-app notification as an overseer, same
+    // as the "Under Review" case in notify_status_change(). In-app
+    // bell only — not added to the email $recipients list below.
+    notify_role_users(
+        'Super Admin',
         'incoming_document',
         $doc['id'] ?? null,
         ($sourceSystem ?: 'An upstream system') . ' sent in ' . ($doc['doc_number'] ?? 'a document')
