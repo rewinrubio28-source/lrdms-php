@@ -9,7 +9,7 @@ RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/wh
 
 # Download the model at BUILD time so the container doesn't have to fetch
 # ~440MB on every cold start.
-ARG BERT_MODEL=sentence-transformers/bert-base-nli-mean-tokens
+ARG BERT_MODEL=sentence-transformers/all-MiniLM-L6-v2
 ENV BERT_MODEL=${BERT_MODEL}
 RUN python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['BERT_MODEL'])"
 
