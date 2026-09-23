@@ -1,0 +1,7 @@
+.git
+.gitignore
+docs/
+sql/
+*.md
+uploads/*
+!uploads/.gitkeep
