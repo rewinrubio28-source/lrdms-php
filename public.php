@@ -401,22 +401,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       cursor: default !important;
     }
 
-    /* Login Modal - branded split panel */
-    #loginModal .modal-dialog {
-      max-width: 820px;
-    }
-    #loginModal .modal-content {
-      border: none;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-    }
-    #loginModal .modal-body {
-      padding: 0;
+    /* Login screen - full page, branded split panel (no longer a popup modal) */
+    #loginModal.login-fullscreen {
+      position: fixed;
+      inset: 0;
+      z-index: 1055;
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
+      background: var(--lrdms-navy-dark, #0b1f3a);
+      overflow-y: auto;
     }
     #loginModal .login-split {
       display: flex;
-      min-height: 480px;
+      flex-wrap: wrap;
+      min-height: 100vh;
+      width: 100%;
+      margin: 0 auto;
+    }
+    @media (min-width: 992px) {
+      #loginModal .login-split {
+        max-width: 1100px;
+        min-height: auto;
+        margin: auto;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      }
     }
     #loginModal .login-brand-panel {
       flex: 0 0 42%;
@@ -708,368 +719,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
 
 <body class="index-page">
 
-  <header id="header" class="header d-flex align-items-center fixed-top">
-    <div class="container-fluid container-xl position-relative d-flex align-items-center">
-
-      <a href="public.php" class="logo d-flex align-items-center me-auto">
-        <h1 class="sitename">MANILA CITY HALL</h1>
-      </a>
-
-      <nav id="navmenu" class="navmenu">
-        <ul>
-          <li><a href="#hero" class="active">Home</a></li>
-          <li><a href="#about">About</a></li>
-          <li><a href="#features">Features</a></li>
-          <li><a href="#process">Process</a></li>
-          <li><a href="#legislation">Legislative Documents</a></li>
-          <li><a href="#contact">Contact</a></li>
-        </ul>
-        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-      </nav>
-
-      <a class="btn-getstarted" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Sign In</a>
-
-    </div>
-  </header>
-
-  <main class="main">
-
-    <section id="hero" class="hero section">
-
-      <div class="container">
-        <div class="row gy-4">
-          <div class="col-lg-6 order-2 order-lg-1 d-flex flex-column justify-content-center" data-aos="zoom-out">
-            <h1>Legislative Records & Document Management System</h1>
-            <p>A centralized platform for managing ordinances, resolutions, and legislative documents of the Lungsod ng Maynila.</p>
-            <div class="d-flex">
-              <a href="#about" class="btn-get-started">Learn More</a>
-              <a href="#" class="btn-get-started" style="background: var(--lrdms-gold); border-color: var(--lrdms-gold);" data-bs-toggle="modal" data-bs-target="#loginModal">Sign In</a>
-            </div>
-          </div>
-          <div class="col-lg-6 order-1 order-lg-2 hero-img" data-aos="zoom-out" data-aos-delay="200">
-            <img src="Arsha/assets/img/manila logo.png" class="img-fluid" alt="Lungsod ng Maynila Logo">
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <section id="about" class="about section dark-background">
-
-      <div class="container section-title" data-aos="fade-up">
-        <h2>About Us</h2>
-      </div>
-
-      <div class="container">
-        <div class="row gy-4">
-          <div class="col-lg-6 content" data-aos="fade-up" data-aos-delay="100">
-            <p>
-              The Legislative Records and Document Management System (LRDMS) is designed to streamline the management of legislative documents within the Lungsod ng Maynila.
-            </p>
-            <ul>
-              <li><i class="bi bi-check2-circle"></i> <span>Centralized repository for all legislative documents</span></li>
-              <li><i class="bi bi-check2-circle"></i> <span>Streamlined encoding and submission workflow</span></li>
-              <li><i class="bi bi-check2-circle"></i> <span>Version control for document tracking</span></li>
-              <li><i class="bi bi-check2-circle"></i> <span>Advanced search and retrieval capabilities</span></li>
-            </ul>
-          </div>
-          <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
-            <p>Our system provides a secure and efficient way to manage ordinances, resolutions, committee reports, and other legislative documents. With role-based access control, we ensure that sensitive documents are only accessible to authorized personnel.</p>
-            <a href="#features" class="read-more"><span>Explore Features</span><i class="bi bi-arrow-right"></i></a>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <section id="features" class="services section dark-background">
-
-      <div class="container section-title" data-aos="fade-up">
-        <h2>Features</h2>
-        <p>Comprehensive tools for legislative document management</p>
-      </div>
-
-      <div class="container">
-        <div class="row gy-4">
-          <div class="col-xl-3 col-md-6 d-flex" data-aos="fade-up" data-aos-delay="100">
-            <div class="service-item position-relative">
-              <div class="icon"><i class="bi bi-file-earmark-text icon"></i></div>
-              <h4>Document Encoding</h4>
-              <p>Easy-to-use form for creating and submitting new legislative documents</p>
-            </div>
-          </div>
-          <div class="col-xl-3 col-md-6 d-flex" data-aos="fade-up" data-aos-delay="200">
-            <div class="service-item position-relative">
-              <div class="icon"><i class="bi bi-folder icon"></i></div>
-              <h4>Repository</h4>
-              <p>Centralized storage for all ordinances, resolutions, and committee reports</p>
-            </div>
-          </div>
-          <div class="col-xl-3 col-md-6 d-flex" data-aos="fade-up" data-aos-delay="300">
-            <div class="service-item position-relative">
-              <div class="icon"><i class="bi bi-search icon"></i></div>
-              <h4>Advanced Search</h4>
-              <p>Find documents quickly with powerful search and filtering options</p>
-            </div>
-          </div>
-          <div class="col-xl-3 col-md-6 d-flex" data-aos="fade-up" data-aos-delay="400">
-            <div class="service-item position-relative">
-              <div class="icon"><i class="bi bi-clock-history icon"></i></div>
-              <h4>Version Control</h4>
-              <p>Track all changes and revisions made to each document</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <section id="process" class="work-process section dark-background">
-
-      <div class="container section-title" data-aos="fade-up">
-        <h2>How It Works</h2>
-        <p>Simple workflow for legislative document management</p>
-      </div>
-
-      <div class="container" data-aos="fade-up" data-aos-delay="100">
-        <div class="row gy-5">
-          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
-            <div class="steps-item">
-              <div class="steps-content">
-                <div class="steps-number">01</div>
-                <h3>Create Document</h3>
-                <p>Authorized users can create new legislative documents using the encoding form with all necessary details.</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
-            <div class="steps-item">
-              <div class="steps-content">
-                <div class="steps-number">02</div>
-                <h3>Review & Approval</h3>
-                <p>Documents go through a review process where authorized personnel can approve, request changes, or reject.</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="400">
-            <div class="steps-item">
-              <div class="steps-content">
-                <div class="steps-number">03</div>
-                <h3>Publication</h3>
-                <p>Once enacted, documents become part of the public repository and can be searched by authorized users.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <section id="legislation" class="legislation section dark-background">
-
-      <div class="container section-title" data-aos="fade-up">
-        <h2><?= $typeFilter !== 'All' ? htmlspecialchars($typeLabel) : 'Published Laws &amp; Legislative Records' ?></h2>
-        <p>Read the city's enacted ordinances, resolutions, and legislative records</p>
-
-        <div class="legis-filters">
-          <a href="#" class="legis-filter<?= $typeFilter === 'All' ? ' is-active' : '' ?>" data-type="All">All</a>
-          <?php foreach ($publicTypes as $t): ?>
-            <a href="#" class="legis-filter<?= $typeFilter === $t ? ' is-active' : '' ?>" data-type="<?= $t ?>"><?= htmlspecialchars($typeDisplayLabels[$t] ?? $t) ?></a>
-          <?php endforeach; ?>
-        </div>
-      </div>
-
-      <div class="container">
-        <div class="row gy-4">
-          <?php if (!$publicDocs): ?>
-            <div class="col-12 text-center" data-aos="fade-up">
-              <p class="text-muted"><?= $typeFilter !== 'All' ? 'No published ' . htmlspecialchars(strtolower($typeDisplayLabels[$typeFilter] ?? $typeFilter)) . ' documents yet.' : 'Published laws will appear here once available.' ?></p>
-            </div>
-          <?php else: ?>
-            <?php foreach ($publicDocs as $i => $doc): ?>
-              <div class="col-lg-4 col-md-6 d-flex law-card-wrap" data-type="<?= htmlspecialchars($doc['doc_type']) ?>" data-aos="fade-up" data-aos-delay="<?= (($i % 3) + 1) * 100 ?>">
-                <article class="law-card position-relative">
-                  <span class="law-card__type"><?= htmlspecialchars($typeDisplayLabels[$doc['doc_type']] ?? $doc['doc_type']) ?></span>
-                  <h4 class="law-card__title"><?= htmlspecialchars($doc['title']) ?></h4>
-                  <p class="law-card__meta"><?= htmlspecialchars($doc['doc_number']) ?> · Enacted <?= $doc['enactment_date'] ? date('M j, Y', strtotime($doc['enactment_date'])) : '—' ?></p>
-                  <?php if (!empty($doc['sponsor'])): ?><p class="law-card__sponsor">Sponsored by <?= htmlspecialchars($doc['sponsor']) ?></p><?php endif; ?>
-                  <a href="public_view.php?id=<?= (int)$doc['id'] ?>" class="law-card__read stretched-link">Read document →</a>
-                </article>
-              </div>
-            <?php endforeach; ?>
-            <!-- empty state — JS shows this when no cards match the active filter -->
-            <div class="col-12 text-center legis-empty" style="display:none;">
-              <i class="bi bi-inbox"></i>
-              <p class="legis-empty-msg"></p>
-            </div>
-          <?php endif; ?>
-        </div>
-      </div>
-    </section>
-
-    <section id="contact" class="contact section dark-background">
-
-      <div class="container section-title" data-aos="fade-up">
-        <h2>Contact</h2>
-        <p>For inquiries and support</p>
-      </div>
-
-      <div class="container" data-aos="fade-up" data-aos-delay="100">
-        <div class="row gy-4 justify-content-center">
-          <div class="col-lg-6">
-            <div class="info-wrap">
-              <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="200">
-                <i class="bi bi-geo-alt flex-shrink-0"></i>
-                <div>
-                  <h3>Location</h3>
-                  <p>Manila City Hall, Padre Burgos Avenue<br>Ermita, Manila 1000, Metro Manila</p>
-                </div>
-              </div>
-              <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="300">
-                <i class="bi bi-envelope flex-shrink-0"></i>
-                <div>
-                  <h3>Email</h3>
-                  <p>info@manila.gov.ph</p>
-                </div>
-              </div>
-              <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="400">
-                <i class="bi bi-phone flex-shrink-0"></i>
-                <div>
-                  <h3>Phone</h3>
-                  <p>(02) 8527-5768</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-  </main>
-
-  <footer id="footer" class="footer">
-
-    <div class="container footer-top">
-      <div class="row gy-4">
-        <div class="col-lg-4 col-md-6 footer-about">
-          <a href="public.php" class="d-flex align-items-center">
-            <span class="sitename">LRDMS</span>
-          </a>
-          <div class="footer-contact pt-3">
-            <p>Manila City Hall</p>
-            <p>Intramuros, Manila</p>
-            <p class="mt-3"><strong>Email:</strong> <span>info@manila.gov.ph</span></p>
-          </div>
-        </div>
-        <div class="col-lg-2 col-md-3 footer-links">
-          <h4>Quick Links</h4>
-          <ul>
-            <li><i class="bi bi-chevron-right"></i> <a href="#hero">Home</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#about">About</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#features">Features</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#legislation">Legislative Documents</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#contact">Contact</a></li>
-          </ul>
-        </div>
-        <div class="col-lg-2 col-md-3 footer-links">
-          <h4>System Access</h4>
-          <ul>
-            <li><i class="bi bi-chevron-right"></i> <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Sign In</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <div class="container copyright text-center mt-4">
-      <p>© <span>Copyright</span> <strong class="px-1 sitename">LRDMS</strong> <span>All Rights Reserved</span></p>
-    </div>
-
-  </footer>
-
-  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-
-  <div id="preloader"></div>
+  <!-- Landing/marketing UI removed: this subsystem now goes straight to login.
+       A separate shared landing page (built by the integration team) links
+       directly into this login screen for the LRDMS subsystem. -->
 
   <script src="Arsha/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="Arsha/assets/vendor/php-email-form/validate.js"></script>
-  <script src="Arsha/assets/vendor/aos/aos.js"></script>
-  <script src="Arsha/assets/vendor/glightbox/js/glightbox.min.js"></script>
-  <script src="Arsha/assets/vendor/swiper/swiper-bundle.min.js"></script>
-  <script src="Arsha/assets/vendor/waypoints/noframework.waypoints.js"></script>
-  <script src="Arsha/assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
-  <script src="Arsha/assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
-  <script src="Arsha/assets/js/main.js"></script>
 
-  <!-- Legislation filter pills (client-side, no page refresh) -->
-  <script>
-  (function () {
-    var headingLabels = <?= json_encode($typeHeadingLabels) ?>;
-    var pills     = document.querySelectorAll('#legislation .legis-filter');
-    var cards     = document.querySelectorAll('#legislation .law-card-wrap');
-    var heading   = document.querySelector('#legislation .section-title h2');
-    var emptyWrap = document.querySelector('#legislation .legis-empty');
-    var emptyMsg  = document.querySelector('#legislation .legis-empty-msg');
 
-    function applyFilter(type) {
-      var anyVisible = false;
-
-      // show / hide cards (need !important to override Bootstrap .d-flex)
-      cards.forEach(function (card) {
-        if (type === 'All' || card.getAttribute('data-type') === type) {
-          card.style.removeProperty('display');
-          anyVisible = true;
-        } else {
-          card.style.setProperty('display', 'none', 'important');
-        }
-      });
-
-      // toggle active pill
-      pills.forEach(function (p) {
-        p.classList.toggle('is-active', p.getAttribute('data-type') === type);
-      });
-
-      // update heading
-      heading.textContent = (type === 'All')
-        ? 'Published Laws & Legislative Records'
-        : (headingLabels[type] || type + 's');
-
-      // empty state
-      if (emptyWrap) {
-        if (anyVisible) {
-          emptyWrap.style.display = 'none';
-        } else {
-          var label = (type === 'All') ? 'documents' : (headingLabels[type] || type).toLowerCase();
-          emptyMsg.textContent = 'No published ' + label + ' available yet.';
-          emptyWrap.style.display = '';
-        }
-      }
-
-      // sync URL without reload
-      var url = new URL(window.location);
-      if (type === 'All') { url.searchParams.delete('type'); }
-      else                { url.searchParams.set('type', type); }
-      history.replaceState(null, '', url);
-    }
-
-    // pill click handlers
-    pills.forEach(function (pill) {
-      pill.addEventListener('click', function (e) {
-        e.preventDefault();
-        applyFilter(this.getAttribute('data-type'));
-      });
-    });
-
-    // apply initial filter on page load (handles ?type=… in URL)
-    var initialType = new URLSearchParams(window.location.search).get('type') || 'All';
-    applyFilter(initialType);
-  })();
-  </script>
-
-  <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-body">
+  <div id="loginModal" class="login-fullscreen">
           <div class="login-split">
             <div class="login-brand-panel">
               <div class="login-brand-icon" style="background: transparent; padding: 0; width: 170px; height: 170px; margin-bottom: 12px;">
@@ -1083,7 +740,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
               </div>
             </div>
             <div class="login-form-panel">
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
 
               <div id="signInView">
                 <h5 id="loginModalLabel">Welcome</h5>
@@ -1239,9 +896,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
   </div>
 
    <script>
@@ -1546,6 +1200,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
         forgotCode.addEventListener('input', syncForgotHiddenFields);
       }
 
+      // Ang login screen ay full-page na ngayon (hindi na popup modal), kaya
+      // laging naka-display na ito nang default sa CSS -- wala nang
+      // show()/hide() na kailangan.
+
       <?php if ($loginError): ?>
       // This no longer triggers because AJAX login exits early before setting $loginError
       // Kept for backward compatibility with non-AJAX fallback
@@ -1553,8 +1211,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
 
       <?php if (!empty($loginLocked)): ?>
       document.addEventListener('DOMContentLoaded', function() {
-        var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-        loginModal.show();
         var alertEl = document.getElementById('loginErrorAlert');
         var msgEl = document.getElementById('loginErrorMessage');
         if (alertEl && msgEl) {
@@ -1566,8 +1222,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
 
       <?php if ($forgotResetSuccess): ?>
       document.addEventListener('DOMContentLoaded', function() {
-        var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-        loginModal.show();
         var signInView = document.getElementById('signInView');
         var forgotView = document.getElementById('forgotPasswordView');
         if (signInView) signInView.classList.add('d-none');
@@ -1576,8 +1230,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       });
       <?php elseif ($forgotStep === 'code' || $forgotStep === 'reset'): ?>
       document.addEventListener('DOMContentLoaded', function() {
-        var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-        loginModal.show();
         var signInView = document.getElementById('signInView');
         var forgotView = document.getElementById('forgotPasswordView');
         if (signInView) signInView.classList.add('d-none');
