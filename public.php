@@ -747,7 +747,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
             </div>
           </div>
           <div class="col-lg-6 order-1 order-lg-2 hero-img" data-aos="zoom-out" data-aos-delay="200">
-            <img src="Arsha/assets/img/manila logo.png" class="img-fluid animated" alt="Lungsod ng Maynila Logo">
+            <img src="Arsha/assets/img/manila logo.png" class="img-fluid" alt="Lungsod ng Maynila Logo">
           </div>
         </div>
       </div>
