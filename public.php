@@ -401,7 +401,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       cursor: default !important;
     }
 
-    /* Login screen - full page, branded split panel (no longer a popup modal) */
+    /* Login screen - full-bleed split layout (reference: Manila CMAS login) */
     #loginModal.login-fullscreen {
       position: fixed;
       inset: 0;
@@ -409,7 +409,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       display: flex;
       align-items: stretch;
       justify-content: stretch;
-      background: var(--lrdms-navy-dark, #0b1f3a);
+      background: #0b1730;
       overflow-y: auto;
     }
     #loginModal .login-split {
@@ -417,127 +417,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       flex-wrap: wrap;
       min-height: 100vh;
       width: 100%;
-      margin: 0 auto;
-    }
-    @media (min-width: 992px) {
-      #loginModal .login-split {
-        max-width: 1100px;
-        min-height: auto;
-        margin: auto;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-      }
     }
     #loginModal .login-brand-panel {
-      flex: 0 0 42%;
-      background: linear-gradient(160deg, var(--lrdms-navy) 0%, var(--lrdms-navy-dark) 100%);
-      color: #fff;
-      padding: 45px 35px;
+      flex: 1 1 48%;
+      min-height: 42vh;
       position: relative;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      overflow: hidden;
-    }
-    #loginModal .login-brand-panel::before {
-      content: "";
-      position: absolute;
-      width: 260px;
-      height: 260px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.06);
-      top: -90px;
-      right: -90px;
-    }
-    #loginModal .login-brand-panel::after {
-      content: "";
-      position: absolute;
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      background: rgba(201, 162, 39, 0.15);
-      bottom: -60px;
-      left: -60px;
-    }
-    #loginModal .login-brand-icon {
-      width: 62px;
-      height: 62px;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.12);
-      display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
-      color: var(--lrdms-gold-light);
-      margin-bottom: 22px;
-      position: relative;
-      z-index: 1;
+      text-align: center;
+      padding: 56px 40px;
+      color: #fff;
+      background:
+        linear-gradient(165deg, rgba(9, 23, 48, 0.80) 0%, rgba(5, 13, 28, 0.90) 100%),
+        url('Arsha/assets/img/bg.jpg') center/cover no-repeat;
+    }
+    #loginModal .login-brand-seal {
+      width: 168px;
+      height: 168px;
+      border-radius: 50%;
+      background: #fff;
+      padding: 10px;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+      margin-bottom: 26px;
+      flex-shrink: 0;
+    }
+    #loginModal .login-brand-seal img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
     }
     #loginModal .login-brand-panel h4 {
       font-family: var(--heading-font, "Jost", sans-serif);
-      font-weight: 700;
-      font-size: 26px;
-      margin-bottom: 12px;
-      position: relative;
-      z-index: 1;
+      font-weight: 800;
+      font-size: 32px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #fff;
+      margin-bottom: 10px;
     }
     #loginModal .login-brand-panel p {
-      font-size: 14.5px;
-      line-height: 1.7;
-      color: rgba(255, 255, 255, 0.8);
-      position: relative;
-      z-index: 1;
-      margin-bottom: 0;
-    }
-    #loginModal .login-brand-badge {
-      margin-top: 30px;
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 12px;
-      padding: 10px 14px;
-      position: relative;
-      z-index: 1;
-      width: fit-content;
-    }
-    #loginModal .login-brand-badge i {
-      color: var(--lrdms-gold-light);
-      font-size: 18px;
-    }
-    #loginModal .login-brand-badge span {
-      font-size: 12.5px;
-      color: rgba(255, 255, 255, 0.85);
+      font-size: 15px;
+      font-weight: 500;
+      color: #a9c6ec;
+      max-width: 360px;
+      margin: 0 auto;
     }
     #loginModal .login-form-panel {
-      flex: 1;
-      padding: 45px 40px;
-      position: relative;
+      flex: 1 1 52%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 32px;
+      background: #fff;
     }
-    #loginModal .login-form-panel .btn-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      z-index: 2;
+    #loginModal .login-form-inner {
+      width: 100%;
+      max-width: 380px;
     }
     #loginModal .login-form-panel h5 {
       font-family: var(--heading-font, "Jost", sans-serif);
-      font-weight: 700;
-      color: var(--lrdms-navy);
-      font-size: 24px;
+      font-weight: 800;
+      color: #0b1f3a;
+      font-size: 30px;
+      text-align: center;
       margin-bottom: 6px;
     }
     #loginModal .login-form-panel .login-subtext {
       color: #6c757d;
-      font-size: 14px;
-      margin-bottom: 28px;
+      font-size: 14.5px;
+      text-align: center;
+      margin-bottom: 26px;
     }
     #loginModal .form-label {
       font-weight: 600;
       font-size: 13.5px;
-      color: var(--lrdms-navy);
+      color: #0b1f3a;
+      margin-bottom: 6px;
     }
     #loginModal .form-icon-input {
       position: relative;
@@ -552,17 +510,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       pointer-events: none;
     }
     #loginModal .form-icon-input input.form-control {
-      border: 1px solid #dee2e6;
-      background: #f5f6f8;
+      border: 1.5px solid #e1e4ea;
+      background: #fff;
       border-radius: 10px;
-      padding: 10px 14px 10px 40px;
+      padding: 11px 14px 11px 40px;
+      font-size: 14.5px;
     }
     #loginModal .form-icon-input.has-toggle input.form-control {
       padding-right: 42px;
     }
     #loginModal .form-icon-input input.form-control:focus {
-      box-shadow: none;
-      border-color: var(--lrdms-navy);
+      box-shadow: 0 0 0 3px rgba(11, 31, 58, 0.12);
+      border-color: #0b1f3a;
       background: #fff;
     }
     #loginModal .form-icon-input.has-error input.form-control {
@@ -585,7 +544,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       cursor: pointer;
     }
     #loginModal .toggle-password-btn:hover {
-      color: var(--lrdms-navy);
+      color: #0b1f3a;
     }
     #loginModal .field-error {
       display: flex;
@@ -596,13 +555,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       margin-top: 6px;
     }
     #loginModal .lrdms-link {
-      color: var(--lrdms-navy);
-      font-size: 13px;
+      color: #0b1f3a;
+      font-size: 12.5px;
       text-decoration: none;
       font-weight: 600;
     }
     #loginModal .lrdms-link:hover {
-      color: var(--lrdms-gold);
+      color: #c9a227;
       text-decoration: underline;
     }
     #loginModal .alert-success-soft {
@@ -610,24 +569,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       border: 1px solid #bfe6c9;
       color: #1e7a3d;
     }
-     #loginModal .btn-login-submit {
-      background: linear-gradient(135deg, var(--lrdms-gold) 0%, var(--lrdms-gold-light) 100%);
+    #loginModal .btn-login-submit {
+      background: linear-gradient(135deg, #123a66 0%, #081a34 100%);
       border: none;
       color: #fff;
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 15px;
       border-radius: 10px;
-      padding: 11px 0;
+      padding: 13px 0;
       letter-spacing: 0.3px;
+      box-shadow: 0 10px 24px rgba(8, 26, 52, 0.28);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
     #loginModal .btn-login-submit:hover {
       transform: translateY(-1px);
-      box-shadow: 0 8px 18px rgba(201, 162, 39, 0.35);
+      box-shadow: 0 12px 26px rgba(8, 26, 52, 0.38);
       color: #fff;
+    }
+    #loginModal .login-footnote {
+      text-align: center;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #8a94a6;
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid #eef0f3;
+    }
+    #loginModal .reset-success-icon {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: rgba(25, 135, 84, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+    }
+    #loginModal .reset-success-icon i {
+      font-size: 36px;
+      color: #198754;
     }
     @media (max-width: 767.98px) {
       #loginModal .login-brand-panel {
-        display: none;
+        flex: 1 1 100%;
+        min-height: 32vh;
+        padding: 36px 24px;
+      }
+      #loginModal .login-brand-seal {
+        width: 108px;
+        height: 108px;
+        margin-bottom: 16px;
+      }
+      #loginModal .login-brand-panel h4 {
+        font-size: 22px;
+      }
+      #loginModal .login-brand-panel p {
+        font-size: 13px;
+      }
+      #loginModal .login-form-panel {
+        flex: 1 1 100%;
+        padding: 32px 24px;
       }
     }
 
@@ -729,22 +730,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
   <div id="loginModal" class="login-fullscreen">
           <div class="login-split">
             <div class="login-brand-panel">
-              <div class="login-brand-icon" style="background: transparent; padding: 0; width: 170px; height: 170px; margin-bottom: 12px;">
-                <img src="Arsha/assets/img/manila logo.png" alt="Manila City Hall" style="width: 160px; height: 160px; object-fit: contain;">
+              <div class="login-brand-seal">
+                <img src="Arsha/assets/img/manila logo.png" alt="Lungsod ng Maynila Seal">
               </div>
-              <h4>LRDMS</h4>
-              <p>Legal Records &amp; Document Management System for Manila City Hall. Sign in to securely access case files and records.</p>
-              <div class="login-brand-badge">
-                <i class="bi bi-shield-lock-fill"></i>
-                <span>Role-based, audited access</span>
-              </div>
+              <h4>Lungsod ng Maynila</h4>
+              <p>Legal Records &amp; Document Management System</p>
             </div>
             <div class="login-form-panel">
-
+              <div class="login-form-inner">
 
               <div id="signInView">
-                <h5 id="loginModalLabel">Welcome</h5>
-                <div class="login-subtext">Sign in to continue to your dashboard.</div>
+                <h5 id="loginModalLabel">Welcome back!</h5>
+                <div class="login-subtext">Sign in to continue to your account.</div>
 
                 <div id="loginErrorAlert" class="alert alert-danger d-flex align-items-center gap-2 py-2 small mb-3 d-none" role="alert">
                   <i class="bi bi-exclamation-triangle-fill"></i>
@@ -763,8 +760,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
                     <div class="field-error d-none" id="usernameError"><i class="bi bi-exclamation-circle-fill"></i><span>Username is required.</span></div>
                   </div>
                   <div class="mb-3">
-                    <label for="modalPassword" class="form-label">Password</label>
-                    <div class="form-icon-input has-toggle" id="passwordFieldWrap">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <label for="modalPassword" class="form-label mb-0">Password</label>
+                      <a href="#" id="showForgotPassword" class="lrdms-link">Forgot password?</a>
+                    </div>
+                    <div class="form-icon-input has-toggle mt-2" id="passwordFieldWrap">
                       <i class="bi bi-lock form-control-icon-left"></i>
                       <input type="password" id="modalPassword" name="password" class="form-control" placeholder="Enter your password" required>
                       <button class="toggle-password-btn" type="button" id="togglePassword" aria-label="Toggle password visibility">
@@ -773,20 +773,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
                     </div>
                     <div class="field-error d-none" id="passwordError"><i class="bi bi-exclamation-circle-fill"></i><span>Password is required.</span></div>
                   </div>
-                  <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="form-check">
-                    
-                      
-                    </div>
-                    <a href="#" id="showForgotPassword" class="lrdms-link">Forgot password?</a>
-                  </div>
-                  <button type="submit" class="btn btn-login-submit w-100">
-                    <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
-                  </button>
+                  <button type="submit" class="btn btn-login-submit w-100 mt-2">Sign In</button>
                 </form>
 
-                <div class="text-center mt-3">
-                  <small class="text-muted">Contact the administrator for account credentials.</small>
+                <div class="login-footnote">
+                  Contact the administrator for account credentials.<br>
+                  &copy; <?php echo date('Y'); ?> Legal Records &amp; Document Management System
                 </div>
               </div>
 
@@ -883,7 +875,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
                   <div class="reset-success-icon">
                     <i class="bi bi-check-lg"></i>
                   </div>
-                  <h5 class="mb-3" style="color: var(--lrdms-navy);">Password Updated Successfully</h5>
+                  <h5 class="mb-3">Password Updated Successfully</h5>
                   <p class="text-muted mb-4">Your password has been reset. You can now sign in with your new password.</p>
                   <button type="button" class="btn btn-login-submit w-100" id="goToSignInAfterReset">
                     <i class="bi bi-box-arrow-in-right me-1"></i> Go to Sign In
@@ -893,6 +885,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
                 <div class="text-center mt-3" id="forgotBackLink">
                   <small class="text-muted">Remember your password? <a href="#" id="showSignIn" class="lrdms-link">Sign in</a></small>
                 </div>
+              </div>
               </div>
             </div>
           </div>
