@@ -340,7 +340,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       .header .logo h1 { font-size: 20px; letter-spacing: 1px; }
     }
     @media (max-width: 576px) {
-      .header .logo h1 { font-size: 16px; letter-spacing: 0.5px; }
+      .header .logo h1 { font-size: 31px; letter-spacing: 0.5px; }
     }
     .btn-getstarted:hover, .btn-get-started:hover {
       background: var(--arsha-accent);
