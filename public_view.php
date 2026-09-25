@@ -218,7 +218,7 @@ if ($doc) {
 <div class="topbar">
   <div class="topbar__inner">
     <div class="topbar__brand">
-      <img src="assets/img/manila logo.png" alt="Manila City Seal" class="topbar__logo">
+      <img src="Arsha/assets/img/manila logo.png" alt="Manila City Seal" class="topbar__logo">
       <div>MANILA CITY HALL<small>Legislative Records &amp; Document Management</small></div>
     </div>
     <a class="topbar__back" href="public.php#legislation">← Back to home</a>
