@@ -1,0 +1,4 @@
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} =GET
+RewriteCond %{THE_REQUEST} \s/public\.php[\s?] [NC]
+RewriteRule ^public\.php$ / [R=301,L]

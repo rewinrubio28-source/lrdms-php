@@ -1,4 +1,9 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
-header('Location: ' . (current_user() ? 'dashboard.php' : 'public.php'));
-exit;
+
+if (current_user()) {
+    header('Location: dashboard.php');
+    exit;
+}
+
+require __DIR__ . '/public.php';

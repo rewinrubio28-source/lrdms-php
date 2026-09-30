@@ -40,5 +40,5 @@ RUN { \
     echo "memory_limit=256M"; \
     echo "max_execution_time=120"; \
   } > /usr/local/etc/php/conf.d/uploads.ini
-
+RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 EXPOSE 80
