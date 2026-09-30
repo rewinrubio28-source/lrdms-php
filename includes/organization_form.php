@@ -1,4 +1,10 @@
-<?php $organizationLists = organization_lists($pdo); ?>
+<?php
+if (!organization_schema_available($pdo)) {
+    echo '<div class="col-12"><p class="alert alert-warning">Database update required. Ask the administrator to run the deployment upgrade before saving organizational assignments.</p></div>';
+    return;
+}
+$organizationLists = organization_lists($pdo);
+?>
 <div class="col-12 mb-3" data-organization-form>
   <h4 class="h6 mt-3">Organizational identity</h4>
   <p class="small text-muted">Assign the staff member's office, designation, and committee memberships.</p>

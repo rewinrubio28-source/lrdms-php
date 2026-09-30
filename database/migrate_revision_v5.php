@@ -25,6 +25,7 @@ function v5_add_column(PDO $pdo, string $table, string $column, string $definiti
     $ran[] = "Added $table.$column";
 }
 
+$initializeRecordsState = !v5_column_exists($pdo, 'documents', 'records_status');
 $documentColumns = [
     'records_status' => "ENUM('Submitted','Pending Validation','Returned for Correction','Validated','Registered','Active','Archive Eligible','Archive Preparation','Transferred to Archive System','Duplicate','Unauthorized Submission') NOT NULL DEFAULT 'Registered'",
     'classification' => "ENUM('PUBLIC','INTERNAL','RESTRICTED','CONFIDENTIAL') NOT NULL DEFAULT 'INTERNAL'",
@@ -50,8 +51,11 @@ foreach ($documentColumns as $column => $definition) v5_add_column($pdo, 'docume
 $userColumns = ['office_id' => 'INT NULL', 'division_id' => 'INT NULL', 'position_id' => 'INT NULL'];
 foreach ($userColumns as $column => $definition) v5_add_column($pdo, 'users', $column, $definition, $ran, $skipped);
 
-$pdo->exec("UPDATE documents SET records_status='Pending Validation', received_at=created_at WHERE verified_at IS NULL AND source_system <> 'Manual Encoding'");
-$pdo->exec("UPDATE documents SET records_status='Registered', registered_at=COALESCE(verified_at, created_at), received_at=created_at WHERE verified_at IS NOT NULL OR source_system = 'Manual Encoding'");
+// Backfill only on the initial upgrade; preserve review outcomes on reruns.
+if ($initializeRecordsState) {
+    $pdo->exec("UPDATE documents SET records_status='Pending Validation', received_at=COALESCE(received_at,created_at) WHERE verified_at IS NULL AND source_system <> 'Manual Encoding'");
+    $pdo->exec("UPDATE documents SET records_status='Registered', registered_at=COALESCE(registered_at,verified_at,created_at), received_at=COALESCE(received_at,created_at) WHERE verified_at IS NOT NULL OR source_system = 'Manual Encoding'");
+}
 
 $tables = [
     'offices' => "CREATE TABLE offices (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(180) NOT NULL UNIQUE, is_active TINYINT(1) NOT NULL DEFAULT 1) ENGINE=InnoDB",

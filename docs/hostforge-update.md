@@ -2,7 +2,16 @@
 
 Pushing main triggers the configured redeploy. Git does not transfer the local MySQL database, uploaded records, backups, or `.env` values.
 
-Before serving the updated app, take a server database/storage backup and apply any missing migrations from the application's server terminal. Do not run demo seeds against production. The following are the new migrations included in this update, in dependency order:
+Before serving the updated app, take a server database/storage backup and run this from the application's server terminal (not the local XAMPP terminal):
+
+```sh
+cd /var/www/html
+php database/upgrade.php
+```
+
+Wait for `UPGRADE COMPLETE`. If it fails, resolve the reported cause before continuing. Active requests may prevent the maintenance lock; retry in a quiet period. The runner applies only the seven migrations below, without demo seeds, and checks the required tables/columns. Re-running preserves existing record review outcomes. The Add User form also depends on organization tables; a missing table previously stopped the response before Bootstrap could load.
+
+Individual migration commands, in dependency order:
 
 ```sh
 php database/migrate_revision_v5.php

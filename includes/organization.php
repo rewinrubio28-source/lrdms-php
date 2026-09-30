@@ -1,5 +1,14 @@
 <?php
 // Organization assignments describe staff identity; permission checks stay in RBAC.
+function organization_schema_available(PDO $pdo): bool {
+    static $available = null;
+    if ($available === null) {
+        $count = $pdo->query("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('offices','divisions','positions','user_committees')")->fetchColumn();
+        $available = (int)$count === 4;
+    }
+    return $available;
+}
+
 function organization_lists(PDO $pdo): array {
     $lists = [];
     foreach (['offices', 'divisions', 'positions', 'committees'] as $table) {
@@ -9,6 +18,10 @@ function organization_lists(PDO $pdo): array {
 }
 
 function organization_input(PDO $pdo, array $input, array &$errors): array {
+    if (!organization_schema_available($pdo)) {
+        $errors[] = 'Database update required. Please ask the administrator to run the deployment upgrade before saving this account.';
+        return [];
+    }
     $values = [];
     foreach (['office_id' => 'offices', 'division_id' => 'divisions', 'position_id' => 'positions'] as $field => $table) {
         $raw = $input[$field] ?? '';
