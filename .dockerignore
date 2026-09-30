@@ -1,7 +1,8 @@
 .git
 .gitignore
 docs/
-sql/
+sql/*
+!sql/ocr_jobs.sql
 *.md
 uploads/*
 !uploads/.gitkeep
