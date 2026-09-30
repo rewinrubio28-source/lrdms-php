@@ -3,21 +3,36 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/rbac.php';
 require_once __DIR__ . '/config/database.php';
 
+require_once __DIR__ . '/includes/council_terms.php';
+require_once __DIR__ . '/includes/storage.php';
 require_login();
 $user = current_user();
 $pdo = get_db();
 
 $statusFilter = $_GET['status'] ?? 'All';
 $typeFilter = $_GET['type'] ?? 'All';
+$repositorySections = ['ordinances' => 'Ordinance', 'resolutions' => 'Resolution'];
+$repositorySection = is_string($_GET['section'] ?? null) && isset($repositorySections[$_GET['section']]) ? $_GET['section'] : '';
+if ($repositorySection !== '') $typeFilter = $repositorySections[$repositorySection];
+$repositoryTitle = $repositorySection !== '' ? ucfirst($repositorySection) : 'Repository';
+$classificationFilter = $_GET['classification'] ?? 'All';
+$termFilter = is_string($_GET['council_term'] ?? null) ? $_GET['council_term'] : 'All';
+if ($repositorySection === 'resolutions') $termFilter = 'All';
 $q = trim($_GET['q'] ?? '');
 $committeeFilter = $_GET['committee'] ?? 'All';
 $dateFrom = trim($_GET['date_from'] ?? '');
 $dateTo = trim($_GET['date_to'] ?? '');
 
 list($visClause, $visParams) = document_visibility_clause($user);
-$where = [$visClause];
+$where = ['(' . $visClause . ')'];
 $params = $visParams;
 
+if ($termFilter === 'unassigned') {
+    $where[] = 'd.council_term IS NULL';
+} elseif ($termFilter !== 'All') {
+    $where[] = 'd.council_term = ?';
+    $params[] = ctype_digit($termFilter) ? (int)$termFilter : -1;
+}
 if ($statusFilter !== 'All') {
     $where[] = 'status = ?';
     $params[] = $statusFilter;
@@ -25,6 +40,10 @@ if ($statusFilter !== 'All') {
 if ($typeFilter !== 'All') {
     $where[] = 'doc_type = ?';
     $params[] = $typeFilter;
+}
+if ($classificationFilter !== 'All') {
+    $where[] = 'd.classification = ?';
+    $params[] = $classificationFilter;
 }
 if ($committeeFilter !== 'All') {
     $where[] = 'd.committee_id = ?';
@@ -46,12 +65,26 @@ if ($q !== '') {
 
 $committees = $pdo->query('SELECT id, name FROM committees ORDER BY name')->fetchAll();
 
+$termStmt = $pdo->prepare('SELECT DISTINCT d.council_term FROM documents d WHERE (' . $visClause . ') AND d.council_term IS NOT NULL ORDER BY d.council_term DESC');
+$termStmt->execute($visParams);
+$councilTerms = $termStmt->fetchAll(PDO::FETCH_COLUMN);
+// Include the council groups requested in the reference, plus later assigned terms.
+$councilTerms = array_unique(array_merge(range(1, 13), array_map('intval', $councilTerms)));
+rsort($councilTerms, SORT_NUMERIC);
+$countStmt = $pdo->prepare('SELECT COUNT(*) FROM documents d JOIN users u ON u.id=d.owner_id WHERE ' . implode(' AND ', $where));
+$countStmt->execute($params);
+$totalDocuments = (int)$countStmt->fetchColumn();
+$pageSize = 20;
+$totalPages = max(1, (int)ceil($totalDocuments / $pageSize));
+$page = min($totalPages, max(1, (int)($_GET['page'] ?? 1)));
+$offset = ($page - 1) * $pageSize;
+
 $sql = 'SELECT d.*, u.full_name AS owner_name, c.name AS committee_name FROM documents d
         JOIN users u ON u.id = d.owner_id
         LEFT JOIN committees c ON c.id = d.committee_id
         WHERE ' . implode(' AND ', $where) . '
-        ORDER BY d.enactment_date DESC, d.created_at DESC
-        LIMIT 200';
+        ORDER BY d.enactment_date DESC, d.created_at DESC, d.id DESC
+        LIMIT ' . $pageSize . ' OFFSET ' . $offset;
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $documents = $stmt->fetchAll();
@@ -85,21 +118,34 @@ if (!$isAjax) {
 <?php
 // Renders just the results (used for both the initial full page load and
 // every AJAX refresh triggered by repository.js), so the two never drift apart.
-function render_repository_results(array $documents, array $attachmentsByDoc = []): void {
+function render_repository_results(array $documents, array $attachmentsByDoc = [], int $totalDocuments = 0, int $page = 1, int $totalPages = 1): void {
+    ?><div class="repo-results-heading"><div><i class="bi bi-collection" aria-hidden="true"></i> <strong><?= $totalDocuments ?></strong> records &middot; Page <?= $page ?> of <?= $totalPages ?></div><span>Newest enactment first</span></div><?php
     if (!$documents): ?>
         <p class="text-muted" id="repo-empty-msg">No documents match these filters (or your role's visibility rules don't allow seeing more).</p>
     <?php else: ?>
         <?php foreach ($documents as $d): ?>
           <div class="card doc-card">
-            <div class="doc-card__header"><?= htmlspecialchars($d['doc_number']) ?></div>
+            <div class="doc-card__header flex-wrap">
+              <span><i class="bi bi-file-earmark-text" aria-hidden="true"></i> <?= htmlspecialchars($d['doc_number']) ?></span>
+              <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="repo-type-tag"><?= htmlspecialchars($d['doc_type']) ?></span>
+                <?php if (trim((string)($d['classification'] ?? '')) !== ''): ?>
+                <span class="classification-tag classification-tag--<?= htmlspecialchars(strtolower($d['classification']), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($d['classification']) ?></span>
+                <?php endif; ?>
+              </div>
+            </div>
             <div class="doc-card__body">
               <div class="doc-card__row">
                 <div class="doc-card__label">Title:</div>
-                <div class="doc-card__value doc-card__value--title"><a href="document.php?id=<?= $d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a></div>
+              <div class="doc-card__value doc-card__value--title"><a href="document.php?id=<?= $d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a></div>
               </div>
               <div class="doc-card__row">
                 <div class="doc-card__label">Type:</div>
                 <div class="doc-card__value"><?= htmlspecialchars($d['doc_type']) ?></div>
+              </div>
+              <div class="doc-card__row">
+                <div class="doc-card__label">Council term:</div>
+                <div class="doc-card__value"><?= !empty($d['council_term']) ? htmlspecialchars(council_term_label((int)$d['council_term'])) : 'Not assigned' ?></div>
               </div>
               <?php if (!empty($d['sponsor'])): ?>
               <div class="doc-card__row">
@@ -127,6 +173,7 @@ function render_repository_results(array $documents, array $attachmentsByDoc = [
               </div>
             </div>
             <div class="doc-card__actions">
+              <a href="document.php?id=<?= (int)$d['id'] ?>" class="btn btn-primary btn-sm">Open Document <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
               <a href="#" data-doc-id="<?= $d['id'] ?>" data-bs-toggle="modal" data-bs-target="#historyModal" class="btn btn-outline-secondary btn-sm open-history-modal"><i class="bi bi-clock-history"></i> History</a>
               <?php
                 $files = $attachmentsByDoc[$d['id']] ?? [];
@@ -134,6 +181,7 @@ function render_repository_results(array $documents, array $attachmentsByDoc = [
                     $files = [$d['file_path']];
                 }
               ?>
+              <?php $files = array_map('record_file_url', $files); ?>
               <?php if ($files): ?>
                 <a href="#"
                    data-files='<?= htmlspecialchars(json_encode(array_values($files)), ENT_QUOTES, 'UTF-8') ?>'
@@ -150,32 +198,46 @@ function render_repository_results(array $documents, array $attachmentsByDoc = [
           </div>
         <?php endforeach; ?>
     <?php endif;
+    if ($totalPages > 1): ?>
+      <nav class="d-flex justify-content-between align-items-center my-3" aria-label="Repository pages">
+        <?php foreach (['Previous' => $page - 1, 'Next' => $page + 1] as $label => $target): ?>
+          <?php if ($target >= 1 && $target <= $totalPages):
+            $pageParams = $_GET; unset($pageParams['ajax']); $pageParams['page'] = $target; ?>
+            <a class="btn btn-outline-secondary btn-sm" data-repo-page="<?= $target ?>" href="repository.php?<?= htmlspecialchars(http_build_query($pageParams), ENT_QUOTES, 'UTF-8') ?>"><?= $label ?></a>
+          <?php else: ?><span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true"><?= $label ?></span><?php endif; ?>
+        <?php endforeach; ?>
+      </nav>
+    <?php endif;
 }
 
 // AJAX refresh: output only the results markup and stop — no layout, no form.
 if ($isAjax) {
-    render_repository_results($documents, $attachmentsByDoc);
+    render_repository_results($documents, $attachmentsByDoc, $totalDocuments, $page, $totalPages);
     exit;
 }
 ?>
-<div class="topbar">
+<div class="topbar" data-banner-date="<?= date('M j, Y') ?>">
   <div class="d-flex align-items-center gap-2">
     <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu">
       <i class="bi bi-list"></i>
     </button>
     <div>
-      <h1 class="topbar__title">Repository</h1>
+      <h1 class="topbar__title"><?= htmlspecialchars($repositoryTitle) ?></h1>
+      <p class="module-banner-description">Browse and manage the legislative records collection.</p>
+      <p class="repo-page-subtitle">Browse legislative records, view attachments, and trace document history.</p>
     </div>
   </div>
 </div>
 
-<div class="card">
+<link rel="stylesheet" href="assets/css/repository-workspace.css?v=1">
+<div class="repo-workspace">
   <form method="get" class="row g-2 mb-3" id="repo-filter-form">
-    <div class="col-md-4">
+    <?php if ($repositorySection !== ''): ?><input type="hidden" name="section" id="repo-section" value="<?= htmlspecialchars($repositorySection) ?>"><?php endif; ?>
+    <div class="col-md-3">
       <label class="form-label small text-muted mb-0" for="repo-q">Search</label>
       <input type="text" name="q" id="repo-q" value="<?= htmlspecialchars($q) ?>" class="form-control" placeholder="Filter by title, number, or sponsor…" autocomplete="off">
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
       <label class="form-label small text-muted mb-0" for="repo-status">Status</label>
       <select name="status" id="repo-status" class="form-select">
         <option value="All">All statuses</option>
@@ -184,18 +246,39 @@ if ($isAjax) {
         <?php endforeach; ?>
       </select>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
       <label class="form-label small text-muted mb-0" for="repo-type">Type</label>
-      <select name="type" id="repo-type" class="form-select">
+      <select name="type" id="repo-type" class="form-select" <?= $repositorySection !== '' ? 'disabled' : '' ?>>
         <option value="All">All types</option>
         <?php foreach (['Ordinance', 'Resolution', 'Committee Report', 'Minutes', 'Other'] as $t): ?>
           <option value="<?= $t ?>" <?= $typeFilter === $t ? 'selected' : '' ?>><?= $t ?></option>
         <?php endforeach; ?>
       </select>
     </div>
-    <div class="col-md-2 d-flex align-items-end">
-      <a href="repository.php" class="btn btn-outline-secondary w-100" id="repo-reset">Reset</a>
+    <div class="col-md-3">
+      <label class="form-label small text-muted mb-0" for="repo-classification">Classification</label>
+      <select name="classification" id="repo-classification" class="form-select">
+        <option value="All">All</option>
+        <?php foreach (['PUBLIC' => 'Public', 'INTERNAL' => 'Internal', 'RESTRICTED' => 'Restricted', 'CONFIDENTIAL' => 'Confidential'] as $value => $label): ?>
+          <option value="<?= $value ?>" <?= $classificationFilter === $value ? 'selected' : '' ?>><?= $label ?></option>
+        <?php endforeach; ?>
+      </select>
     </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <a href="repository.php<?= $repositorySection !== '' ? '?section=' . rawurlencode($repositorySection) : '' ?>" class="btn btn-outline-secondary w-100" id="repo-reset">Reset</a>
+    </div>
+    <?php if ($repositorySection !== 'resolutions'): ?>
+    <div class="col-md-3">
+      <label class="form-label small text-muted mb-0" for="repo-council-term">Council term</label>
+      <select name="council_term" id="repo-council-term" class="form-select">
+        <option value="All">All council terms</option>
+        <option value="unassigned" <?= $termFilter === 'unassigned' ? 'selected' : '' ?>>Not assigned</option>
+        <?php foreach ($councilTerms as $term): ?>
+          <option value="<?= (int)$term ?>" <?= $termFilter === (string)$term ? 'selected' : '' ?>><?= htmlspecialchars(council_term_label((int)$term)) ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <?php endif; ?>
     <div class="col-md-3">
       <label class="form-label small text-muted mb-0" for="repo-committee">Committee</label>
       <select name="committee" id="repo-committee" class="form-select">
@@ -220,7 +303,7 @@ if ($isAjax) {
   </form>
 
   <div id="repo-results">
-    <?php render_repository_results($documents); ?>
+    <?php render_repository_results($documents, $attachmentsByDoc, $totalDocuments, $page, $totalPages); ?>
   </div>
 </div>
 

@@ -235,7 +235,7 @@ body {
   margin-bottom: 20px;
 }
 
-.card h3 {
+.card h3, .card-title {
   margin: 0 0 12px;
   font-size: 16px;
   font-weight: 600;
@@ -566,5 +566,843 @@ html.dark .notif-dropdown__mark-all { color: #47b2e4; }
   .notif-dropdown {
     width: calc(100vw - 24px);
     right: -8px;
+  }
+}
+
+/* ========================================
+    Loading States & Empty States
+    ======================================== */
+
+/* Form submit loading spinner */
+.lrdms-submit-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.7;
+}
+.lrdms-submit-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: lrdms-spin 0.6s linear infinite;
+}
+html.dark .lrdms-submit-loading::after {
+  border-color: rgba(0, 0, 0, 0.15);
+  border-top-color: var(--primary);
+}
+@keyframes lrdms-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty state */
+.lrdms-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  background: var(--surface2, #f8f9fa);
+  border: 1px dashed var(--border, #dee2e6);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-5);
+}
+.lrdms-empty-state i {
+  font-size: 48px;
+  color: var(--text-muted, #adb5bd);
+}
+.lrdms-empty-state p {
+  color: var(--text-muted, var(--gray));
+  margin-top: var(--space-3);
+  margin-bottom: 0;
+}
+
+/* Confirm dialog styling */
+.lrdms-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lrdms-confirm-card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  max-width: 400px;
+  width: 90%;
+  box-shadow: var(--shadow-lg);
+}
+.lrdms-confirm-card h4 {
+  color: var(--text-primary);
+  margin-bottom: var(--space-3);
+}
+.lrdms-confirm-card p {
+  color: var(--text-muted);
+  margin-bottom: var(--space-5);
+}
+.lrdms-confirm-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+/* ========================================
+   Users Table — Access Control & Security Module
+   Mirrors the reference design: avatar + identity
+   stack, org/position columns, colour-coded role
+   pills, 2FA / status pills, icon row actions.
+   ======================================== */
+
+.users-table {
+  --cell-pad-y: 10px;
+  --cell-pad-x: 12px;
+}
+
+.users-table thead th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted, #6a7a94);
+  background: var(--surface2, #eef2f8);
+  border-bottom: 1px solid var(--border, #dbe2ef);
+  padding: var(--cell-pad-y) var(--cell-pad-x);
+  white-space: nowrap;
+}
+
+.users-table tbody td {
+  padding: var(--cell-pad-y) var(--cell-pad-x);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border, #dbe2ef);
+}
+
+.users-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ─── User identity cell (avatar + name + email) ─── */
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.user-cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.user-cell__name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary, #112d4e);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.user-cell__name:hover {
+  color: var(--primary, #3f72af);
+  text-decoration: underline;
+}
+
+.user-cell__email {
+  font-size: 12px;
+  color: var(--text-muted, #6a7a94);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* "Created Sep 12, 2026" + inline badges under the identity */
+.user-cell__meta {
+  font-size: 11.5px;
+  color: var(--text-subtle, #8a97ad);
+  white-space: nowrap;
+}
+
+.user-cell .badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+/* ─── Office / Division cell (two lines) ─── */
+.org-cell {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+  min-width: 0;
+}
+
+.org-cell__office {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary, #112d4e);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.org-cell__division {
+  font-size: 12px;
+  color: var(--text-muted, #6a7a94);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Role pill (colour-coded per role) ─── */
+.role-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.role-superadmin {
+  background: #1e3a5f;
+  color: #ffffff;
+}
+.role-recordsadmin {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.role-recordsofficer {
+  background: #dcfce7;
+  color: #15803d;
+}
+.role-secretariat {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+.role-legislative {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+.role-requester {
+  background: #ffedd5;
+  color: #c2410c;
+}
+.role-auditor {
+  background: #cffafe;
+  color: #0e7490;
+}
+.role-public {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* Dark-mode variants for the role pills */
+html.dark .role-superadmin   { background: #2a4a73; color: #cfe0f5; }
+html.dark .role-recordsadmin { background: rgba(59, 130, 246, 0.22); color: #93c5fd; }
+html.dark .role-recordsofficer { background: rgba(34, 197, 94, 0.20); color: #86efac; }
+html.dark .role-secretariat  { background: rgba(139, 92, 246, 0.22); color: #c4b5fd; }
+html.dark .role-legislative  { background: rgba(168, 85, 247, 0.22); color: #d8b4fe; }
+html.dark .role-requester   { background: rgba(249, 115, 22, 0.22); color: #fdba74; }
+html.dark .role-auditor      { background: rgba(6, 182, 212, 0.22); color: #67e8f9; }
+html.dark .role-public       { background: rgba(148, 163, 184, 0.20); color: #cbd5e1; }
+
+/* ─── Status / 2FA pills ─── */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 11px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.status-pill--on {
+  background: #dcfce7;
+  color: #15803d;
+}
+.status-pill--off {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.status-pill--muted {
+  background: #f1f5f9;
+  color: #64748b;
+}
+.status-pill--required {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+/* Archived (soft-deleted) account */
+.status-pill--archived {
+  background: #ede9fe;
+  color: #6d28d9;
+  font-weight: 700;
+}
+
+html.dark .status-pill--on       { background: rgba(34, 197, 94, 0.20); color: #86efac; }
+html.dark .status-pill--off      { background: rgba(239, 68, 68, 0.20); color: #fca5a5; }
+html.dark .status-pill--muted    { background: rgba(148, 163, 184, 0.18); color: #cbd5e1; }
+html.dark .status-pill--required { background: rgba(245, 158, 11, 0.20); color: #fcd34d; }
+html.dark .status-pill--archived { background: rgba(139, 92, 246, 0.22); color: #c4b5fd; }
+
+/* Archive reason shown under the status pill in the archive view */
+.ac-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: 4px;
+  max-width: 220px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--text-subtle, #8a97ad);
+  font-style: italic;
+}
+.ac-reason i { flex-shrink: 0; margin-top: 1px; }
+
+/* Row actions: destructive (archive) + restore + self-lock */
+.row-action--danger {
+  color: var(--danger, #dc3545);
+}
+.row-action--danger:hover,
+.row-action--danger:focus-visible {
+  background: var(--danger-soft-bg, rgba(239, 68, 68, 0.12));
+  color: var(--danger, #dc3545);
+}
+
+.row-action--restore {
+  color: var(--success, #28a745);
+}
+.row-action--restore:hover,
+.row-action--restore:focus-visible {
+  background: var(--success-soft-bg, rgba(16, 185, 129, 0.12));
+  color: var(--success, #28a745);
+}
+
+/* Self row: archive is impossible, so the trash is visibly inert */
+.row-action--locked,
+.row-action--locked:hover {
+  color: var(--text-subtle, #8a97ad);
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+/* Archive link in the role rail */
+.ac-role--archive .ac-role__name i {
+  opacity: 0.7;
+}
+.ac-role--archive.is-active {
+  background: rgba(139, 92, 246, 0.14);
+  border-color: rgba(139, 92, 246, 0.14);
+  color: #6d28d9;
+}
+html.dark .ac-role--archive.is-active { color: #c4b5fd; }
+
+/* ─── Last login ─── */
+.last-login {
+  font-size: 12.5px;
+  color: var(--primary-light, #5b8ec4);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Row actions (view / edit / kebab) ─── */
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  justify-content: flex-end;
+}
+
+.row-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md, 8px);
+  color: var(--text-muted, #6a7a94);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.row-action:hover,
+.row-action:focus-visible {
+  background: var(--hover-bg2, rgba(17, 45, 78, 0.09));
+  color: var(--primary, #3f72af);
+  outline: none;
+}
+
+.row-action:focus-visible {
+  box-shadow: 0 0 0 2px var(--glow-primary, rgba(63, 114, 175, 0.25));
+}
+
+.row-action i {
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* Kebab dropdown menu */
+.users-table .dropdown-menu {
+  border-radius: var(--radius-lg, 10px);
+  border: 1px solid var(--border, #dbe2ef);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 190px;
+  padding: 4px;
+}
+
+.users-table .dropdown-item {
+  font-size: 13px;
+  color: var(--text-secondary, #3a4858);
+  border-radius: var(--radius-sm, 6px);
+  padding: 7px 10px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+}
+
+.users-table .dropdown-item:hover,
+.users-table .dropdown-item:focus {
+  background: var(--hover-bg, rgba(17, 45, 78, 0.05));
+  color: var(--text-primary, #112d4e);
+}
+
+/* ─── Responsive: keep the table readable on narrow screens ─── */
+@media (max-width: 992px) {
+  .users-table thead th,
+  .users-table tbody td {
+    padding: 10px;
+  }
+  .user-cell__name { font-size: 13px; }
+}
+
+/* ========================================
+   Access Control — Master / Detail Split
+   Left rail = defined roles (with counts),
+   right panel = members of the selected role.
+   ======================================== */
+
+.ac-split {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ─── Left rail: role navigator ─── */
+.ac-roles {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #dbe2ef);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow, 0 1px 3px rgba(17, 45, 78, 0.08));
+  padding: 18px 12px 12px;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.ac-roles__head {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-subtle, #8a97ad);
+  padding: 0 10px 12px;
+}
+
+.ac-roles__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ac-role {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text-secondary, #3a4858);
+  font-size: 13.5px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.ac-role:hover {
+  background: var(--hover-bg, rgba(17, 45, 78, 0.05));
+  color: var(--text-primary, #112d4e);
+}
+
+.ac-role.is-active {
+  background: var(--primary-soft-bg, rgba(63, 114, 175, 0.12));
+  border-color: var(--primary-soft-bg, rgba(63, 114, 175, 0.12));
+  color: var(--primary, #3f72af);
+  font-weight: 600;
+}
+
+.ac-role__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ac-role__count {
+  font-size: 11.5px;
+  color: var(--text-muted, #6a7a94);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ac-role.is-active .ac-role__count {
+  color: var(--primary, #3f72af);
+}
+
+/* Create-role CTA pinned to the bottom of the rail */
+.ac-roles__foot {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border, #dbe2ef);
+}
+
+.ac-role-create {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  border: 1px dashed var(--border2, #c7d3e6);
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--primary, #3f72af);
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.ac-role-create:hover {
+  background: var(--primary-soft-bg, rgba(63, 114, 175, 0.1));
+  border-color: var(--primary, #3f72af);
+  color: var(--primary, #3f72af);
+}
+
+/* ─── Right panel ─── */
+.ac-detail {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #dbe2ef);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow, 0 1px 3px rgba(17, 45, 78, 0.08));
+  overflow: hidden;
+  min-width: 0;
+}
+
+.ac-detail__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  flex-wrap: wrap;
+}
+
+.ac-detail__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #112d4e);
+  margin: 0;
+}
+
+.ac-detail__sub {
+  font-size: 12px;
+  color: var(--text-muted, #6a7a94);
+  margin-top: 2px;
+}
+
+/* Search box with leading icon */
+.ac-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.ac-search__field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ac-search__icon {
+  position: absolute;
+  left: 11px;
+  font-size: 13px;
+  color: var(--text-muted, #6a7a94);
+  pointer-events: none;
+}
+
+.ac-search__input {
+  width: 260px;
+  max-width: 100%;
+  padding: 8px 12px 8px 32px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-primary, #112d4e);
+  background: var(--surface2, #fff);
+  border: 1px solid var(--border2, #c7d3e6);
+  border-radius: 9px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ac-search__input:focus {
+  outline: none;
+  border-color: var(--primary, #3f72af);
+  box-shadow: 0 0 0 3px var(--glow-primary, rgba(63, 114, 175, 0.12));
+}
+
+.ac-search__input::placeholder {
+  color: var(--text-subtle, #8a97ad);
+}
+
+.ac-search__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  color: var(--text-muted, #6a7a94);
+  text-decoration: none;
+  font-size: 12px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ac-search__clear:hover {
+  background: var(--hover-bg, rgba(17, 45, 78, 0.07));
+  color: var(--text-primary, #112d4e);
+}
+
+/* "/" shortcut hint inside the search field */
+.ac-search__hint {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--text-subtle, #8a97ad);
+  background: var(--surface2, #f1f5f9);
+  border: 1px solid var(--border, #dbe2ef);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 1px 7px;
+  cursor: default;
+  user-select: none;
+}
+
+/* Collapsible secondary filters */
+.ac-more-filters {
+  border-top: 1px solid var(--border, #dbe2ef);
+  border-bottom: 1px solid var(--border, #dbe2ef);
+  padding: 0 20px;
+}
+
+.ac-more-filters > summary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted, #6a7a94);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.ac-more-filters > summary::-webkit-details-marker { display: none; }
+.ac-more-filters > summary::marker { content: ""; }
+.ac-more-filters > summary:hover { color: var(--primary, #3f72af); }
+
+.ac-more-filters__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--primary, #3f72af);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.ac-more-filters__form {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+}
+
+.ac-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ac-field label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted, #6a7a94);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.ac-field .form-select {
+  min-width: 170px;
+}
+
+.ac-field--actions {
+  flex-direction: row;
+  gap: 6px;
+}
+
+/* Read-only identity list (archived accounts) */
+.ac-readonly {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 0;
+  margin: 0 0 18px;
+  font-size: 13px;
+}
+
+.ac-readonly dt {
+  padding: 7px 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-subtle, #8a97ad);
+  border-bottom: 1px solid var(--border, #dbe2ef);
+}
+
+.ac-readonly dd {
+  margin: 0;
+  padding: 7px 0;
+  color: var(--text-primary, #112d4e);
+  border-bottom: 1px solid var(--border, #dbe2ef);
+  overflow-wrap: anywhere;
+}
+
+/* Archive view banner */
+.ac-archive-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: rgba(139, 92, 246, 0.10);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.22);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-secondary, #3a4858);
+  flex-wrap: wrap;
+}
+.ac-archive-banner > i {
+  font-size: 18px;
+  color: #6d28d9;
+  flex-shrink: 0;
+}
+.ac-archive-banner strong { color: var(--text-primary, #112d4e); }
+html.dark .ac-archive-banner { background: rgba(139, 92, 246, 0.16); }
+html.dark .ac-archive-banner > i { color: #c4b5fd; }
+
+/* Table sits flush inside the panel (rounded corners handled by panel) */
+.ac-table-wrap {
+  overflow-x: auto;
+}
+
+.ac-detail .users-table thead th {
+  background: var(--surface2, #eef2f8);
+}
+
+/* Empty state inside the panel */
+.ac-empty {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.ac-empty > i {
+  font-size: 40px;
+  color: var(--text-subtle, #8a97ad);
+  display: block;
+  margin-bottom: 12px;
+}
+
+.ac-empty__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #112d4e);
+  margin: 0 0 4px;
+}
+
+.ac-empty__text {
+  font-size: 12.5px;
+  color: var(--text-muted, #6a7a94);
+  margin: 0 0 14px;
+}
+
+/* ─── Responsive: rail stacks above the panel ─── */
+@media (max-width: 992px) {
+  .ac-split {
+    grid-template-columns: 1fr;
+  }
+  .ac-roles {
+    position: static;
+    max-height: none;
+  }
+  .ac-roles__list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .ac-role {
+    border: 1px solid var(--border, #dbe2ef);
+    padding: 7px 12px;
+    border-radius: 999px;
+  }
+  .ac-detail__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ac-search__input {
+    width: 100%;
   }
 }

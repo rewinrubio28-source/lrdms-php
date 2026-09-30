@@ -35,7 +35,7 @@ unset($__bertUrl);
 // Optional shared secret - must match BERT_API_KEY on the BERT service.
 define('BERT_API_KEY', (string) env_optional('BERT_API_KEY', ''));
 
-function semantic_search($pdo, $query, $whereClause, $whereParams) {
+function semantic_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit = 25) {
     $ch = curl_init(BERT_SERVICE_URL);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['query' => $query]));
@@ -53,14 +53,14 @@ function semantic_search($pdo, $query, $whereClause, $whereParams) {
     // Service unreachable, errored, or returned something unexpected —
     // fall back to keyword search rather than breaking the page.
     if ($response === false || $httpCode !== 200) {
-        return keyword_search($pdo, $query, $whereClause, $whereParams);
+        return keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
     }
 
     $decoded = json_decode($response, true);
     $matchedIds = $decoded['document_ids'] ?? null;
 
     if ($matchedIds === null) {
-        return keyword_search($pdo, $query, $whereClause, $whereParams);
+        return keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
     }
 
     if (!$matchedIds) {
@@ -85,14 +85,14 @@ function semantic_search($pdo, $query, $whereClause, $whereParams) {
     return $rows;
 }
 
-function keyword_search($pdo, $query, $whereClause, $whereParams) {
+function keyword_search($pdo, $query, $whereClause, $whereParams, $limit = 25) {
     $sql = "SELECT * FROM documents d
             WHERE ($whereClause)
               AND (title LIKE ? OR ocr_text LIKE ? OR body LIKE ? OR doc_number LIKE ?)
-            ORDER BY enactment_date DESC
-            LIMIT 25";
+            ORDER BY (doc_number = ?) DESC, (title = ?) DESC, (title LIKE ?) DESC, enactment_date DESC, id DESC";
+    if ($limit !== null) $sql .= ' LIMIT ' . max(1, (int)$limit);
     $like = '%' . $query . '%';
-    $params = array_merge($whereParams, [$like, $like, $like, $like]);
+    $params = array_merge($whereParams, [$like, $like, $like, $like, $query, $query, $like]);
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchAll();

@@ -1,0 +1,92 @@
+/* Compact city banner shared by authenticated module headers. */
+.app-shell > .main { --module-page-gutter: 24px; --module-banner-inset: 10px; padding-top: 10px; padding-inline: var(--module-page-gutter); }
+.main :is(.topbar, .dash-header)[data-banner-date] {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 110px;
+  padding: 18px 22px;
+  margin: 0 calc(var(--module-banner-inset) - var(--module-page-gutter)) 16px;
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(90deg,rgba(3,38,67,.93),rgba(3,38,67,.62),rgba(3,38,67,.25)),url('../../bg.jpg') center 47%/cover;
+  color: #fff;
+}
+.main :is(.topbar, .dash-header)[data-banner-date]::after {
+  content: attr(data-banner-date);
+  position: absolute;
+  bottom: 10px;
+  right: 22px;
+  color: #e1edf5;
+  font-size: 10px;
+  pointer-events: none;
+}
+.main [data-banner-date] :is(.topbar__title,.dash-header__title,.search-hero__title) {
+  color: #fff;
+  font-size: clamp(21px,2vw,27px);
+  font-weight: 650;
+  letter-spacing: -.5px;
+  line-height: 1.25;
+  margin: 5px 0;
+}
+.main [data-banner-date] :is(.topbar__eyebrow,.module-banner-eyebrow) {
+  color: #cee5f4;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.main [data-banner-date] :is(.module-banner-description,.search-hero__subtitle,.dash-header__date,.dash-header__clock) {
+  color: #e1edf5;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 5px 0 0;
+}
+.main [data-banner-date] :is(.topbar__actions,.dash-header__actions),
+.main [data-banner-date] > .header-actions-group {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  flex-shrink: 0;
+  margin-top: 0;
+  margin-left: auto;
+}
+.main [data-banner-date] :is(.topbar__actions,.dash-header__actions) > .header-actions-group { margin-top: 0; }
+.main [data-banner-date] .header-actions-group { gap: 12px; }
+.main [data-banner-date] .header-actions-group > :is(.notif-bell,.account-menu) {
+  display: flex;
+  align-items: center;
+  height: 40px;
+}
+.main [data-banner-date] :is(.notif-bell__toggle,.account-menu__toggle) {
+  width: 40px;
+  height: 40px;
+  background: #123b59;
+  border-color: #b4cede;
+  color: #fff;
+}
+.main [data-banner-date] .notif-bell__toggle > i { color: #ffda44; }
+.main [data-banner-date] :is(.notif-bell__toggle,.account-menu__toggle):hover { background: #20597e; }
+.account-menu__photo { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.main [data-banner-date] .sidebar-toggle { color: #fff; }
+.main [data-banner-date] a.small { color: #d5eafb !important; }
+.main [data-banner-date] .btn-outline-primary { color: #fff; border-color: #a5c8e3; }
+/* The audit page has its own banner; remove its now-empty desktop toolbar. */
+.main #audit-workspace .audit-hero {
+  margin-inline: calc(var(--module-banner-inset) - var(--module-page-gutter));
+  border-radius: 9px;
+}
+#audit-workspace .audit-topbar { margin-bottom: 0; }
+@media (min-width: 993px) {
+  #audit-workspace .audit-topbar { display: none; }
+}
+@media (max-width: 992px) {
+  #audit-workspace .audit-topbar { margin-bottom: 6px; }
+}
+@media (max-width: 760px) {
+  .app-shell > .main { padding-top: 10px; }
+  .main :is(.topbar,.dash-header)[data-banner-date] { padding: 16px 18px; flex-wrap: wrap; gap: 8px; }
+  .main :is(.topbar,.dash-header)[data-banner-date]::after { display: none; }
+  .main [data-banner-date] :is(.topbar__actions,.dash-header__actions,.header-actions-group) { margin-top: 0; }
+}

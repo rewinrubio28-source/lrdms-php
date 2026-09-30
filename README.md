@@ -27,6 +27,24 @@ Built with **native PHP, MySQL, and Bootstrap 5** — no framework, per the proj
 6. **Delete or move `database/seed.php`** out of the web root once you've run it — it's not something you want reachable in a real deployment.
 7. Go to `http://localhost/lrdms-php/login.php` and sign in.
 
+### Applying the Revision Plan v5 database update
+
+For Pending Records & Follow-up, run `php database/migrate_record_followups.php`
+after the v5 migration. Open **Encoding & Submission → Pending Records & Follow-up**.
+The working reminder is 15 days from `pending_since`, falling back to the received
+date and then the creation date. Staff record completed contact and choose the
+next reminder date. This records follow-up activity; it does not send messages.
+The official timer trigger remains subject to client confirmation.
+
+After importing the schema, run `php database/migrate_revision_v5.php` from
+the project directory, or sign in as Super Admin and open
+`http://localhost/lrdms-php/database/migrate_revision_v5.php`. This adds
+records-management state, source-status provenance, organizational identity,
+validation history, integration receipts, access-request, and archive support.
+It is safe to reopen; existing values are preserved. Upstream API intake and
+the Encoding validation queue use these new fields, so apply the migration
+before accepting new records.
+
 ### Demo accounts (created by seed.php)
 
 | Username | Password | Role |
@@ -133,5 +151,7 @@ curl "http://localhost/lrdms-php/api/search.php?query=fare%20hike&mode=semantic"
 - **2FA** isn't implemented — fold it into `includes/auth.php` if you need it.
 
 ## Suggested Git workflow
+
+For coordinated database/upload backups and recovery commands, see [Records backup and recovery](docs/backup-restore.md). Restore creates a separate database and matching uploads and never overwrites the live system.
 
 Since the stack list includes Git + GitHub: a simple `main` + feature-branch flow works fine for a project this size — branch per module (`feature/version-control`, `feature/audit-export`, etc.), PR into `main`, tag a release before your defense so you have a known-good snapshot to demo from.

@@ -3,6 +3,7 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/rbac.php';
 require_once __DIR__ . '/includes/audit.php';
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/includes/organization.php';
 
 require_permission('access', 'manage_users');
 $me = current_user();
@@ -43,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = trim($_POST['email'] ?? '');
         $roleId = (int)($_POST['role_id'] ?? 0);
         $committeeId = ($_POST['committee_id'] ?? '') !== '' ? (int)$_POST['committee_id'] : null;
+        $organizationValues = organization_input($pdo, $_POST, $errors);
         if ($uid === (int)$me['id']) {
             // Nobody changes their own role (prevents promoting yourself).
             $roleId = (int)$guardTarget['role_id'];
@@ -76,11 +78,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
             if (!$errors) {
+                $pdo->beginTransaction();
+                try {
                 $stmt = $pdo->prepare(
                     'UPDATE users SET full_name = ?, username = ?, email = ?, role_id = ?, committee_id = ?, is_active = ?, must_change_password = ? WHERE id = ?'
                 );
                 $stmt->execute([$fullName, $username, $email ?: null, $roleId, $committeeId, $isActive, $mustChange, $uid]);
-                log_action('access', 'updated_user', 'user_id=' . $uid);
+                organization_save($pdo, $uid, $organizationValues);
+                log_action('access', 'updated_user', 'user_id=' . $uid . '; organization=' . json_encode($organizationValues));
+                $pdo->commit();
+                } catch (Throwable $e) {
+                    if ($pdo->inTransaction()) $pdo->rollBack();
+                    throw $e;
+                }
                 $success = 'User details updated.';
             }
         }
@@ -183,7 +193,7 @@ $canForceLogout = has_permission('access', 'force_logout');
 
 include __DIR__ . '/includes/layout_top.php';
 ?>
-<div class="topbar">
+<div class="topbar" data-banner-date="<?= date('M j, Y') ?>">
   <div class="d-flex align-items-center gap-2">
     <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu">
       <i class="bi bi-list"></i>
@@ -198,6 +208,7 @@ include __DIR__ . '/includes/layout_top.php';
           <?php if ($isMe): ?><span class="badge text-bg-info">This is you</span><?php endif; ?>
         <?php endif; ?>
       </h1>
+      <p class="module-banner-description">Review account information, access, and activity.</p>
     </div>
   </div>
 </div>
@@ -216,13 +227,14 @@ include __DIR__ . '/includes/layout_top.php';
     <div class="card">
       <h3 style="font-size:16px;">Account details</h3>
       <form method="post">
+        <?php csrf_field(); ?>
         <input type="hidden" name="form_action" value="update_details">
         <input type="hidden" name="user_id" value="<?= (int)$target['id'] ?>">
         <div class="mb-2"><label class="form-label small">Full name</label><input type="text" name="full_name" class="form-control form-control-sm" value="<?= htmlspecialchars($target['full_name']) ?>" required></div>
         <div class="mb-2"><label class="form-label small">Username</label><input type="text" name="username" class="form-control form-control-sm" value="<?= htmlspecialchars($target['username']) ?>" required></div>
         <div class="mb-2"><label class="form-label small">Email</label><input type="email" name="email" class="form-control form-control-sm" value="<?= htmlspecialchars($target['email'] ?? '') ?>"></div>
         <div class="mb-2">
-          <label class="form-label small">Role</label>
+          <label class="form-label small">System role</label>
           <select name="role_id" class="form-select form-select-sm" required <?= $isMe ? 'disabled title="You cannot change your own role"' : '' ?>>
             <?php foreach ($roles as $r): ?>
               <?php
@@ -237,7 +249,7 @@ include __DIR__ . '/includes/layout_top.php';
           </select>
         </div>
         <div class="mb-2">
-          <label class="form-label small">Committee (if applicable)</label>
+          <label class="form-label small">Primary committee (if applicable)</label>
           <select name="committee_id" class="form-select form-select-sm">
             <option value="">— None —</option>
             <?php foreach ($committees as $c): ?>
@@ -245,6 +257,7 @@ include __DIR__ . '/includes/layout_top.php';
             <?php endforeach; ?>
           </select>
         </div>
+        <?php $organizationValues = $organizationValues ?? organization_user($pdo, (int)$target['id']); include __DIR__ . '/includes/organization_form.php'; ?>
         <div class="form-check mb-2">
           <input class="form-check-input" type="checkbox" name="is_active" id="is_active" <?= $target['is_active'] ? 'checked' : '' ?> <?= $isMe ? 'disabled' : '' ?>>
           <label class="form-check-label small" for="is_active">Account is active</label>

@@ -1,5 +1,6 @@
 </main>
 </div>
+<link rel="stylesheet" href="<?= isset($__inSubfolder) ? '../' : '' ?>assets/css/responsive.css?v=1">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   // Auto-inject CSRF token into every POST form (set by layout_top.php).
@@ -21,7 +22,7 @@
 <script>
   // Header actions group: relocate the notification bell + avatar/profile/
   // dark-mode/logout template into the current page's action row (next to
-  // "+ New Encoding" on the dashboard, or at the end of the .topbar on
+  // "+ Review Incoming Documents" on the dashboard, or at the end of the .topbar on
   // every other page), then wire both up.
   (function () {
     var tpl = document.getElementById('account-menu-tpl');
@@ -275,24 +276,63 @@
     var sidebar = document.querySelector('.sidebar');
     var overlay = document.getElementById('sidebar-overlay');
     if (!toggle || !sidebar || !overlay) return;
-    function openSidebar() { sidebar.classList.add('is-open'); overlay.classList.add('is-open'); }
-    function closeSidebar() { sidebar.classList.remove('is-open'); overlay.classList.remove('is-open'); }
+    var mobile = window.matchMedia('(max-width: 992px)');
+    sidebar.id = sidebar.id || 'app-sidebar';
+    toggle.setAttribute('aria-controls', sidebar.id);
+    toggle.setAttribute('aria-expanded', 'false');
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'sidebar-close';
+    close.setAttribute('aria-label', 'Close menu');
+    close.innerHTML = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
+    sidebar.prepend(close);
+    function openSidebar() {
+      sidebar.classList.add('is-open'); overlay.classList.add('is-open');
+      document.body.classList.add('sidebar-open');
+      toggle.setAttribute('aria-expanded', 'true');
+      close.focus();
+    }
+    function closeSidebar(restoreFocus) {
+      sidebar.classList.remove('is-open'); overlay.classList.remove('is-open');
+      document.body.classList.remove('sidebar-open');
+      toggle.setAttribute('aria-expanded', 'false');
+      if (restoreFocus !== false) toggle.focus();
+    }
     toggle.addEventListener('click', openSidebar);
     overlay.addEventListener('click', closeSidebar);
+    close.addEventListener('click', closeSidebar);
+    mobile.addEventListener('change', function () { closeSidebar(false); });
+    document.addEventListener('keydown', function (event) {
+      if (!sidebar.classList.contains('is-open')) return;
+      if (event.key === 'Escape') { closeSidebar(); return; }
+      if (event.key !== 'Tab') return;
+      var items = Array.from(sidebar.querySelectorAll('a[href], button, input, select, [tabindex="0"]')).filter(function (el) { return !el.disabled && el.getClientRects().length; });
+      var first = items[0], last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    });
   })();
 </script>
 <script>
-  // Submit button loading state — show spinner + "Saving…" on all POST forms.
+  // Submit button loading state — show spinner on all POST forms.
   (function () {
     document.querySelectorAll('form[method="post"]').forEach(function (form) {
       form.addEventListener('submit', function () {
-        var btn = form.querySelector('button[type="submit"], button:not([type])');
+        var btn = this.querySelector('button[type="submit"], button:not([type])');
         if (btn && !btn.disabled) {
           btn.disabled = true;
           btn.dataset.origHtml = btn.innerHTML;
-          btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving…';
-          setTimeout(function () { btn.disabled = false; if (btn.dataset.origHtml) btn.innerHTML = btn.dataset.origHtml; }, 12000);
+          btn.innerHTML = '<span class="lrdms-submit-loading" style="display:inline-block;"></span> Saving…';
         }
+      });
+      // Reset button state after page reload if form wasn't submitted
+      window.addEventListener('load', function () {
+        form.querySelectorAll('button[disabled]').forEach(function (b) {
+          if (b.dataset.origHtml) {
+            b.innerHTML = b.dataset.origHtml;
+            b.disabled = false;
+          }
+        });
       });
     });
   })();
@@ -303,8 +343,13 @@
   (function () {
     var container = document.getElementById('lrdms-toast-container');
     if (!container) return;
-    var alertSuccess = document.querySelector('.alert-success');
-    var alertDanger = document.querySelector('.alert-danger');
+    function findPageAlert(selector) {
+      return Array.from(document.querySelectorAll(selector)).find(function (element) {
+        return !element.closest('.modal, [hidden], .d-none') && element.textContent.trim() !== '';
+      });
+    }
+    var alertSuccess = findPageAlert('.alert-success');
+    var alertDanger = findPageAlert('.alert-danger');
     var alertEl = alertSuccess || alertDanger;
     if (!alertEl) return;
     var type = alertSuccess ? 'success' : 'danger';

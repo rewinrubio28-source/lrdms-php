@@ -13,9 +13,13 @@
   const form = document.getElementById("repo-filter-form");
   if (!form) return; // not on the repository page
 
+  const termSelect = document.getElementById("repo-council-term");
   const qInput = document.getElementById("repo-q");
   const statusSelect = document.getElementById("repo-status");
   const typeSelect = document.getElementById("repo-type");
+  const sectionInput = document.getElementById("repo-section");
+  const sectionType = sectionInput ? typeSelect.value : "All";
+  const classificationSelect = document.getElementById("repo-classification");
   const committeeSelect = document.getElementById("repo-committee");
   const dateFromInput = document.getElementById("repo-date-from");
   const dateToInput = document.getElementById("repo-date-to");
@@ -29,17 +33,21 @@
 
   function buildParams() {
     const params = new URLSearchParams();
+    if (termSelect && termSelect.value !== "All") params.set("council_term", termSelect.value);
+    if (sectionInput) params.set("section", sectionInput.value);
     if (qInput.value.trim() !== "") params.set("q", qInput.value.trim());
     if (statusSelect.value !== "All") params.set("status", statusSelect.value);
     if (typeSelect.value !== "All") params.set("type", typeSelect.value);
+    if (classificationSelect.value !== "All") params.set("classification", classificationSelect.value);
     if (committeeSelect && committeeSelect.value !== "All") params.set("committee", committeeSelect.value);
     if (dateFromInput && dateFromInput.value.trim() !== "") params.set("date_from", dateFromInput.value.trim());
     if (dateToInput && dateToInput.value.trim() !== "") params.set("date_to", dateToInput.value.trim());
     return params;
   }
 
-  async function refreshResults() {
+  async function refreshResults(targetPage = 1) {
     const params = buildParams();
+    if (Number.isInteger(targetPage) && targetPage > 1) params.set("page", targetPage);
 
     // Keep the address bar (and back button / refresh / share links) in sync.
     const newUrl = params.toString()
@@ -84,12 +92,21 @@
     debounceTimer = setTimeout(refreshResults, DEBOUNCE_MS);
   }
 
+  if (termSelect) termSelect.addEventListener("change", refreshResults);
+  resultsEl.addEventListener("click", function (event) {
+    const link = event.target.closest("[data-repo-page]");
+    if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    clearTimeout(debounceTimer);
+    refreshResults(Number(link.dataset.repoPage));
+  });
   // Search box: filter as you type (debounced so it doesn't fire every keystroke).
   qInput.addEventListener("input", scheduleRefresh);
 
   // Dropdowns: filter immediately, no need to wait.
   statusSelect.addEventListener("change", refreshResults);
   typeSelect.addEventListener("change", refreshResults);
+  classificationSelect.addEventListener("change", refreshResults);
   if (committeeSelect) committeeSelect.addEventListener("change", refreshResults);
 
   // Date fields: plain native <input type="date">. "change" fires once a full
@@ -112,8 +129,10 @@
     resetLink.addEventListener("click", function (e) {
       e.preventDefault();
       qInput.value = "";
+      if (termSelect) termSelect.value = "All";
       statusSelect.value = "All";
-      typeSelect.value = "All";
+      typeSelect.value = sectionType;
+      classificationSelect.value = "All";
       if (committeeSelect) committeeSelect.value = "All";
       if (dateFromInput) dateFromInput.value = "";
       if (dateToInput) dateToInput.value = "";

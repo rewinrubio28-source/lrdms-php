@@ -1,0 +1,4 @@
+Options -Indexes
+RewriteEngine On
+# Stored files are served only after record-level authorization.
+RewriteRule ^(.+)$ ../preview_document.php?path=uploads/$1 [B,L,QSD]

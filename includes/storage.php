@@ -43,6 +43,10 @@ function storage_is_remote($path) {
     return (bool) preg_match('#^https?://#i', (string) $path);
 }
 
+function record_file_url(string $path): string {
+    return 'preview_document.php?path=' . rawurlencode($path) . '&name=' . rawurlencode(basename(parse_url($path, PHP_URL_PATH) ?: $path));
+}
+
 function storage_content_type($name, $localPath = null) {
     static $map = [
         'pdf'  => 'application/pdf',
@@ -184,6 +188,8 @@ function storage_put($localPath, $key, $contentType) {
  * when remote (that temp file is deleted by PHP at the end of the request).
  */
 function storage_store_upload($tmpName, $safeName, &$localReadable = null) {
+    if (!is_uploaded_file($tmpName)) return null;
+    $safeName = bin2hex(random_bytes(16)) . '_' . preg_replace('/[^A-Za-z0-9._-]/', '_', basename($safeName));
     if (storage_enabled()) {
         $url = storage_put($tmpName, 'uploads/' . $safeName, storage_content_type($safeName, $tmpName));
         if ($url === null) return null;
@@ -193,9 +199,24 @@ function storage_store_upload($tmpName, $safeName, &$localReadable = null) {
 
     $uploadDir = __DIR__ . '/../uploads/';
     if (!is_dir($uploadDir)) @mkdir($uploadDir, 0755, true);
-    if (!move_uploaded_file($tmpName, $uploadDir . $safeName)) return null;
+    if (!storage_copy_new_file($tmpName, $uploadDir . $safeName)) return null;
     $localReadable = $uploadDir . $safeName;
     return 'uploads/' . $safeName;
+}
+
+/** Exclusive creation prevents a revision upload from overwriting an original. */
+function storage_copy_new_file(string $source, string $destination): bool {
+    $input = @fopen($source, 'rb');
+    if (!$input) return false;
+    $output = @fopen($destination, 'xb');
+    if (!$output) { fclose($input); return false; }
+    $expected = fstat($input)['size'];
+    $copied = stream_copy_to_stream($input, $output);
+    $flushed = fflush($output);
+    fclose($input);
+    fclose($output);
+    if ($copied !== $expected || !$flushed) { @unlink($destination); return false; }
+    return true;
 }
 
 /**

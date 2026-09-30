@@ -1,0 +1,28 @@
+.repo-page-subtitle{margin:7px 0 0;color:var(--text-muted,#64748b);font-size:13px}
+.repo-workspace{--repo-border:#dce5f2;--repo-ink:#233e60;--repo-muted:#657995}
+.repo-workspace #repo-filter-form{margin:0 0 24px!important;padding:20px;background:var(--card-bg,#fff);border:1px solid var(--repo-border);border-radius:16px;box-shadow:0 4px 20px #20365306;row-gap:14px!important}
+.repo-workspace #repo-filter-form .form-label{margin-bottom:6px!important;font-size:11px;font-weight:600;color:var(--repo-muted)!important}
+.repo-workspace #repo-filter-form :is(.form-control,.form-select){min-height:40px;background:var(--card-bg,#fff);border-color:var(--repo-border);border-radius:9px;font-size:13px;color:var(--repo-ink)}
+.repo-workspace #repo-filter-form :is(.form-control,.form-select):focus{border-color:#709ee3;box-shadow:0 0 0 3px #417ad31a}
+.repo-workspace #repo-filter-form .btn{min-height:40px;border-radius:9px}
+.repo-results-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;font-size:12px;color:var(--repo-muted)}
+.repo-results-heading i{margin-right:6px;color:#3c71bb}.repo-results-heading strong{color:var(--repo-ink);font-size:15px}
+.repo-workspace .doc-card{padding:0;margin-bottom:16px;border:1px solid var(--repo-border);border-radius:15px;overflow:hidden;box-shadow:0 3px 18px #20365306;transition:border-color .18s,box-shadow .18s}
+.repo-workspace .doc-card:hover{border-color:#acc7ed;box-shadow:0 5px 22px #20365310}
+.repo-workspace .doc-card__header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;background:linear-gradient(110deg,#f0f5ff,#fafcff);border-bottom:1px solid #e6edf7;color:var(--repo-ink);font-size:14px;font-weight:700}
+.repo-workspace .doc-card__header i{color:#5782c3;margin-right:7px}.repo-type-tag{padding:4px 9px;border-radius:20px;background:#e3edfc;color:#396399;font-size:10px;font-weight:600;white-space:nowrap}
+.repo-workspace .doc-card__body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px;padding:18px 20px}
+.repo-workspace .doc-card__row{display:flex;align-items:baseline;gap:12px;margin:0;min-width:0;font-size:12px}
+.repo-workspace .doc-card__row:first-child{grid-column:1/-1;display:block;margin-bottom:4px}.repo-workspace .doc-card__row:first-child .doc-card__label{display:none}
+.repo-workspace .doc-card__label{width:110px;flex:0 0 110px;color:var(--repo-muted);font-size:11px;font-weight:500}
+.repo-workspace .doc-card__value{color:var(--repo-ink);min-width:0;overflow-wrap:anywhere;flex:1}
+.repo-workspace .doc-card__value--title a{font-size:16px;font-weight:650;line-height:1.5;text-decoration:none;color:var(--repo-ink)}.repo-workspace .doc-card__value--title a:hover{color:#2765bb;text-decoration:underline;text-underline-offset:3px}
+.repo-workspace .doc-card__actions{display:flex;flex-wrap:wrap;gap:8px;padding:13px 20px;border-top:1px solid #edf1f7;background:var(--card-bg,#fff)}
+.repo-workspace .doc-card__actions .btn{padding:7px 12px;border-radius:8px;font-size:11px;display:inline-flex;align-items:center;gap:6px}
+.repo-workspace #repo-empty-msg{padding:45px 22px;text-align:center;border:1px dashed #b8cbe7;background:var(--card-bg,#fff);border-radius:15px}
+.repo-workspace :is(a,button):focus-visible{outline:3px solid #88b4f2;outline-offset:3px}
+html.dark .repo-workspace{--repo-border:#344761;--repo-ink:#dce7f7;--repo-muted:#a3b5cf;--card-bg:#18263b}
+html.dark .repo-workspace .doc-card__header{background:linear-gradient(110deg,#203453,#18263b);border-color:#344761}html.dark .repo-workspace .repo-type-tag{background:#304b70;color:#c6ddff}html.dark .repo-workspace .doc-card__actions{border-color:#344761}
+@media(max-width:850px){.repo-workspace .doc-card__body{grid-template-columns:1fr}.repo-workspace .doc-card__row:first-child{grid-column:auto}}
+@media(max-width:576px){.repo-workspace #repo-filter-form{padding:14px}.repo-workspace .doc-card__header,.repo-workspace .doc-card__body,.repo-workspace .doc-card__actions{padding:14px}.repo-results-heading{align-items:flex-start}.repo-results-heading>span{font-size:10px}.repo-workspace .doc-card__value--title a{font-size:14px}.repo-workspace .doc-card__label{width:94px;flex-basis:94px}}
+@media(prefers-reduced-motion:reduce){.repo-workspace *{transition:none!important}}

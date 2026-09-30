@@ -59,8 +59,18 @@ function perm_action_label($action) {
     static $labels = [
         'create'            => 'Create',
         'edit_metadata'     => 'Edit Metadata',
+        'register_record'   => 'Validate / Register Record',
+        'manage_organization' => 'Manage Organizational Lists',
+        'manage_visibility' => 'Manage Public Visibility',
+        'print_record'      => 'Print Record Summary',
+        'download'          => 'Download Document Copy',
+        'review_copy_requests' => 'Review Copy Requests',
+        'export'            => 'Export Report',
         'view_all'          => 'View All',
         'view_committee'    => 'View Committee',
+        'view_memberships'  => 'View Assigned Committees',
+        'view_office'       => 'View Originating Office',
+        'view_division'     => 'View Originating Division',
         'view_own'          => 'View Own',
         'view_public'       => 'View Public',
         'amend'             => 'Amend',
@@ -177,7 +187,7 @@ function require_permission($module, $action) {
  * unambiguous when the query also joins users/committees — both of which
  * have a committee_id column.
  */
-function document_visibility_clause($user) {
+function legacy_document_visibility_clause($user) {
     // "Public" visibility keys off is_public alone, not status = 'Enacted'.
     // is_public is never touched by amend/rollback/withdraw (see document.php
     // and version.php's status-change action) — it only ever changes via an
@@ -241,7 +251,7 @@ function document_visibility_clause($user) {
  * Same rules as document_visibility_clause(), but as a PHP predicate for
  * a single row you've already fetched by ID (e.g. document.php?id=).
  */
-function can_view_document($user, $doc) {
+function legacy_can_view_document($user, $doc) {
     $isPublic = (int)$doc['is_public'] === 1
         && !in_array($doc['status'], ['Draft', 'Submitted', 'Under Review'], true);
 
@@ -263,4 +273,43 @@ function can_view_document($user, $doc) {
             || $isPublic;
     }
     return $isPublic;
+}
+
+/** Optional organization scopes, enabled explicitly through role permissions.
+ * Office/division refer to document origin, not the document owner's current assignment.
+ * Null/unmatched origin metadata never grants access. Intake remains excluded.
+ */
+function organization_visibility_clause($user) {
+    if (!$user) return ['1=0', []];
+    $clauses = [];
+    $params = [];
+    if (_role_has_permission($user['role_id'], 'repository', 'view_memberships')) {
+        $clauses[] = 'EXISTS (SELECT 1 FROM users scope_user WHERE scope_user.id = ? AND (scope_user.committee_id = d.committee_id OR EXISTS (SELECT 1 FROM user_committees scope_member WHERE scope_member.user_id = scope_user.id AND scope_member.committee_id = d.committee_id)))';
+        $params[] = $user['id'];
+    }
+    if (_role_has_permission($user['role_id'], 'repository', 'view_office')) {
+        $clauses[] = 'EXISTS (SELECT 1 FROM users scope_user JOIN offices scope_office ON scope_office.id = scope_user.office_id WHERE scope_user.id = ? AND scope_office.name = d.originating_office)';
+        $params[] = $user['id'];
+    }
+    if (_role_has_permission($user['role_id'], 'repository', 'view_division')) {
+        $clauses[] = 'EXISTS (SELECT 1 FROM users scope_user JOIN offices scope_office ON scope_office.id = scope_user.office_id JOIN divisions scope_division ON scope_division.id = scope_user.division_id AND scope_division.office_id = scope_office.id WHERE scope_user.id = ? AND scope_office.name = d.originating_office AND scope_division.name = d.originating_division)';
+        $params[] = $user['id'];
+    }
+    return $clauses ? ['(d.verified_at IS NOT NULL AND (' . implode(' OR ', $clauses) . '))', $params] : ['1=0', []];
+}
+
+function document_visibility_clause($user) {
+    [$legacy, $params] = legacy_document_visibility_clause($user);
+    [$organization, $organizationParams] = organization_visibility_clause($user);
+    return ['d.verified_at IS NOT NULL AND ((' . $legacy . ') OR (' . $organization . '))', array_merge($params, $organizationParams)];
+}
+
+function can_view_document($user, $doc) {
+    if (legacy_can_view_document($user, $doc)) return true;
+    if (!$user || empty($doc['id'])) return false;
+    [$clause, $params] = organization_visibility_clause($user);
+    if (!$params) return false;
+    $stmt = get_db()->prepare('SELECT 1 FROM documents d WHERE d.id = ? AND (' . $clause . ')');
+    $stmt->execute(array_merge([(int)$doc['id']], $params));
+    return (bool)$stmt->fetchColumn();
 }

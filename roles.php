@@ -10,6 +10,7 @@ $pdo = get_db();
 
 $errors = [];
 $success = '';
+if (isset($_GET['saved'])) $success = 'Role saved.';
 
 // All permissions, ordered by module then action, for the matrix.
 $permissions = $pdo->query(
@@ -122,6 +123,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Reload the matrix and role counts from the saved grants.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$errors && $success !== '') {
+    $savedRoleId = $formAction === 'create_role' ? ($newRoleId ?? 0) : ($formAction === 'update_role' ? ($roleId ?? 0) : 0);
+    header('Location: roles.php?saved=1' . ($savedRoleId ? '&edit=' . (int)$savedRoleId : ''));
+    exit;
+}
+
 /**
  * Replace a role's permission set.
  */
@@ -146,14 +154,15 @@ function in_array_permission($pdo, array $permIds, $module, $action) {
 
 include __DIR__ . '/includes/layout_top.php';
 ?>
-<div class="topbar">
+<div class="topbar" data-banner-date="<?= date('M j, Y') ?>">
   <div class="d-flex align-items-center gap-2">
     <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu">
       <i class="bi bi-list"></i>
     </button>
     <div>
-      <a class="small text-muted text-decoration-none" href="users.php">← Back to users</a>
+      <a class="small text-muted text-decoration-none" href="users.php?open=add-user">← Back to users</a>
       <h1 class="topbar__title">Roles &amp; Permissions</h1>
+      <p class="module-banner-description">Manage system roles and their permissions.</p>
     </div>
   </div>
 </div>
@@ -176,14 +185,18 @@ include __DIR__ . '/includes/layout_top.php';
                 <?= (int)$r['perm_count'] ?> permission<?= $r['perm_count'] == 1 ? '' : 's' ?>
                 <?php if ((int)$me['role_id'] === (int)$r['id']): ?><span class="badge text-bg-info">you</span><?php endif; ?>
               </div>
+              <?php if ((int)$r['user_count'] > 0 && !in_array($r['name'], ['Super Admin', 'Administrator'], true)): ?>
+                <div class="small text-muted mt-1">Reassign this role's users before deleting.</div>
+              <?php endif; ?>
             </div>
-            <div class="text-nowrap ms-2">
+            <div class="d-flex align-items-center justify-content-end gap-1 flex-shrink-0 text-nowrap ms-3" style="min-width:128px;">
               <a class="btn btn-outline-primary btn-sm" href="roles.php?edit=<?= (int)$r['id'] ?>">Edit</a>
-              <?php if ((int)$r['user_count'] === 0 && !in_array($r['name'], ['Super Admin', 'Administrator'], true)): ?>
-              <form method="post" class="d-inline">
+              <?php if (!in_array($r['name'], ['Super Admin', 'Administrator'], true)): ?>
+              <form method="post" class="d-inline" onsubmit="return confirm('Delete this role permanently?');">
+                <?php csrf_field(); ?>
                 <input type="hidden" name="form_action" value="delete_role">
                 <input type="hidden" name="role_id" value="<?= (int)$r['id'] ?>">
-                <button class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this role permanently?')">Delete</button>
+                <button type="submit" class="btn btn-danger btn-sm" <?= (int)$r['user_count'] > 0 ? 'disabled' : '' ?>><i class="bi bi-trash me-1" aria-hidden="true"></i>Delete</button>
               </form>
               <?php endif; ?>
             </div>

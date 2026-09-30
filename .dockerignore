@@ -5,3 +5,13 @@ sql/
 *.md
 uploads/*
 !uploads/.gitkeep
+!uploads/.htaccess
+.env
+config/database.php
+config/email.php
+config/local.php
+dev_test_incoming.php
+backups/*
+!backups/.htaccess
+.runtime/*
+!.runtime/.htaccess

@@ -120,7 +120,7 @@ $statusOptions = ['Draft', 'Submitted', 'Under Review', 'Enacted', 'Amended', 'S
 
 include __DIR__ . '/includes/layout_top.php';
 ?>
-<div class="topbar">
+<div class="topbar" data-banner-date="<?= date('M j, Y') ?>">
   <div class="d-flex align-items-center gap-2">
     <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu">
       <i class="bi bi-list"></i>
@@ -128,6 +128,7 @@ include __DIR__ . '/includes/layout_top.php';
     <div>
       <div class="topbar__eyebrow">Repository</div>
       <h1 class="topbar__title"><?= htmlspecialchars($sub['name']) ?></h1>
+      <p class="module-banner-description">Review records received from connected systems.</p>
     </div>
   </div>
 </div>

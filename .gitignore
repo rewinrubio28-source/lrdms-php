@@ -8,6 +8,7 @@ __pycache__/
 # Uploaded files (keep the folder, ignore its contents)
 /uploads/*
 !/uploads/.gitkeep
+!/uploads/.htaccess
 
 # Config files with real credentials — never commit these.
 # Ship the .example versions instead; each dev/server copies + fills in
@@ -25,3 +26,7 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+/.runtime/*
+!/.runtime/.htaccess
+/backups/*
+!/backups/.htaccess

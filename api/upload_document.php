@@ -1,45 +1,15 @@
 <?php
 /**
- * REST endpoint used by the Ordinance & Resolution Lifecycle System
- * (System 1) and the Session Management System (System 2) to push
- * finalized documents into this repository.
- *
- * POST /api/upload_document.php
- * Header: X-API-Key: <shared secret>
- *
- * Accepts EITHER of two request shapes:
- *
- * 1) JSON body (the real System 1 / System 2 integration shape):
- *   {
- *     "title": "...",            required
- *     "doc_number": "...",       required
- *     "doc_type": "Ordinance",   optional, defaults to "Ordinance"
- *     "sponsor": "...",          optional
- *     "committee_id": 1,         optional
- *     "enactment_date": "2026-07-20", optional
- *     "source_system": "System 1 – Ordinance & Resolution Lifecycle",
- *     "is_public": true,         optional, defaults to true (see note below)
- *     "ocr_text": "..."          optional
- *   }
- *
- * 2) multipart/form-data with the same field names as regular POST fields,
- *    plus optional "attachment[]" file(s). Used by dev_test_incoming.php to
- *    simulate a push that includes real file(s) — no limit on how many.
- *    documents.file_path is set to the FIRST file, unchanged from before —
- *    every existing single-file code path keeps working as-is. When more
- *    than one file is sent, ALL of them (including the first) are also
- *    recorded in document_attachments, which the gallery/carousel views
- *    read from once a document has 2+ files. No OCR runs on any of them
- *    here; files are just stored as-is. (If OCR text is wanted for a test
- *    push, pass it directly via the ocr_text field, same as the JSON shape.)
- *
- * Per the integration boundary in README.md, this system is the system
- * of record for FINALIZED documents only — it receives them already
- * enacted. Draft/review workflow stays owned by System 1.
+ * Authenticated source-system intake: JSON or multipart attachment[].
+ * Required: doc_number, title. Optional: status, source_status, provenance,
+ * classification, council_term, previous_version_id, body and ocr_text.
+ * Every submission starts private and Pending Validation. Registration is
+ * performed by an authorized reviewer, never by this endpoint.
  */
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/audit.php';
 require_once __DIR__ . '/../includes/storage.php';
+require_once __DIR__ . '/../includes/intake_record.php';
 
 header('Content-Type: application/json');
 
@@ -77,10 +47,11 @@ if ($isMultipart) {
     $input = json_decode(file_get_contents('php://input'), true);
 }
 
-if (!$input || empty($input['title']) || empty($input['doc_number'])) {
-    http_response_code(422);
-    echo json_encode(['error' => 'title and doc_number are required.']);
-    exit;
+try {
+    if (!is_array($input)) throw new InvalidArgumentException('A valid document payload is required.');
+    $recordValues = intake_record_values($input);
+} catch (InvalidArgumentException $e) {
+    http_response_code(422); echo json_encode(['error'=>$e->getMessage()]); exit;
 }
 
 $pdo = get_db();
@@ -102,7 +73,7 @@ if (!$systemUserId) {
 // by mistake). Reject rather than silently insert a second row, and log
 // the attempt so it's visible instead of a silent failure.
 $dupStmt = $pdo->prepare('SELECT id FROM documents WHERE doc_number = ?');
-$dupStmt->execute([$input['doc_number']]);
+$dupStmt->execute([$recordValues['doc_number']]);
 if ($dupStmt->fetchColumn()) {
     http_response_code(409);
     echo json_encode(['error' => 'A document with this doc_number already exists.', 'doc_number' => $input['doc_number']]);
@@ -110,13 +81,19 @@ if ($dupStmt->fetchColumn()) {
     exit;
 }
 
-// Verification gate: a document pushed by an upstream system is genuinely
-// Enacted (that's the integration boundary — see docs/SCOPE_DECISION.md),
-// but it is never made public sight-unseen. It stays is_public = 0, however
-// the upstream request tags it, until a Records Officer verifies it in the
-// Encoding module's "Documents Awaiting Verification" queue and releases it.
+// Source status is retained; receipt never grants public access.
 $isPublic = 0;
-$sourceSystem = $input['source_system'] ?? 'System 1 – Ordinance & Resolution Lifecycle';
+$sourceRecordId = $recordValues['source_record_id'];
+$sourceStatus = $recordValues['source_status'];
+$sourceSystem = $recordValues['source_system'];
+if ($recordValues['previous_version_id']) {
+    $previousQuery = $pdo->prepare('SELECT * FROM documents WHERE id=?');
+    $previousQuery->execute([$recordValues['previous_version_id']]);
+    $previous = $previousQuery->fetch();
+    if (!$previous || !$previous['verified_at'] || $previous['next_version_id'] !== null || $previous['doc_type'] !== $recordValues['doc_type']) {
+        http_response_code(422); echo json_encode(['error'=>'Previous version must be a registered current record of the same type.']); exit;
+    }
+}
 
 // Optional attachment(s) — multipart requests only. No OCR is run here;
 // files are just stored, same as everywhere else in LRDMS right now.
@@ -144,7 +121,9 @@ if ($isMultipart && isset($_FILES['attachment'])) {
         : [$_FILES['attachment']];
 
     foreach ($files as $f) {
-        if ($f['error'] !== UPLOAD_ERR_OK || empty($f['name'])) continue;
+        if ($f['error'] === UPLOAD_ERR_NO_FILE) continue;
+        if ($f['error'] !== UPLOAD_ERR_OK || empty($f['name'])) { http_response_code(422); echo json_encode(['error'=>'Attachment upload failed.']); exit; }
+        if (!in_array(strtolower(pathinfo($f['name'], PATHINFO_EXTENSION)), ['pdf','png','jpg','jpeg','gif','webp','doc','docx','txt'], true)) { http_response_code(422); echo json_encode(['error'=>'Unsupported attachment type.']); exit; }
         $originalName = $f['name'];
         $safeName = date('Ymd_His') . '_' . substr(uniqid(), -5) . '_' . preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $originalName);
         // Saves to the S3 bucket when S3_* env vars are set, else to uploads/.
@@ -153,31 +132,21 @@ if ($isMultipart && isset($_FILES['attachment'])) {
         if ($storedPath !== null) {
             $allFilePaths[] = ['file_path' => $storedPath, 'display_name' => $originalName];
             if ($filePath === null) $filePath = $storedPath; // first successful upload
+        } else {
+            http_response_code(500); echo json_encode(['error'=>'Attachment storage failed; no record was registered.']); exit;
         }
     }
 }
 
-$stmt = $pdo->prepare(
-    'INSERT INTO documents
-       (doc_number, title, doc_type, sponsor, committee_id, owner_id, status, is_public,
-        source_system, enactment_date, ocr_text, file_path)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
-);
-$stmt->execute([
-    $input['doc_number'],
-    $input['title'],
-    $input['doc_type'] ?? 'Ordinance',
-    $input['sponsor'] ?? null,
-    $input['committee_id'] ?? null,
-    $systemUserId,
-    'Enacted',
-    $isPublic,
-    $sourceSystem,
-    $input['enactment_date'] ?? null,
-    $input['ocr_text'] ?? null,
-    $filePath,
-]);
+$pdo->beginTransaction();
+try {
+$recordValues += ['owner_id'=>$systemUserId, 'is_public'=>0, 'records_status'=>'Pending Validation', 'received_at'=>date('Y-m-d H:i:s'), 'pending_since'=>date('Y-m-d H:i:s'), 'status_last_synced'=>date('Y-m-d H:i:s'), 'file_path'=>$filePath];
+$columns = array_keys($recordValues);
+$stmt = $pdo->prepare('INSERT INTO documents (`' . implode('`,`', $columns) . '`) VALUES (' . implode(',', array_fill(0, count($columns), '?')) . ')');
+$stmt->execute(array_values($recordValues));
 $newId = $pdo->lastInsertId();
+$receipt = $pdo->prepare("INSERT INTO integration_receipts (source_system, external_reference_id, received_by, processing_status, lrdms_record_id) VALUES (?, ?, ?, 'Pending Validation', ?)");
+$receipt->execute([$sourceSystem, $sourceRecordId ?: ($input['doc_number'] ?? null), $systemUserId, $newId]);
 
 if ($allFilePaths) {
     $attStmt = $pdo->prepare(
@@ -190,12 +159,16 @@ if ($allFilePaths) {
 
 log_action('encoding', 'api_ingest', $sourceSystem . ' → ' . $input['doc_number']);
 
-// Alert Records Officers that something is waiting for them to verify.
+$pdo->commit();
+} catch (Throwable $e) {
+    if ($pdo->inTransaction()) $pdo->rollBack();
+    error_log('Intake failed: ' . $e->getMessage());
+    http_response_code($e instanceof PDOException && $e->getCode() === '23000' ? 409 : 500);
+    echo json_encode(['error'=>'Intake could not be saved. Check document number and references before retrying.']); exit;
+}
+// Notifications must not roll back a successfully received record.
 require_once __DIR__ . '/../includes/workflow.php';
-notify_incoming_document([
-    'id' => $newId,
-    'doc_number' => $input['doc_number'],
-    'title' => $input['title'],
-], $sourceSystem);
+try { notify_incoming_document(['id'=>$newId,'doc_number'=>$recordValues['doc_number'],'title'=>$recordValues['title']], $sourceSystem); }
+catch (Throwable $e) { error_log('Intake notification: ' . $e->getMessage()); }
 
-echo json_encode(['document_id' => (int)$newId, 'status' => 'Enacted', 'is_public' => false, 'file_path' => $filePath, 'attachment_count' => count($allFilePaths)]);
+echo json_encode(['document_id' => (int)$newId, 'status' => $recordValues['status'], 'records_status' => 'Pending Validation', 'is_public' => false, 'file_path' => $filePath, 'attachment_count' => count($allFilePaths)]);

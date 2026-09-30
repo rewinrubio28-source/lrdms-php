@@ -54,6 +54,11 @@ function saved_search_query_string(array $criteria) {
         'status'    => $criteria['status'] ?? '',
         'date_from' => $criteria['date_from'] ?? '',
         'date_to'   => $criteria['date_to'] ?? '',
+        'sort'      => $criteria['sort'] ?? 'relevance',
+        'year' => $criteria['year'] ?? '',
+        'committee_id' => $criteria['committee_id'] ?? 0,
+        'office' => $criteria['office'] ?? '',
+        'classification' => $criteria['classification'] ?? '',
     ]);
 }
 

@@ -24,6 +24,7 @@ require_once __DIR__ . '/includes/audit.php';
 require_once __DIR__ . '/includes/legislative.php';
 require_once __DIR__ . '/config/database.php';
 
+require_once __DIR__ . '/includes/storage.php';
 require_login();
 $user = current_user();
 $pdo = get_db();
@@ -37,14 +38,18 @@ function fetch_doc_row($pdo, $id) {
 /** Walks previous_version_id back to the root, then next_version_id forward. Returns oldest -> newest. */
 function version_chain($pdo, $doc) {
     $head = $doc;
+    $seen = [(int)$head['id'] => true];
     while (!empty($head['previous_version_id'])) {
         $prev = fetch_doc_row($pdo, $head['previous_version_id']);
-        if (!$prev) break; // broken link (points to a row that no longer exists) — stop walking back from here
+        if (!$prev || isset($seen[(int)$prev['id']]) || !can_view_document(current_user(), $prev)) break; // broken link (points to a row that no longer exists) — stop walking back from here
+        $seen[(int)$prev['id']] = true;
         $head = $prev;
     }
     $chain = [];
     $walker = $head;
-    while ($walker) {
+    $seen = [];
+    while ($walker && !isset($seen[(int)$walker['id']]) && can_view_document(current_user(), $walker)) {
+        $seen[(int)$walker['id']] = true;
         $chain[] = $walker;
         $walker = !empty($walker['next_version_id']) ? fetch_doc_row($pdo, $walker['next_version_id']) : null;
     }
@@ -68,6 +73,10 @@ function _compute_diff($oldText, $newText) {
     // Simple LCS-based diff
     $m = count($oldLines);
     $n = count($newLines);
+    // Bound LCS memory for long OCR documents; retain a full-text comparison.
+    if ($m * $n > 250000) {
+        return array_merge(array_map(static function ($line) { return ['status' => 'removed', 'text' => $line]; }, $oldLines), array_map(static function ($line) { return ['status' => 'added', 'text' => $line]; }, $newLines));
+    }
     $dp = array_fill(0, $m + 1, array_fill(0, $n + 1, 0));
     for ($i = 1; $i <= $m; $i++) {
         for ($j = 1; $j <= $n; $j++) {
@@ -125,17 +134,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'rollb
         $errors[] = 'Security token expired. Please refresh the page and try again.';
     }
     if (validate_csrf()) {
-    if (!has_permission('version', 'rollback')) {
+    if (!has_permission('version', 'rollback') || !has_permission('encoding', 'create')) {
         $errors[] = 'Your role cannot roll back versions.';
     } else {
         $targetId = (int)($_POST['target_id'] ?? 0);
         $target = fetch_doc_row($pdo, $targetId);
-        if (!$target) {
+        if (!$target || !can_view_document($user, $target)) {
             $errors[] = 'Version not found.';
         } else {
             $chain = version_chain($pdo, $target);
             $head = end($chain);
-            if ((int)$head['id'] === (int)$target['id']) {
+            if (!$head || !empty($head['next_version_id']) || empty($head['verified_at']) || empty($target['verified_at'])) {
+                $errors[] = 'Restore requires access to the complete registered version chain.';
+            } elseif ((int)$head['id'] === (int)$target['id']) {
                 $errors[] = 'That is already the current version.';
             } elseif (in_array($head['status'], ['Superseded', 'Withdrawn'], true)) {
                 $errors[] = 'This document is closed and cannot be restored.';
@@ -144,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'rollb
                 // carry forward old content), so it needs its own doc_number too — same
                 // rule as document.php's amend action, never a copy of an existing number.
                 $newDocNumber = trim($_POST['new_doc_number'] ?? '');
-                if ($newDocNumber === '') {
+                if ($newDocNumber === '' || mb_strlen($newDocNumber) > 60) {
                     $errors[] = 'New document number is required to restore this version as a new instrument.';
                 } else {
                     $dupStmt = $pdo->prepare('SELECT id FROM documents WHERE doc_number = ?');
@@ -154,30 +165,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'rollb
                     }
                 }
 
+                if (trim((string)($_POST['rollback_note'] ?? '')) === '') $errors[] = 'Enter the reason and authorization reference for restoring this copy.';
                 if (!$errors) {
                 $newId = null;
                 $pdo->beginTransaction();
                 try {
+                    $lock = $pdo->prepare('SELECT * FROM documents WHERE id=? FOR UPDATE');
+                    $lock->execute([$head['id']]);
+                    $lockedHead = $lock->fetch();
+                    if (!$lockedHead || $lockedHead['next_version_id'] !== null || in_array($lockedHead['status'], ['Superseded', 'Withdrawn'], true) || !can_view_document($user, $lockedHead)) throw new RuntimeException('The current version changed. Refresh before restoring.');
+                    $head = $lockedHead;
+                    $lock->execute([$target['id']]);
+                    $target = $lock->fetch();
+                    if (!$target || !can_view_document($user, $target)) throw new RuntimeException('The earlier record is no longer accessible.');
+                    $classificationRanks = ['PUBLIC' => 0, 'INTERNAL' => 1, 'RESTRICTED' => 2, 'CONFIDENTIAL' => 3];
+                    $restoreClassification = ($classificationRanks[$target['classification']] ?? 3) > ($classificationRanks[$head['classification']] ?? 3) ? $target['classification'] : $head['classification'];
                     $stmt = $pdo->prepare(
                         'INSERT INTO documents
                            (doc_number, title, doc_type, sponsor, committee_id, owner_id, status, is_public, verified_at,
                             source_system, enactment_date, file_path, ocr_text, previous_version_id)
-                         VALUES (?,?,?,?,?,?,?,?,NOW(),?,?,?,?,?)'
+                         VALUES (?,?,?,?,?,?,?,?,NULL,?,?,?,?,?)'
                     );
-                    // verified_at = NOW(), same reasoning as document.php's amend: a
-                    // Records Officer just created this row internally via Version
-                    // Control, so it's already reviewed and must not resurface in
-                    // encoding.php's "Awaiting Verification" queue.
+                    // New copies remain pending until the shared registration service links them.
                     $stmt->execute([
                         $newDocNumber, $target['title'], $target['doc_type'], $target['sponsor'],
-                        $target['committee_id'], $user['id'], 'Enacted', $head['is_public'],
-                        $head['source_system'], $target['enactment_date'], $target['file_path'], $target['ocr_text'],
+                        $target['committee_id'], $user['id'], $head['status'], 0,
+                        'Records restoration', $target['enactment_date'], $target['file_path'], $target['ocr_text'],
                         $head['id'],
                     ]);
                     $newId = $pdo->lastInsertId();
+                    $pdo->prepare('UPDATE documents SET body=?, council_term=? WHERE id=?')->execute([$target['body'] ?? null, $target['council_term'] ?? null, $newId]);
+                    $pdo->prepare('INSERT INTO document_attachments (document_id, file_path, display_name, sort_order) SELECT ?, file_path, display_name, sort_order FROM document_attachments WHERE document_id=?')->execute([$newId, $target['id']]);
 
-                    $pdo->prepare('UPDATE documents SET status = ?, next_version_id = ? WHERE id = ?')
-                        ->execute(['Amended', $newId, $head['id']]);
+
+                    $pdo->prepare('UPDATE documents SET records_status=?, classification=?, originating_office=?, originating_division=?, submitter_position=?, responsible_custodian=?, related_legislative_item=?, source_record_id=?, source_status=?, source_status_date=?, status_last_synced=NOW(), received_at=NOW(), pending_since=NOW(), registered_at=NULL WHERE id=?')
+                        ->execute(['Pending Validation', $restoreClassification, $target['originating_office'], $target['originating_division'], $target['submitter_position'], $target['responsible_custodian'], $head['related_legislative_item'], $head['source_record_id'], $head['source_status'], $head['source_status_date'], $newId]);
 
                     $userNote = trim($_POST['rollback_note'] ?? '');
                     $noteText = $userNote !== ''
@@ -187,16 +209,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'rollb
                     $pdo->prepare('INSERT INTO document_change_notes (document_id, note, created_by) VALUES (?,?,?)')
                         ->execute([$newId, $noteText, $user['id']]);
 
+                    log_action('version', 'rolled_back', 'Record #' . $target['id'] . ' restored as #' . $newId . '; previous current #' . $head['id']);
                     $pdo->commit();
                 } catch (Exception $e) {
                     $pdo->rollBack();
-                    $errors[] = 'Rollback failed: ' . $e->getMessage();
+                    error_log('Version restore: ' . $e->getMessage());
+                    $errors[] = 'Restore failed. Refresh the page and check the document number before trying again.';
                     $newId = null;
                 }
 
                 if (!empty($newId)) {
-                    log_action('version', 'rolled_back', $target['doc_number'] . ' — restored as new document ' . $newDocNumber . ' (#' . $newId . '), replacing current #' . $head['id']);
-                    header('Location: version.php?doc=' . $newId . '&tab=rollback&restored=1#version-tabs');
+                    $_SESSION['flash_success'] = 'Restored copy submitted for validation. The current version stays unchanged until registration.';
+                    header('Location: document.php?id=' . $newId);
                     exit;
                 }
                 }
@@ -243,12 +267,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'remov
     } else {
         $relId = (int)($_POST['rel_id'] ?? 0);
         $backTo = (int)($_POST['from_id'] ?? 0);
-        if ($relId) {
-            remove_relationship($pdo, $relId);
+        if ($relId && remove_relationship($pdo, $relId)) {
             log_action('version', 'unrelated_document', "relationship #$relId removed");
+            header('Location: version.php?doc=' . $backTo . '&tab=related#version-tabs');
+            exit;
+        } else {
+            $errors[] = 'Relationship unavailable or access denied.';
         }
-        header('Location: version.php?doc=' . $backTo . '&tab=related#version-tabs');
-        exit;
     }
 }
 
@@ -259,18 +284,35 @@ if (isset($_GET['related'])) $message = 'Related legislation linked.';
 // ------------------------------------------------------------
 list($visClause, $visParams) = document_visibility_clause($user);
 $sql = "SELECT d.*, u.full_name AS owner_name FROM documents d JOIN users u ON u.id = d.owner_id
-        WHERE d.next_version_id IS NULL AND ($visClause)
+        WHERE d.verified_at IS NOT NULL AND d.next_version_id IS NULL AND ($visClause)
         ORDER BY d.title";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($visParams);
 $heads = $stmt->fetchAll();
 
+// Load the visible history once so older versions can be opened directly.
+$stmt = $pdo->prepare("SELECT d.*, u.full_name AS owner_name FROM documents d JOIN users u ON u.id = d.owner_id WHERE d.verified_at IS NOT NULL AND ($visClause) ORDER BY d.created_at DESC, d.id DESC");
+$stmt->execute($visParams);
+$visibleVersions = $stmt->fetchAll();
+$visibleById = array_column($visibleVersions, null, 'id');
+$versionInfo = [];
+foreach ($visibleVersions as $record) {
+    if (isset($versionInfo[$record['id']])) continue;
+    $root = $record;
+    $seen = [];
+    while (!empty($root['previous_version_id']) && isset($visibleById[$root['previous_version_id']]) && !isset($seen[$root['id']])) {
+        $seen[$root['id']] = true;
+        $root = $visibleById[$root['previous_version_id']];
+    }
+    $ids = []; $node = $root;
+    while ($node && !in_array((int)$node['id'], $ids, true)) {
+        $ids[] = (int)$node['id'];
+        $node = $visibleById[$node['next_version_id'] ?? 0] ?? null;
+    }
+    foreach ($ids as $index => $id) $versionInfo[$id] = ['number' => $index + 1, 'total' => count($ids), 'ids' => $ids];
+}
 $selectedId = (int)($_GET['doc'] ?? 0);
-$selected = null;
-foreach ($heads as $h) { if ((int)$h['id'] === $selectedId) { $selected = $h; break; } }
-// No auto-fallback to $heads[0] here on purpose: landing on this page with no
-// ?doc= (no search performed, no picker selection yet) must show an empty
-// state, not silently reveal whichever document sorts first.
+$selected = $visibleById[$selectedId] ?? null;
 
 // Load all attachment files for the selected (current) version. Fall back to
 // the legacy file_path column so older/single-file records still work —
@@ -292,9 +334,10 @@ if ($selected && $selected['committee_id']) {
 }
 
 $tab = $_GET['tab'] ?? 'overview';
-if (!in_array($tab, ['overview', 'history', 'compare', 'related', 'rollback'], true)) $tab = 'overview';
+if (!in_array($tab, ['overview', 'history', 'compare', 'activity', 'related', 'rollback'], true)) $tab = 'overview';
 
-$chain = $selected ? version_chain($pdo, $selected) : [];
+$chain = $selected ? array_map(static function ($id) use ($visibleById) { return $visibleById[$id]; }, $versionInfo[$selectedId]['ids']) : [];
+$selectedVersion = $selected ? $versionInfo[$selectedId]['number'] : 0;
 $chainDesc = array_reverse($chain); // newest -> oldest, matches the reference timeline layout
 $chainTotal = count($chainDesc);
 $chainIds = array_map(function ($n) { return (int)$n['id']; }, $chainDesc);
@@ -312,7 +355,7 @@ foreach ($chainDesc as $idx => $n) {
 
 include __DIR__ . '/includes/layout_top.php';
 ?>
-<div class="topbar">
+<div class="topbar" data-banner-date="<?= date('M j, Y') ?>">
   <div class="d-flex align-items-center gap-2">
     <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu">
       <i class="bi bi-list"></i>
@@ -320,6 +363,7 @@ include __DIR__ . '/includes/layout_top.php';
     <div>
       <p class="topbar__eyebrow mb-0">Legislative Records &amp; Retrieval</p>
       <h1 class="topbar__title">Version Control</h1>
+      <p class="module-banner-description">Review record history and compare changes across versions.</p>
     </div>
   </div>
 </div>
@@ -348,132 +392,12 @@ include __DIR__ . '/includes/layout_top.php';
 <?php if ($message): ?><div class="alert alert-success"><?= htmlspecialchars($message) ?></div><?php endif; ?>
 <?php if ($errors): ?><div class="alert alert-danger"><?php foreach ($errors as $e) echo htmlspecialchars($e) . '<br>'; ?></div><?php endif; ?>
 
-<!-- ============================================================
-     LEGISLATIVE DOCUMENT SEARCH
-     AJAX-driven, hits api/version_lookup.php (session-authenticated,
-     RBAC-scoped, head-documents-only, capped result count) instead of
-     loading every document into a dropdown.
-     ============================================================ -->
-<div class="card lrdms-search-card">
-  <h2 class="lrdms-search-title"><i class="bi bi-search"></i> Legislative Document Search</h2>
-  <div class="lrdms-search-row">
-    <input type="text" id="lrdms-search-input" class="form-control" autocomplete="off"
-           placeholder="Search ordinance/resolution number, title, subject, sponsor, keyword…">
-  </div>
-  <div class="lrdms-quick-filters">
-    <select id="lrdms-filter-type" class="form-select form-select-sm">
-      <option value="">All Types</option>
-      <?php foreach (['Ordinance','Resolution','Committee Report','Minutes','Other'] as $t): ?>
-        <option value="<?= $t ?>"><?= $t ?></option>
-      <?php endforeach; ?>
-    </select>
-    <select id="lrdms-filter-status" class="form-select form-select-sm">
-      <option value="">All Status</option>
-      <?php foreach (['Enacted','Amended','Superseded','Withdrawn','Rejected'] as $s): ?>
-        <option value="<?= $s ?>"><?= $s ?></option>
-      <?php endforeach; ?>
-    </select>
-    <span id="lrdms-search-count" class="text-muted small"></span>
-  </div>
-  <div id="lrdms-search-results" class="lrdms-search-results"></div>
-
-  <details class="lrdms-browse-all" <?= (!$heads || $selected) ? '' : 'open' ?>>
-    <summary>Browse all documents (secondary — use search above for large repositories)</summary>
-    <form method="get" class="row g-2 align-items-end mt-2" id="doc-picker-form">
-      <div class="col-md-12" id="doc-picker-select-col">
-        <select name="doc" class="form-select" id="doc-picker-select" onchange="this.form.submit()">
-          <option value="">— Select a document —</option>
-          <?php foreach ($heads as $h):
-            $len = count(version_chain($pdo, $h)); ?>
-            <option value="<?= $h['id'] ?>" <?= $selected && (int)$selected['id'] === (int)$h['id'] ? 'selected' : '' ?>>
-              <?= htmlspecialchars($h['doc_number'] . ' — ' . $h['title']) ?><?= $len > 1 ? ' (' . $len . ' versions)' : '' ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <input type="hidden" name="tab" value="<?= htmlspecialchars($tab) ?>">
-      </div>
-    </form>
-  </details>
-  <?php if (!$heads): ?>
-    <p class="text-muted small mt-3 mb-0">No documents on file yet — or your role's visibility rules don't allow seeing any.</p>
-  <?php endif; ?>
-</div>
-
-<script>
-(function () {
-  var input = document.getElementById('lrdms-search-input');
-  var typeSel = document.getElementById('lrdms-filter-type');
-  var statusSel = document.getElementById('lrdms-filter-status');
-  var results = document.getElementById('lrdms-search-results');
-  var count = document.getElementById('lrdms-search-count');
-  var timer = null;
-
-  var STATUS_CLASS = function (s) { return 'stamp--' + s.toLowerCase().replace(/ /g, '-'); };
-
-  function render(list) {
-    if (!list.length) {
-      results.innerHTML = input.value.trim() ? '<p class="text-muted small mb-0">No matching legislative records.</p>' : '';
-      return;
-    }
-    var html = '';
-    list.forEach(function (d) {
-      var date = d.enactment_date ? d.enactment_date : '—';
-      var committee = d.committee_name ? d.committee_name : 'Unassigned';
-      var sponsor = d.sponsor ? d.sponsor : '—';
-      html += '<div class="lrdms-result-card">'
-        + '<div class="lrdms-result-main">'
-        + '<div class="lrdms-result-num">' + d.doc_number + '</div>'
-        + '<div class="lrdms-result-title">' + d.title + '</div>'
-        + '<div class="lrdms-result-meta">'
-        + '<span class="stamp ' + STATUS_CLASS(d.status) + '">' + d.status + '</span>'
-        + '<span>' + d.doc_type + '</span>'
-        + '<span>' + date + '</span>'
-        + '<span>' + d.version_count + ' version' + (d.version_count === 1 ? '' : 's') + '</span>'
-        + '</div>'
-        + '<div class="lrdms-result-sub">Committee: ' + committee + ' &nbsp;·&nbsp; Sponsor: ' + sponsor + '</div>'
-        + '</div>'
-        + '<div class="lrdms-result-actions">'
-        + '<a class="btn btn-sm btn-outline-primary" href="version.php?doc=' + d.id + '&tab=overview">View Record</a>'
-        + '<a class="btn btn-sm btn-outline-secondary" href="version.php?doc=' + d.id + '&tab=history">History</a>'
-        + '<a class="btn btn-sm btn-outline-secondary" href="version.php?doc=' + d.id + '&tab=compare">Compare</a>'
-        + '</div></div>';
-    });
-    results.innerHTML = html;
-  }
-
-  function esc(s) {
-    var d = document.createElement('div');
-    d.innerText = s == null ? '' : s;
-    return d.innerHTML;
-  }
-
-  function runSearch() {
-    var q = input.value.trim();
-    var type = typeSel.value;
-    var status = statusSel.value;
-    if (!q && !type && !status) { results.innerHTML = ''; count.textContent = ''; return; }
-    var url = 'api/version_lookup.php?q=' + encodeURIComponent(q) + '&type=' + encodeURIComponent(type) + '&status=' + encodeURIComponent(status);
-    fetch(url, { credentials: 'same-origin' })
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        // escape text fields before render() concatenates them into HTML
-        var safe = data.results.map(function (d) {
-          var c = {};
-          for (var k in d) c[k] = typeof d[k] === 'string' ? esc(d[k]) : d[k];
-          return c;
-        });
-        count.textContent = data.count + ' result' + (data.count === 1 ? '' : 's') + ' found';
-        render(safe);
-      })
-      .catch(function () { results.innerHTML = '<p class="text-danger small mb-0">Search failed. Please try again.</p>'; });
-  }
-
-  input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(runSearch, 300); });
-  typeSel.addEventListener('change', runSearch);
-  statusSel.addEventListener('change', runSearch);
-})();
-</script>
-
+<link rel="stylesheet" href="assets/css/version-workspace.css?v=4">
+<div class="version-page">
+<?php if (!$selected): ?>
+<?php if ($selectedId): ?><div class="alert alert-warning">This version is unavailable or you do not have access to it.</div><?php endif; ?>
+<?php include __DIR__ . '/includes/version_history_workspace.php'; ?>
+<?php else: ?><a class="version-back" href="version.php">&larr; Back to Version History</a><?php endif; ?>
   <?php if ($selected): ?>
     <!-- ============================================================
          LEGISLATIVE RECORD PROFILE
@@ -481,10 +405,15 @@ include __DIR__ . '/includes/layout_top.php';
     <div class="card lrdms-profile-card">
       <div class="lrdms-profile-head">
         <div>
-          <div class="lrdms-profile-eyebrow"><?= htmlspecialchars($selected['doc_type']) ?> No. <?= htmlspecialchars($selected['doc_number']) ?></div>
+          <div class="lrdms-profile-eyebrow"><?= htmlspecialchars($selected['doc_type']) ?> No. <?= htmlspecialchars($selected['doc_number']) ?> &middot; Viewing v<?= $selectedVersion ?></div>
           <h2 class="lrdms-profile-title"><?= htmlspecialchars($selected['title']) ?></h2>
         </div>
         <div class="lrdms-profile-status">
+          <div class="text-muted small mb-1">Version Status</div>
+          <span class="version-chip <?= empty($selected['next_version_id']) ? 'is-current' : '' ?>"><?= empty($selected['next_version_id']) ? 'CURRENT' : 'EARLIER VERSION' ?> &middot; v<?= $selectedVersion ?></span>
+          <div class="text-muted small mt-3 mb-1">Legislative Status (from source)</div>
+          <?php if ($selectedVersion < $chainTotal): ?><a class="d-block small mb-2" href="version.php?doc=<?= (int)$chainDesc[0]['id'] ?>">Go to current v<?= $chainTotal ?> &rarr;</a><?php endif; ?>
+
           <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $selected['status'])) ?> lrdms-stamp-lg">● <?= htmlspecialchars($selected['status']) ?></span>
           <?php $stage = legislative_stage_caption($selected['status']); if ($stage): ?>
             <div class="lrdms-profile-stage"><?= htmlspecialchars($stage) ?></div>
@@ -505,7 +434,7 @@ include __DIR__ . '/includes/layout_top.php';
 
       <p class="text-muted small mt-3 mb-0" style="font-family:var(--font-mono);">
         <?= $chainTotal ?> version<?= $chainTotal === 1 ? '' : 's' ?> on record
-        <?= $chainTotal > 1 ? '· ' . ($chainTotal - 1) . ' amendment' . ($chainTotal - 1 === 1 ? '' : 's') : '' ?>
+        <?= $chainTotal > 1 ? '· ' . ($chainTotal - 1) . ' revision' . ($chainTotal - 1 === 1 ? '' : 's') : '' ?>
         <?= $relationshipCount ? '· ' . $relationshipCount . ' related record' . ($relationshipCount === 1 ? '' : 's') : '' ?>
       </p>
     </div>
@@ -513,17 +442,19 @@ include __DIR__ . '/includes/layout_top.php';
     <div class="card" id="version-tabs">
     <ul class="nav nav-pills my-1 lrdms-tabs">
       <li class="nav-item"><a class="nav-link <?= $tab === 'overview' ? 'active' : '' ?>" href="version.php?doc=<?= $selected['id'] ?>&tab=overview#version-tabs">Overview</a></li>
-      <li class="nav-item"><a class="nav-link <?= $tab === 'history' ? 'active' : '' ?>" href="version.php?doc=<?= $selected['id'] ?>&tab=history#version-tabs">Legislative History</a></li>
-      <li class="nav-item"><a class="nav-link <?= $tab === 'compare' ? 'active' : '' ?>" href="version.php?doc=<?= $selected['id'] ?>&tab=compare#version-tabs">Version Comparison</a></li>
+      <li class="nav-item"><a class="nav-link <?= $tab === 'history' ? 'active' : '' ?>" href="version.php?doc=<?= $selected['id'] ?>&tab=history#version-tabs">Version History</a></li>
+      <li class="nav-item"><a class="nav-link <?= $tab === 'compare' ? 'active' : '' ?>" href="version.php?doc=<?= $selected['id'] ?>&tab=compare#version-tabs">Compare Versions</a></li>
+      <li class="nav-item"><a class="nav-link <?= $tab === 'activity' ? 'active' : '' ?>" href="version.php?doc=<?= $selected['id'] ?>&tab=activity#version-tabs">Activity</a></li>
       <li class="nav-item"><a class="nav-link <?= $tab === 'related' ? 'active' : '' ?>" href="version.php?doc=<?= $selected['id'] ?>&tab=related#version-tabs">Related Legislation<?= $relationshipCount ? ' (' . $relationshipCount . ')' : '' ?></a></li>
-      <li class="nav-item"><a class="nav-link <?= $tab === 'rollback' ? 'active' : '' ?>" href="version.php?doc=<?= $selected['id'] ?>&tab=rollback#version-tabs">Rollback / Restore</a></li>
+      <li class="nav-item"><a class="nav-link <?= $tab === 'rollback' ? 'active' : '' ?>" href="version.php?doc=<?= $selected['id'] ?>&tab=rollback#version-tabs">Restore Earlier Copy</a></li>
     </ul>
 
+    <p class="version-readonly"><i class="bi bi-lock"></i> Received versions are preserved. Review the record history and compare changes below.</p>
     <?php if ($tab === 'overview'): ?>
       <?php $latestNote = latest_note($pdo, $selected['id']); ?>
       <div class="lrdms-overview-grid">
         <div>
-          <h4 class="lrdms-subhead">Most recent change</h4>
+          <h4 class="lrdms-subhead">What changed in v<?= $selectedVersion ?></h4>
           <?php if ($latestNote): ?>
             <p class="vtimeline__desc mb-1"><?= htmlspecialchars($latestNote['note']) ?></p>
             <p class="text-muted small">by <?= htmlspecialchars($latestNote['full_name']) ?> · <?= htmlspecialchars(date('M j, Y g:i A', strtotime($latestNote['created_at']))) ?></p>
@@ -533,11 +464,11 @@ include __DIR__ . '/includes/layout_top.php';
 
           <h4 class="lrdms-subhead mt-3">Document file</h4>
           <?php if ($selectedFiles): ?>
-            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filePreviewModal" data-files="<?= htmlspecialchars(json_encode($selectedFiles), ENT_QUOTES, 'UTF-8') ?>">
-              <i class="bi bi-file-earmark-text"></i> Preview current version<?= count($selectedFiles) > 1 ? ' (' . count($selectedFiles) . ' files)' : '' ?>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filePreviewModal" data-files="<?= htmlspecialchars(json_encode(array_map('record_file_url', $selectedFiles)), ENT_QUOTES, 'UTF-8') ?>">
+              <i class="bi bi-file-earmark-text"></i> Preview version<?= count($selectedFiles) > 1 ? ' (' . count($selectedFiles) . ' files)' : '' ?>
             </button>
           <?php else: ?>
-            <p class="text-muted small">No file attached to the current version.</p>
+            <p class="text-muted small">No file attached to this version.</p>
           <?php endif; ?>
         </div>
         <div>
@@ -555,15 +486,35 @@ include __DIR__ . '/includes/layout_top.php';
           <a href="version.php?doc=<?= $selected['id'] ?>&tab=related" class="small">View all related legislation →</a>
 
           <h4 class="lrdms-subhead mt-3">Full document</h4>
-          <p><a href="document.php?id=<?= $selected['id'] ?>">Open full document record →</a></p>
+          <p><a href="document.php?id=<?= (int)$selected['id'] ?>&amp;return=<?= rawurlencode('version.php?doc=' . (int)$selected['id'] . '&tab=' . $tab) ?>">Open full document record →</a></p>
         </div>
       </div>
 
+      <?php if (empty($selected['next_version_id']) && !in_array($selected['status'], ['Superseded','Withdrawn'], true) && has_permission('version','amend') && has_permission('encoding','create')): ?>
+      <details class="document-supporting-details mt-3">
+        <summary>Submit a received revision</summary>
+        <form method="post" enctype="multipart/form-data" action="document.php?id=<?= (int)$selected['id'] ?>" class="mt-3">
+          <?php csrf_field(); ?><input type="hidden" name="action" value="amend">
+          <p class="small text-muted">Upload the received revision for validation. The current version remains unchanged until registration.</p>
+          <label for="revision-number" class="form-label small">New document number</label><input id="revision-number" name="new_doc_number" class="form-control mb-2" maxlength="60" required>
+          <label for="revision-file" class="form-label small">Received document file</label><input id="revision-file" name="new_file" type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt" class="form-control mb-2" required>
+          <label for="revision-note" class="form-label small">Source reference / change note</label><textarea id="revision-note" name="amend_note" class="form-control mb-2" maxlength="4000" required></textarea>
+          <button class="btn btn-primary btn-sm">Submit for validation</button>
+        </form>
+      </details>
+      <?php endif; ?>
+
+    <?php elseif ($tab === 'activity'): ?>
+      <div class="vtimeline">
+      <?php foreach ($chainDesc as $i => $node): $activityNote = latest_note($pdo, $node['id']); ?>
+        <div class="vtimeline__item"><div class="vtimeline__row"><strong>v<?= $chainTotal - $i ?> received</strong><time class="vtimeline__time"><?= htmlspecialchars(date('M j, Y g:i A', strtotime($node['created_at']))) ?></time></div><p class="vtimeline__desc"><?= htmlspecialchars($activityNote['note'] ?? 'Document received and registered.') ?></p><div class="vtimeline__meta"><?= htmlspecialchars($node['owner_name']) ?> &middot; <?= htmlspecialchars($node['source_system']) ?></div></div>
+      <?php endforeach; ?>
+      </div>
     <?php elseif ($tab === 'history'): ?>
       <div class="vtimeline">
         <?php foreach ($chainDesc as $i => $node):
           $vNum = $chainTotal - $i;
-          $isCurrent = $i === 0;
+          $isCurrent = empty($node['next_version_id']);
           $isFirst = $vNum === 1;
           $note = latest_note($pdo, $node['id']);
           // Determine icon type
@@ -575,7 +526,7 @@ include __DIR__ . '/includes/layout_top.php';
             <div class="vtimeline__icon vtimeline__icon--<?= $iconCls ?>"><i class="bi <?= $icon ?>"></i></div>
             <div class="vtimeline__row">
               <div>
-                <span class="vtimeline__title">Version <?= $vNum ?>.0<?= $isFirst ? ' — Original Filing' : '' ?></span>
+                <span class="vtimeline__title">Version <?= $vNum ?><?= $isFirst ? ' — Original Filing' : '' ?></span>
                 <span class="lrdms-vbadge lrdms-vbadge--<?= $badge['class'] ?>"><?= $badge['label'] ?></span>
               </div>
               <span class="vtimeline__time"><?= htmlspecialchars(date('M j, Y · g:i A', strtotime($node['created_at']))) ?></span>
@@ -589,10 +540,11 @@ include __DIR__ . '/includes/layout_top.php';
                 <em class="text-muted">No change note recorded for this revision.</em>
               <?php endif; ?>
             </div>
+            <div class="d-flex gap-2 my-2"><a class="btn btn-sm btn-outline-primary" href="version.php?doc=<?= (int)$node['id'] ?>">View Document</a><?php if ($chainTotal > 1): ?><a class="btn btn-sm btn-outline-secondary" href="version.php?doc=<?= (int)$selected['id'] ?>&tab=compare&a=<?= (int)$node['id'] ?>&b=<?= (int)($chainDesc[$i === 0 ? 1 : 0]['id']) ?>">Compare</a><?php endif; ?></div>
             <div class="vtimeline__meta">
               <?= $isFirst ? 'Filed' : 'Edited' ?> by <?= htmlspecialchars($node['owner_name']) ?>
               · <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $node['status'])) ?>"><?= htmlspecialchars($node['status']) ?></span>
-              · <a href="document.php?id=<?= $node['id'] ?>">View full document →</a>
+              · <a href="document.php?id=<?= (int)$node['id'] ?>&amp;return=<?= rawurlencode('version.php?doc=' . (int)$selected['id'] . '&tab=history') ?>">View full document →</a>
             </div>
           </div>
         <?php endforeach; ?>
@@ -609,7 +561,7 @@ include __DIR__ . '/includes/layout_top.php';
             <label class="form-label small fw-semibold">Compare</label>
             <select name="a" class="form-select form-select-sm">
               <?php foreach ($chainDesc as $i => $n): ?>
-                <option value="<?= $n['id'] ?>" <?= $aId === (int)$n['id'] ? 'selected' : '' ?>>v<?= $chainTotal - $i ?>.0 — <?= $n['enactment_date'] ? htmlspecialchars(date('M j, Y', strtotime($n['enactment_date']))) : '—' ?></option>
+                <option value="<?= $n['id'] ?>" <?= $aId === (int)$n['id'] ? 'selected' : '' ?>>v<?= $chainTotal - $i ?> — <?= $n['enactment_date'] ? htmlspecialchars(date('M j, Y', strtotime($n['enactment_date']))) : '—' ?></option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -617,7 +569,7 @@ include __DIR__ . '/includes/layout_top.php';
             <label class="form-label small fw-semibold">Against</label>
             <select name="b" class="form-select form-select-sm">
               <?php foreach ($chainDesc as $i => $n): ?>
-                <option value="<?= $n['id'] ?>" <?= $bId === (int)$n['id'] ? 'selected' : '' ?>>v<?= $chainTotal - $i ?>.0 — <?= $n['enactment_date'] ? htmlspecialchars(date('M j, Y', strtotime($n['enactment_date']))) : '—' ?></option>
+                <option value="<?= $n['id'] ?>" <?= $bId === (int)$n['id'] ? 'selected' : '' ?>>v<?= $chainTotal - $i ?> — <?= $n['enactment_date'] ? htmlspecialchars(date('M j, Y', strtotime($n['enactment_date']))) : '—' ?></option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -629,7 +581,7 @@ include __DIR__ . '/includes/layout_top.php';
             <?php foreach ([$docA, $docB] as $pair): $row = $pair['row']; $v = $pair['v']; $isCur = $row['next_version_id'] === null;
               $n = latest_note($pdo, $row['id']); ?>
               <div class="compare-col <?= $isCur ? 'is-current' : '' ?>">
-                <h4>v<?= $v ?>.0<?= $isCur ? ' (Current)' : '' ?></h4>
+                <h4>v<?= $v ?><?= $isCur ? ' (Current)' : '' ?></h4>
                 <div class="vtimeline__meta"><?= htmlspecialchars(date('M j, Y', strtotime($row['created_at']))) ?> · <?= htmlspecialchars($row['owner_name']) ?></div>
                 <div class="vtimeline__desc"><?= $n ? htmlspecialchars($n['note']) : '<em class="text-muted">No change note recorded.</em>' ?></div>
                 <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $row['status'])) ?>"><?= htmlspecialchars($row['status']) ?></span>
@@ -641,18 +593,36 @@ include __DIR__ . '/includes/layout_top.php';
           <?php else:
             $older = $docA['v'] < $docB['v'] ? $docA : $docB;
             $newer = $docA['v'] < $docB['v'] ? $docB : $docA;
-            $oldBody = $older['row']['body'] ?? $older['row']['ocr_text'] ?? '';
-            $newBody = $newer['row']['body'] ?? $newer['row']['ocr_text'] ?? '';
-            $diff = _compute_diff($oldBody, $newBody); ?>
+            $oldBody = trim((string)($older['row']['body'] ?? '')) !== '' ? $older['row']['body'] : ($older['row']['ocr_text'] ?? '');
+            $newBody = trim((string)($newer['row']['body'] ?? '')) !== '' ? $newer['row']['body'] : ($newer['row']['ocr_text'] ?? '');
+            $diff = _compute_diff($oldBody, $newBody);
+            $removedCount = count(array_filter($diff, static function ($line) { return $line['status'] === 'removed'; }));
+            $addedCount = count(array_filter($diff, static function ($line) { return $line['status'] === 'added'; }));
+            ?>
+            <?php if (count(preg_split('/\r?\n/', $oldBody)) * count(preg_split('/\r?\n/', $newBody)) > 250000): ?><p class="text-muted small">Large document: showing full older and newer text instead of line-by-line matching.</p><?php endif; ?>
             <div class="compare-diff">
-              <strong>Changed:</strong> status moved from "<?= htmlspecialchars($older['row']['status']) ?>" to "<?= htmlspecialchars($newer['row']['status']) ?>"
+              <strong>Changes:</strong>
+              <?php if ($older['row']['status'] !== $newer['row']['status']): ?>
+                Status changed from &ldquo;<?= htmlspecialchars($older['row']['status']) ?>&rdquo; to &ldquo;<?= htmlspecialchars($newer['row']['status']) ?>&rdquo;.
+              <?php else: ?>
+                Status unchanged (<?= htmlspecialchars($newer['row']['status']) ?>).
+              <?php endif; ?>
               <?php if ($older['row']['enactment_date'] !== $newer['row']['enactment_date']): ?>
-                , enactment date updated to <?= htmlspecialchars(date('M j, Y', strtotime($newer['row']['enactment_date']))) ?>
+                Enactment date: <?= $newer['row']['enactment_date'] ? htmlspecialchars(date('M j, Y', strtotime($newer['row']['enactment_date']))) : 'Not set' ?>.
               <?php endif; ?>
             </div>
             <div class="diff-section">
-              <h5 class="diff-header"><i class="bi bi-file-diff"></i> Content Diff — v<?= $older['v'] ?>.0 → v<?= $newer['v'] ?>.0</h5>
-              <?= _render_diff($diff) ?>
+              <h5 class="diff-header"><i class="bi bi-file-diff"></i> Content Diff — v<?= $older['v'] ?> → v<?= $newer['v'] ?></h5>
+              <?php if (trim($oldBody) === '' && trim($newBody) === ''): ?>
+                <p class="text-muted small">No extracted document text is available for these versions.</p>
+              <?php else: ?>
+              <?php if ($oldBody === $newBody): ?><p class="text-muted small">Document text is identical in these versions.</p><?php endif; ?>
+              <div class="version-diff-legend"><span>&minus; Removed from v<?= $older['v'] ?> (<?= $removedCount ?> lines)</span><span>+ Added in v<?= $newer['v'] ?> (<?= $addedCount ?> lines)</span><span>Unchanged</span></div>
+              <div class="compare-grid version-diff-grid">
+                <section><h6>v<?= $older['v'] ?> &mdash; Older</h6><?= _render_diff(array_filter($diff, static function ($line) { return $line['status'] !== 'added'; })) ?></section>
+                <section><h6>v<?= $newer['v'] ?> &mdash; Newer</h6><?= _render_diff(array_filter($diff, static function ($line) { return $line['status'] !== 'removed'; })) ?></section>
+              </div>
+              <?php endif; ?>
             </div>
           <?php endif; ?>
         <?php endif; ?>
@@ -714,27 +684,29 @@ include __DIR__ . '/includes/layout_top.php';
 
     <?php elseif ($tab === 'rollback'): ?>
       <?php if (!has_permission('version', 'rollback')): ?>
-        <div class="alert alert-warning mb-0">🔒 Your role cannot restore prior versions. This action is limited to Records Officers.</div>
+        <div class="alert alert-warning mb-0">🔒 Your role cannot restore prior versions. Your role needs the Restore permission.</div>
       <?php else: ?>
-        <p class="text-muted small">Restoring a version files it as a new, separately-numbered document — it does not delete history.</p>
-        <?php foreach ($chainDesc as $i => $node): $vNum = $chainTotal - $i; $isCurrent = $i === 0; ?>
+        <p class="text-muted small">Restore records an authorized earlier copy under a new document number; it does not approve or amend legislation — it does not delete history.</p>
+        <?php foreach ($chainDesc as $i => $node): $vNum = $chainTotal - $i; $isCurrent = empty($node['next_version_id']); ?>
           <div class="rollback-row <?= $isCurrent ? 'is-current' : '' ?>">
             <div>
-              <strong>v<?= $vNum ?>.0</strong> — <?= htmlspecialchars($node['doc_number']) ?> · <?= $node['enactment_date'] ? htmlspecialchars(date('M j, Y', strtotime($node['enactment_date']))) : '—' ?>
+              <strong>v<?= $vNum ?></strong> — <?= htmlspecialchars($node['doc_number']) ?> · <?= $node['enactment_date'] ? htmlspecialchars(date('M j, Y', strtotime($node['enactment_date']))) : '—' ?>
               · <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $node['status'])) ?>"><?= htmlspecialchars($node['status']) ?></span>
             </div>
             <?php if ($isCurrent): ?>
               <span class="text-muted small">This is the current version.</span>
+            <?php elseif (in_array($chainDesc[0]['status'], ['Superseded', 'Withdrawn'], true) || !empty($chainDesc[0]['next_version_id'])): ?>
+              <span class="text-muted small">Restore unavailable: the current record is closed or inaccessible.</span>
             <?php else: ?>
-              <form method="post" onsubmit="return confirm('Restore v<?= $vNum ?>.0 (<?= htmlspecialchars($node['doc_number']) ?>) as a new document? This will be filed as a new instrument in the history.');">
+              <form method="post" onsubmit="return confirm('Restore v<?= $vNum ?> (<?= htmlspecialchars($node['doc_number']) ?>) as a new document? This will be filed as a new instrument in the history.');">
                 <?php csrf_field(); ?>
                 <input type="hidden" name="action" value="rollback">
                 <input type="hidden" name="target_id" value="<?= $node['id'] ?>">
                 <div class="mt-2 mb-2">
                   <input type="text" name="new_doc_number" class="form-control form-control-sm mb-2" placeholder="New document number (e.g. 2026-045)" required>
-                  <textarea name="rollback_note" class="form-control form-control-sm" rows="2" placeholder="Reason for restoring this version (optional)" style="resize:vertical;"></textarea>
+                  <textarea name="rollback_note" class="form-control form-control-sm" rows="2" required placeholder="Reason and authorization reference for restoring this copy" style="resize:vertical;"></textarea>
                 </div>
-                <button class="btn btn-outline-primary btn-sm">Restore as new document</button>
+                <button class="btn btn-outline-primary btn-sm">Submit restored copy for review</button>
               </form>
             <?php endif; ?>
           </div>
@@ -742,15 +714,9 @@ include __DIR__ . '/includes/layout_top.php';
       <?php endif; ?>
     <?php endif; ?>
     </div>
-  <?php elseif ($heads): ?>
-    <div class="card lrdms-profile-card">
-      <p class="text-muted mb-0">
-        <i class="bi bi-search"></i>
-        Search or pick a document above to view its version details, files, and history.
-      </p>
-    </div>
   <?php endif; ?>
 
+</div>
 <div class="modal fade" id="filePreviewModal" tabindex="-1" aria-labelledby="filePreviewModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-md-down">
     <div class="modal-content">
@@ -887,15 +853,18 @@ include __DIR__ . '/includes/layout_top.php';
     } catch (e) { return false; }
   }
 
+  var tabRequest = 0;
   function loadTab(url, push) {
     var card = document.getElementById('version-tabs');
     if (card) card.classList.add('lrdms-tab-loading');
+    var request = ++tabRequest;
     fetch(url, { credentials: 'same-origin' })
       .then(function (r) {
         if (!r.ok) throw new Error('Request failed');
         return r.text();
       })
       .then(function (html) {
+        if (request !== tabRequest) return;
         var doc = new DOMParser().parseFromString(html, 'text/html');
         var fresh = doc.getElementById('version-tabs');
         var current = document.getElementById('version-tabs');
@@ -904,7 +873,7 @@ include __DIR__ . '/includes/layout_top.php';
         bindWithin(fresh);
         if (push) history.pushState({ lrdmsVersionTab: true }, '', url);
       })
-      .catch(function () { window.location.href = url; });
+      .catch(function () { if (request === tabRequest) window.location.href = url; });
   }
 
   function bindWithin(scope) {
@@ -913,6 +882,7 @@ include __DIR__ . '/includes/layout_top.php';
       var href = a.getAttribute('href');
       if (!href || !sameDocDifferentTab(href)) return;
       a.addEventListener('click', function (e) {
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
         e.preventDefault();
         loadTab(cleanUrl(href), true);
       });

@@ -37,9 +37,8 @@ $withdrawnCount = $statusCounts['Withdrawn'] ?? 0;
 $canEncode = has_permission('encoding', 'create');
 $awaitingVerificationCount = 0;
 if ($canEncode) {
-    $awaitingVerificationCount = (int)$pdo->query(
-        "SELECT COUNT(*) FROM documents WHERE verified_at IS NULL AND source_system <> 'Manual Encoding'"
-    )->fetchColumn();
+    $incoming = $pdo->query("SELECT * FROM documents WHERE verified_at IS NULL AND source_system <> 'Manual Encoding'")->fetchAll();
+    $awaitingVerificationCount = count(array_filter($incoming, static function ($record) use ($user) { return can_view_document($user, $record); }));
 }
 
 $stmt = $pdo->prepare("SELECT COUNT(*) FROM documents d WHERE $clause AND status = 'Enacted' AND is_public = 1");
@@ -90,7 +89,7 @@ if ($canEncode) {
     // Encoding Activity Trend — monthly counts (last 12 months)
     $monthStmt = $pdo->prepare("SELECT DATE_FORMAT(d.created_at, '%Y-%m') AS month, COUNT(*) AS n
                                 FROM documents d
-                                WHERE $clause
+                                WHERE ($clause) AND d.created_at >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 11 MONTH), '%Y-%m-01') AND d.created_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
                                 GROUP BY month
                                 ORDER BY month ASC
                                 LIMIT 12");
@@ -137,7 +136,9 @@ if ($totalDocs > 0) {
     foreach ($versionedHeads as &$vh) {
         $n = 1;
         $id = (int)$vh['id'];
-        while (isset($links[$id]) && $links[$id] !== null) {
+        $seen = [];
+        while (isset($links[$id]) && $links[$id] !== null && !isset($seen[$id]) && array_key_exists($links[$id], $links)) {
+            $seen[$id] = true;
             $n++;
             $id = $links[$id];
         }
@@ -190,34 +191,6 @@ if ($canAudit) {
 }
 
 // ------------------------------------------------------------
-// System integrations — containers for each subsystem's data.
-// Derived from existing tables where possible; subsystems that
-// have no data yet render a "Coming soon" placeholder.
-// ------------------------------------------------------------
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM documents d WHERE $clause AND doc_type IN ('Ordinance', 'Resolution')");
-$stmt->execute($params);
-$intOrdsRes = (int)$stmt->fetchColumn();
-
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM documents d WHERE $clause AND doc_type = 'Minutes'");
-$stmt->execute($params);
-$intMinutes = (int)$stmt->fetchColumn();
-
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM documents d WHERE $clause AND doc_type = 'Committee Report'");
-$stmt->execute($params);
-$intCommitteeReports = (int)$stmt->fetchColumn();
-
-// Records ready to hand off to Subsystem #8 (Archives): enacted, no newer version.
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM documents d WHERE $clause AND status = 'Enacted' AND next_version_id IS NULL");
-$stmt->execute($params);
-$readyArchival = (int)$stmt->fetchColumn();
-
-// Where incoming records came from (Manual Encoding vs. subsystem API pushes).
-$stmt = $pdo->prepare("SELECT source_system, COUNT(*) AS n FROM documents d
-                       WHERE $clause GROUP BY source_system ORDER BY n DESC");
-$stmt->execute($params);
-$sourceSystems = $stmt->fetchAll();
-
-// ------------------------------------------------------------
 // View
 // ------------------------------------------------------------
 $hour = (int)date('G');
@@ -229,22 +202,27 @@ $timeStr = date('g:i A');
 
 include __DIR__ . '/includes/layout_top.php';
 ?>
-<div class="dash-header">
+<div class="dash-header" data-banner-date="">
   <div class="d-flex align-items-start gap-2">
     <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu">
       <i class="bi bi-list"></i>
     </button>
     <div>
+      <div class="module-banner-eyebrow">DASHBOARD</div>
       <h1 class="dash-header__title"><span id="greeting"><?= htmlspecialchars($greeting) ?></span>, <?= htmlspecialchars($firstName) ?> 👋</h1>
       <p class="dash-header__date"><?= htmlspecialchars($dateStr) ?> · <span id="clock" class="dash-header__clock"><?= htmlspecialchars($timeStr) ?></span></p>
     </div>
   </div>
   <div class="dash-header__actions">
-    <?php if (has_permission('encoding', 'create')): ?>
-      <a href="encoding.php#awaiting-verification" class="btn btn-primary btn-sm">Review Incoming Documents</a>
-    <?php endif; ?>
   </div>
 </div>
+
+<?php if ($canEncode): ?>
+<nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Dashboard shortcuts">
+  <a class="btn btn-primary btn-sm" href="encoding.php">Incoming Records <span class="badge text-bg-light ms-1"><?= $awaitingVerificationCount ?></span></a>
+  <a class="btn btn-outline-primary btn-sm" href="encoding.php?tab=followups">Pending &amp; Follow-up</a>
+</nav>
+<?php endif; ?>
 
 <div class="kpi-row">
   <div class="stat-tile kpi-primary">
@@ -356,8 +334,8 @@ include __DIR__ . '/includes/layout_top.php';
   <section class="module-card">
     <header class="module-card__header">
       <div>
-        <h3>My Recent Encodings</h3>
-        <p class="module-card__subtitle">Documents you recently created</p>
+        <h3>My Recent Records</h3>
+        <p class="module-card__subtitle">Recently filed records assigned to you</p>
       </div>
     </header>
     <div class="module-card__body">
@@ -374,7 +352,7 @@ include __DIR__ . '/includes/layout_top.php';
           <?php endforeach; ?>
         </ul>
       <?php else: ?>
-        <p class="module-empty">You haven't encoded any documents yet.</p>
+        <p class="module-empty">No records are assigned to you yet.</p>
       <?php endif; ?>
     </div>
   </section>
@@ -434,7 +412,7 @@ include __DIR__ . '/includes/layout_top.php';
         </div>
         <div class="split-stat">
           <div class="split-stat__num"><?= number_format($restrictedCount) ?></div>
-          <div class="split-stat__label">Restricted</div>
+          <div class="split-stat__label">Not public</div>
         </div>
       </div>
     </div>
@@ -489,7 +467,7 @@ include __DIR__ . '/includes/layout_top.php';
   <section class="module-card">
     <header class="module-card__header">
       <div>
-        <h3>Retrieval &amp; Search</h3>
+        <h3>Search and Document Retrieval</h3>
         <p class="module-card__subtitle">Search activity across the repository</p>
       </div>
       <a class="module-card__link" href="search.php">Open module →</a>
@@ -591,144 +569,6 @@ include __DIR__ . '/includes/layout_top.php';
   <?php endif; ?>
 </div>
 <?php endif; ?>
-
-<!-- ── System Integrations: data containers per subsystem ── -->
-<section class="module-card" style="margin-bottom: 16px;">
-  <header class="module-card__header">
-    <div>
-      <h3>System Integrations</h3>
-      <p class="module-card__subtitle">Data containers for each subsystem that exchanges records</p>
-    </div>
-  </header>
-  <div class="module-card__body">
-    <div class="integration-grid">
-
-      <!-- Subsystem #1 — Ordinance / Resolution Lifecycle -->
-      <div class="int-card">
-        <div class="int-card__head">
-          <span class="flow-tag flow-tag--in">⬇ Inbound</span>
-        </div>
-        <div class="int-card__name">Ordinance / Resolution Lifecycle</div>
-        <p class="int-card__desc">Enacted ordinances &amp; resolutions pushed into the repository after approval &amp; enactment.</p>
-        <div class="int-stat"><?= number_format($intOrdsRes) ?></div>
-        <div class="int-stat__label">Ordinances &amp; resolutions on file</div>
-        <a class="int-link" href="integrations.php?sys=1">View records →</a>
-      </div>
-
-      <!-- Subsystem #2 — Session Management -->
-      <div class="int-card">
-        <div class="int-card__head">
-          <span class="flow-tag flow-tag--in">⬇ Inbound</span>
-        </div>
-        <div class="int-card__name">Session &amp; Legislative Meetings</div>
-        <p class="int-card__desc">Minutes of Session generated after each regular session and stored as records.</p>
-        <div class="int-stat"><?= number_format($intMinutes) ?></div>
-        <div class="int-stat__label">Minutes of session on file</div>
-        <a class="int-link" href="integrations.php?sys=2">View records →</a>
-      </div>
-
-      <!-- Subsystem #3 — Agenda & Calendar -->
-      <div class="int-card">
-        <div class="int-card__head">
-          <span class="flow-tag flow-tag--in">⬇ Inbound</span>
-        </div>
-        <div class="int-card__name">Legislative Agenda &amp; Calendar</div>
-        <p class="int-card__desc">Agenda references and linked legislative matters arriving for repository linking.</p>
-        <div class="int-empty">Coming soon</div>
-        <a class="int-link" href="integrations.php?sys=3">View records →</a>
-      </div>
-
-      <!-- Subsystem #4 — Committee Management -->
-      <div class="int-card">
-        <div class="int-card__head">
-          <span class="flow-tag flow-tag--in">⬇ Inbound</span>
-        </div>
-        <div class="int-card__name">Committee Management &amp; Assignment</div>
-        <p class="int-card__desc">Committee reports &amp; recommendations filed after committee deliberation.</p>
-        <div class="int-stat"><?= number_format($intCommitteeReports) ?></div>
-        <div class="int-stat__label">Committee reports on file</div>
-        <a class="int-link" href="integrations.php?sys=4">View records →</a>
-      </div>
-
-      <!-- Subsystem #5 — Voting & Decision -->
-      <div class="int-card">
-        <div class="int-card__head">
-          <span class="flow-tag flow-tag--in">⬇ Inbound</span>
-        </div>
-        <div class="int-card__name">Voting, Quorum &amp; Decision Support</div>
-        <p class="int-card__desc">Decision records and validated vote results stored for future reference.</p>
-        <div class="int-empty">Coming soon</div>
-        <a class="int-link" href="integrations.php?sys=5">View records →</a>
-      </div>
-
-      <!-- Subsystem #7 — Public Hearing -->
-      <div class="int-card">
-        <div class="int-card__head">
-          <span class="flow-tag flow-tag--in">⬇ Inbound</span>
-        </div>
-        <div class="int-card__name">Public Hearing &amp; Consultation</div>
-        <p class="int-card__desc">Hearing records, stakeholder feedback, and response tracking.</p>
-        <div class="int-empty">Coming soon</div>
-        <a class="int-link" href="integrations.php?sys=7">View records →</a>
-      </div>
-
-      <!-- Subsystem #8 — Archives (outbound) -->
-      <div class="int-card">
-        <div class="int-card__head">
-          <span class="flow-tag flow-tag--out">⬆ Outbound</span>
-        </div>
-        <div class="int-card__name">Legislative Archives &amp; Historical Repository</div>
-        <p class="int-card__desc">Completed / retained records forwarded from #6 for archival processing.</p>
-        <div class="int-stat"><?= number_format($readyArchival) ?></div>
-        <div class="int-stat__label">Enacted records ready to archive</div>
-        <a class="int-link" href="integrations.php?sys=8">View records →</a>
-      </div>
-
-      <!-- Subsystem #9 — Research (two-way) -->
-      <div class="int-card">
-        <div class="int-card__head">
-          <span class="flow-tag flow-tag--both">⇅ Two-way</span>
-        </div>
-        <div class="int-card__name">Legislative Research &amp; Policy Analysis</div>
-        <p class="int-card__desc">Retrieves records from #6 for analysis, then returns research &amp; analysis reports.</p>
-        <div class="int-empty">Coming soon</div>
-        <a class="int-link" href="integrations.php?sys=9">View records →</a>
-      </div>
-
-      <!-- Subsystem #10 — Citizen Engagement -->
-      <div class="int-card">
-        <div class="int-card__head">
-          <span class="flow-tag flow-tag--in">⬇ Inbound</span>
-        </div>
-        <div class="int-card__name">Citizen Engagement &amp; Public Feedback</div>
-        <p class="int-card__desc">Public feedback, proposals, and complaints associated to a legislative matter.</p>
-        <div class="int-empty">Coming soon</div>
-        <a class="int-link" href="integrations.php?sys=10">View records →</a>
-      </div>
-
-      <!-- Source system summary -->
-      <div class="int-card span-3">
-        <div class="int-card__head">
-          <span class="int-card__num">Incoming by source system</span>
-          <span class="flow-tag flow-tag--in">⬇ Where records come from</span>
-        </div>
-        <?php if ($sourceSystems): ?>
-          <?php foreach ($sourceSystems as $ss): ?>
-            <div class="bar-row">
-              <span class="bar-label"><?= htmlspecialchars($ss['source_system']) ?></span>
-              <div class="bar-track"><div class="bar-fill bar-fill--accent" style="width: <?= _dash_pct((int)$ss['n'], $totalDocs) ?>%"></div></div>
-              <span class="bar-value"><?= (int)$ss['n'] ?></span>
-            </div>
-          <?php endforeach; ?>
-          
-        <?php else: ?>
-          <p class="module-empty">No records tagged by source system yet.</p>
-        <?php endif; ?>
-      </div>
-
-    </div>
-  </div>
-</section>
 
 <!-- Notification Bell Dropdown Panel -->
 <div class="notif-dropdown" id="notif-dropdown">

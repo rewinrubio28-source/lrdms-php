@@ -2,6 +2,7 @@
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/audit.php';
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/includes/organization.php';
 
 require_login();
 $user = current_user();
@@ -19,7 +20,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (validate_csrf()) {
     $formAction = $_POST['form_action'] ?? '';
 
-    if ($formAction === 'update_profile') {
+    if ($formAction === 'upload_profile_photo') {
+        $file = $_FILES['profile_photo'] ?? null;
+        if (!$file || !is_scalar($file['error'] ?? null) || (int)$file['error'] !== UPLOAD_ERR_OK) {
+            $errors[] = 'Choose a photo up to 2 MB and try again.';
+        } elseif (!is_uploaded_file($file['tmp_name']) || filesize($file['tmp_name']) > 2 * 1024 * 1024) {
+            $errors[] = 'The photo must be an uploaded image no larger than 2 MB.';
+        } else {
+            $info = @getimagesize($file['tmp_name']);
+            $mime = (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
+            if (!$info || !in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true) || $info['mime'] !== $mime || $info[0] > 4096 || $info[1] > 4096) {
+                $errors[] = 'Use a JPG, PNG, or WebP image up to 4096 ? 4096 pixels.';
+            } else {
+                $imageData = file_get_contents($file['tmp_name']);
+                $pdo->prepare('INSERT INTO user_profile_photos (user_id, mime_type, image_data) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE mime_type=VALUES(mime_type), image_data=VALUES(image_data), updated_at=NOW()')
+                    ->execute([$user['id'], $mime, $imageData]);
+                log_action('auth', 'updated_profile_photo', $user['username']);
+                $success = 'Profile photo updated.';
+            }
+        }
+    } elseif ($formAction === 'remove_profile_photo') {
+        $pdo->prepare('DELETE FROM user_profile_photos WHERE user_id = ?')->execute([$user['id']]);
+        log_action('auth', 'removed_profile_photo', $user['username']);
+        $success = 'Profile photo removed.';
+    } elseif ($formAction === 'update_profile') {
         $fullName = trim($_POST['full_name'] ?? '');
         $email = trim($_POST['email'] ?? '');
 
@@ -197,13 +221,14 @@ function mask_email_for_display_profile($email) {
 
 include __DIR__ . '/includes/layout_top.php';
 ?>
-<div class="topbar">
+<div class="topbar" data-banner-date="<?= date('M j, Y') ?>">
   <div class="d-flex align-items-center gap-2">
     <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu">
       <i class="bi bi-list"></i>
     </button>
     <div>
       <h1 class="topbar__title">My Profile</h1>
+      <p class="module-banner-description">Manage your account details and security settings.</p>
     </div>
   </div>
 </div>
@@ -218,6 +243,7 @@ include __DIR__ . '/includes/layout_top.php';
 
 <div class="row g-3">
   <div class="col-lg-6">
+    <?php include __DIR__ . '/includes/profile_photo_form.php'; ?>
     <div class="card">
       <h3 style="font-size:16px;">Account details</h3>
       <form method="post">
@@ -234,6 +260,15 @@ include __DIR__ . '/includes/layout_top.php';
           <label class="form-label small">Role</label>
           <input type="text" class="form-control form-control-sm" value="<?= htmlspecialchars($user['role_name']) ?>" disabled>
         </div>
+        <?php $identity = organization_user($pdo, (int)$user['id']); ?>
+        <h4 class="h6 mt-3">Organizational identity</h4>
+        <dl class="small">
+          <?php foreach (['office_name' => 'Office', 'division_name' => 'Division', 'position_name' => 'Position / Designation'] as $field => $label): ?>
+          <dt><?= $label ?></dt><dd><?= htmlspecialchars($identity[$field] ?: 'Not assigned') ?></dd>
+          <?php endforeach; ?>
+          <dt>Committee memberships</dt><dd><?= htmlspecialchars(implode(', ', array_column($identity['committees'], 'name')) ?: 'Not assigned') ?></dd>
+        </dl>
+        <p class="form-text">Contact an administrator to update organizational assignments.</p>
         <button class="btn btn-primary btn-sm w-100">Save profile</button>
       </form>
     </div>

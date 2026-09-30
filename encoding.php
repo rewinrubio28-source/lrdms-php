@@ -23,11 +23,18 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/rbac.php';
 require_once __DIR__ . '/includes/audit.php';
 require_once __DIR__ . '/includes/notifications.php';
+require_once __DIR__ . '/includes/record_processing.php';
 require_once __DIR__ . '/config/database.php';
 
 require_permission('encoding', 'create');
 $user = current_user();
 $pdo = get_db();
+
+$encodingTab = ($_GET['tab'] ?? '') === 'followups' ? 'followups' : 'incoming';
+if ($encodingTab === 'followups' || ($_POST['action'] ?? '') === 'record_followup') {
+    $encodingTab = 'followups';
+    require __DIR__ . '/includes/record_followups.php';
+}
 
 $errors = [];
 
@@ -35,43 +42,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validate_csrf()) {
         $errors[] = 'Security token expired. Please refresh the page and try again.';
     }
-    if (validate_csrf() && isset($_POST['action']) && $_POST['action'] === 'verify_incoming') {
-        // ── Verify & release a document that arrived from an upstream system ──
-        $incomingId = (int)($_POST['doc_id'] ?? 0);
-        $stmt = $pdo->prepare("UPDATE documents SET is_public = 1, verified_at = NOW() WHERE id = ? AND verified_at IS NULL AND source_system <> 'Manual Encoding'");
-        $stmt->execute([$incomingId]);
-        if ($stmt->rowCount() > 0) {
-            log_action('encoding', 'verified_incoming_document', "Document #$incomingId released after verification.");
+    if (validate_csrf() && isset($_POST['action']) && in_array($_POST['action'], ['register_private', 'release_public'], true)) {
+        try {
+            $incomingId = (int)($_POST['doc_id'] ?? 0);
+            process_record($pdo, $user, $incomingId, $_POST['action'] === 'release_public' ? 'register_public' : 'register_private');
             mark_notifications_read_for_document($incomingId, 'incoming_document');
-            $_SESSION['flash_success'] = 'Document verified and released.';
+            $_SESSION['flash_success'] = 'Record registered.';
+            header('Location: document.php?id=' . $incomingId);
+            exit;
+        } catch (Throwable $e) {
+            error_log('Registration: ' . $e->getMessage());
+            $errors[] = $e instanceof PDOException ? 'Could not register this record. Refresh and try again.' : $e->getMessage();
         }
-        header('Location: encoding.php#awaiting-verification');
-        exit;
     }
 }
 
 // Documents pushed by upstream systems that a Records Officer hasn't
 // verified/released yet — the queue behind the "awaiting verification" alert.
 $awaitingVerification = $pdo->query(
-    "SELECT id, doc_number, title, doc_type, source_system, enactment_date, created_at
-     FROM documents
+    "SELECT * FROM documents
      WHERE verified_at IS NULL AND source_system <> 'Manual Encoding'
      ORDER BY created_at ASC"
 )->fetchAll();
 
+$awaitingVerification = array_values(array_filter($awaitingVerification, static function ($record) use ($user) { return can_view_document($user, $record); }));
+
+$intakeTotal = count($awaitingVerification);
 include __DIR__ . '/includes/layout_top.php';
 ?>
-<div class="topbar">
+<link rel="stylesheet" href="assets/css/encoding-workspace.css?v=2">
+<div class="topbar" data-banner-date="<?= date('M j, Y') ?>">
   <div class="d-flex align-items-center gap-2">
     <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu">
       <i class="bi bi-list"></i>
     </button>
     <div>
-      <h1 class="topbar__title">Document Encoding &amp; Submission</h1>
+      <h1 class="topbar__title">Document Intake</h1>
+      <p class="module-banner-description">Receive, verify, and register legislative documents.</p>
     </div>
   </div>
 </div>
 
+<div id="encoding-content">
 <?php if ($errors): ?>
   <div class="alert alert-danger">
     <ul class="mb-0"><?php foreach ($errors as $e) echo '<li>' . htmlspecialchars($e) . '</li>'; ?></ul>
@@ -83,40 +95,41 @@ include __DIR__ . '/includes/layout_top.php';
   <?php unset($_SESSION['flash_success']); ?>
 <?php endif; ?>
 
+<nav class="nav nav-pills gap-2 mb-4" aria-label="Encoding sections">
+  <a class="nav-link <?= $encodingTab === 'incoming' ? 'active' : '' ?>" href="encoding.php" <?= $encodingTab === 'incoming' ? 'aria-current="page"' : '' ?>><i class="bi bi-inbox me-2" aria-hidden="true"></i>Incoming records <span class="intake-count"><?= $intakeTotal ?></span></a>
+  <a class="nav-link <?= $encodingTab === 'followups' ? 'active' : '' ?>" href="encoding.php?tab=followups" <?= $encodingTab === 'followups' ? 'aria-current="page"' : '' ?>><i class="bi bi-clock-history me-2" aria-hidden="true"></i>Pending Records &amp; Follow-up</a>
+</nav>
+<?php if ($encodingTab === 'followups'): ?>
+<?php include __DIR__ . '/includes/record_followups_view.php'; ?>
+<?php else: ?>
 <div class="card" id="awaiting-verification">
-  <h3>Documents Awaiting Verification <span class="badge bg-secondary"><?= count($awaitingVerification) ?></span></h3>
-  <p class="text-muted small">Documents another system has sent in. They're already on file (status: Enacted) but stay hidden from public view until you verify their details here. Click <strong>Review</strong> to open the document, or verify straight from this list.</p>
+  <div class="intake-heading"><div><h2>Incoming records</h2><p>Open a record to check its file, validate details, and register it.</p></div><span><i class="bi bi-sort-up me-1" aria-hidden="true"></i>Oldest submissions first</span></div>
+  <p class="intake-results" role="status"><?= $intakeTotal ?> records</p>
   <?php if (!$awaitingVerification): ?>
-    <p class="text-muted small mb-0">Nothing waiting right now.</p>
+    <div class="intake-empty"><i class="bi bi-inbox" aria-hidden="true"></i><h3>No incoming records</h3><p>New submissions will appear here when they are received.</p></div>
   <?php else: ?>
     <div class="table-responsive">
       <table class="table table-sm align-middle">
         <thead>
           <tr>
-            <th>Reference</th>
-            <th>Title</th>
-            <th>Type</th>
+            <th>Document</th>
+            <th>Records status</th>
             <th>Source</th>
             <th>Received</th>
-            <th></th>
+            <th><span class="visually-hidden">Actions</span></th>
           </tr>
         </thead>
         <tbody>
           <?php foreach ($awaitingVerification as $doc): ?>
           <tr>
-            <td class="text-nowrap"><a href="document_review.php?id=<?= (int)$doc['id'] ?>"><?= htmlspecialchars($doc['doc_number']) ?></a></td>
-            <td><?= htmlspecialchars($doc['title']) ?></td>
-            <td><?= htmlspecialchars($doc['doc_type']) ?></td>
+            <td class="intake-document"><span class="intake-reference"><?= htmlspecialchars($doc['doc_number']) ?></span><a href="document.php?id=<?= (int)$doc['id'] ?>"><?= htmlspecialchars($doc['title']) ?></a><small><?= htmlspecialchars($doc['doc_type']) ?></small></td>
+            <td><span class="intake-status <?= $doc['records_status'] === 'Validated' ? 'is-ready' : (in_array($doc['records_status'], ['Returned for Correction', 'Duplicate', 'Unauthorized Submission'], true) ? 'is-attention' : '') ?>"><?= htmlspecialchars($doc['records_status'] ?: 'Not specified') ?></span></td>
             <td><?= htmlspecialchars($doc['source_system']) ?></td>
             <td class="text-nowrap text-muted small"><?= htmlspecialchars(date('M j, Y g:i A', strtotime($doc['created_at']))) ?></td>
             <td class="text-end">
-              <a href="document_review.php?id=<?= (int)$doc['id'] ?>" class="btn btn-outline-secondary btn-sm">Review</a>
-              <form method="post" style="display:inline;" onsubmit="return confirm('Release this document to the public repository?');">
-                <?php csrf_field(); ?>
-                <input type="hidden" name="action" value="verify_incoming">
-                <input type="hidden" name="doc_id" value="<?= (int)$doc['id'] ?>">
-                <button type="submit" class="btn btn-success btn-sm">Verify &amp; Release</button>
-              </form>
+              <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
+                <a href="document.php?id=<?= (int)$doc['id'] ?>" class="btn btn-outline-primary btn-sm" aria-label="Review <?= htmlspecialchars($doc['doc_number'], ENT_QUOTES, 'UTF-8') ?>">Review <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+              </div>
             </td>
           </tr>
           <?php endforeach; ?>
@@ -126,4 +139,7 @@ include __DIR__ . '/includes/layout_top.php';
   <?php endif; ?>
 </div>
 
+<?php endif; ?>
+</div>
+<script src="assets/js/encoding.js?v=1" defer></script>
 <?php include __DIR__ . '/includes/layout_bottom.php'; ?>

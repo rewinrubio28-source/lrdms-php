@@ -1,0 +1,2 @@
+# Database administration and demo seeds are CLI-only on deployed servers.
+Require all denied

@@ -84,11 +84,13 @@ function _relationship_head($pdo, $id) {
     $stmt = $pdo->prepare('SELECT d.*, u.full_name AS owner_name FROM documents d JOIN users u ON u.id = d.owner_id WHERE d.id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch();
-    if (!$row) return null;
+    if (!$row || !can_view_document(current_user(), $row)) return null;
+    $seen = [(int)$row['id'] => true];
     while ($row['next_version_id']) {
         $stmt->execute([$row['next_version_id']]);
         $next = $stmt->fetch();
-        if (!$next) break;
+        if (!$next || isset($seen[(int)$next['id']]) || !can_view_document(current_user(), $next)) break;
+        $seen[(int)$next['id']] = true;
         $row = $next;
     }
     return $row;
@@ -96,6 +98,13 @@ function _relationship_head($pdo, $id) {
 
 /** Records a relationship. $documentId is the "from" side (forward direction). */
 function add_relationship($pdo, $documentId, $relatedId, $type, $userId) {
+    if (!has_permission('version', 'amend')) return ['ok' => false, 'error' => 'Your role cannot link records.'];
+    $access = $pdo->prepare('SELECT * FROM documents WHERE id=?');
+    foreach ([$documentId, $relatedId] as $id) {
+        $access->execute([$id]);
+        $record = $access->fetch();
+        if (!$record || !can_view_document(current_user(), $record)) return ['ok' => false, 'error' => 'Record unavailable or access denied.'];
+    }
     if ((int)$documentId === (int)$relatedId) {
         return ['ok' => false, 'error' => 'A document cannot be related to itself.'];
     }
@@ -120,7 +129,19 @@ function add_relationship($pdo, $documentId, $relatedId, $type, $userId) {
 }
 
 function remove_relationship($pdo, $relId) {
+    if (!has_permission('version', 'amend')) return false;
+    $query = $pdo->prepare('SELECT document_id, related_id FROM document_relationships WHERE id=?');
+    $query->execute([$relId]);
+    $relationship = $query->fetch();
+    if (!$relationship) return false;
+    $access = $pdo->prepare('SELECT * FROM documents WHERE id=?');
+    foreach ([$relationship['document_id'], $relationship['related_id']] as $id) {
+        $access->execute([$id]);
+        $record = $access->fetch();
+        if (!$record || !can_view_document(current_user(), $record)) return false;
+    }
     $pdo->prepare('DELETE FROM document_relationships WHERE id = ?')->execute([$relId]);
+    return true;
 }
 
 /**

@@ -74,7 +74,7 @@ include __DIR__ . '/includes/layout_top.php';
 <div class="mb-2">
   <a href="<?= htmlspecialchars($backUrl) ?>" class="text-decoration-none small text-muted"><i class="bi bi-arrow-left"></i> Back to document</a>
 </div>
-<div class="topbar">
+<div class="topbar" data-banner-date="<?= date('M j, Y') ?>">
   <div class="d-flex align-items-center gap-2">
     <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu">
       <i class="bi bi-list"></i>
@@ -82,6 +82,7 @@ include __DIR__ . '/includes/layout_top.php';
     <div>
       <div class="topbar__eyebrow"><?= htmlspecialchars($doc['doc_type']) ?> · <?= htmlspecialchars($doc['doc_number']) ?> · Text As Filed<?= $totalPages > 1 ? ' · ' . $totalPages . ' pages' : '' ?></div>
       <h1 class="topbar__title" style="font-size:21px;"><?= htmlspecialchars($doc['title']) ?></h1>
+      <p class="module-banner-description">Read and search the text of the filed document.</p>
     </div>
   </div>
 </div>

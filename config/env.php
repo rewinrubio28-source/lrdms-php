@@ -12,6 +12,8 @@
  * variable the real environment already provides.
  */
 
+require_once __DIR__ . '/../includes/maintenance_lock.php';
+
 function load_env_file() {
     static $loaded = false;
     if ($loaded) return;
