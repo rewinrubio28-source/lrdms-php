@@ -118,9 +118,16 @@ function ocr_service_request($filePath, $originalFileName, array $extraFields = 
 
     $decoded = json_decode($response, true);
 
-    if ($httpCode !== 200 || !isset($decoded['text'])) {
-        $errorMsg = $decoded['error'] ?? ('Unexpected response from OCR service (HTTP ' . $httpCode . '): '
-                  . substr(trim(strip_tags((string) $response)), 0, 200));
+    if ($httpCode !== 200 || !is_array($decoded) || !isset($decoded['text']) || !is_string($decoded['text'])) {
+        // Gateway HTML is not an OCR result; never show its CSS/scripts to users.
+        $errorMsg = match ((int)$httpCode) {
+            503 => 'OCR service is unavailable (HTTP 503). Ask the administrator to check the configured OCR service URL and its running deployment.',
+            502, 504 => 'OCR service did not respond through the gateway (HTTP ' . $httpCode . '). Please retry shortly.',
+            404 => 'OCR endpoint was not found (HTTP 404). Ask the administrator to check OCR_SERVICE_URL.',
+            401, 403 => 'OCR service access was denied (HTTP ' . $httpCode . '). Ask the administrator to check service access settings.',
+            default => 'Unexpected OCR service response (HTTP ' . $httpCode . '). Please contact the administrator.',
+        };
+        if (is_array($decoded) && isset($decoded['error']) && is_string($decoded['error'])) $errorMsg = substr($decoded['error'], 0, 300);
         return ['ok' => false, 'message' => '[OCR failed] "' . $originalFileName . '": ' . $errorMsg];
     }
 
