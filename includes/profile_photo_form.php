@@ -1,4 +1,9 @@
 <?php
+require_once __DIR__ . '/profile_photos.php';
+if (!profile_photos_available($pdo)) {
+    echo '<p class="small text-muted">Profile photos are not available yet. Please contact the administrator.</p>';
+    return;
+}
 $photoQuery = $pdo->prepare('SELECT 1 FROM user_profile_photos WHERE user_id = ?');
 $photoQuery->execute([$user['id']]);
 $hasProfilePhoto = (bool)$photoQuery->fetchColumn();

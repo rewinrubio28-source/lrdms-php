@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/rbac.php';
+require_once __DIR__ . '/profile_photos.php';
 
 function current_page($name) {
     return (basename($_SERVER['PHP_SELF'], '.php') === $name) ? 'is-active' : '';
@@ -9,7 +10,7 @@ function current_page($name) {
 ensure_csrf_token();
 $__user = current_user();
 $__hasHeaderPhoto = false;
-if ($__user) {
+if ($__user && profile_photos_available(get_db())) {
     $__headerPhotoQuery = get_db()->prepare('SELECT 1 FROM user_profile_photos WHERE user_id = ?');
     $__headerPhotoQuery->execute([$__user['id']]);
     $__hasHeaderPhoto = (bool)$__headerPhotoQuery->fetchColumn();

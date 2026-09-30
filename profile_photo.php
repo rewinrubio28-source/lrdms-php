@@ -2,6 +2,8 @@
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/rbac.php';
 require_login();
+require_once __DIR__ . '/includes/profile_photos.php';
+if (!profile_photos_available(get_db())) { http_response_code(404); exit; }
 $user = current_user();
 $id = (int)($_GET['id'] ?? 0);
 if ($id !== (int)$user['id'] && !has_permission('access', 'manage_users')) {

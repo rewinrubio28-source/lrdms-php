@@ -3,6 +3,7 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/audit.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/organization.php';
+require_once __DIR__ . '/includes/profile_photos.php';
 
 require_login();
 $user = current_user();
@@ -20,7 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (validate_csrf()) {
     $formAction = $_POST['form_action'] ?? '';
 
-    if ($formAction === 'upload_profile_photo') {
+    if (in_array($formAction, ['upload_profile_photo', 'remove_profile_photo'], true) && !profile_photos_available($pdo)) {
+        $errors[] = 'Profile photos are not available yet. Please contact the administrator.';
+    } elseif ($formAction === 'upload_profile_photo') {
         $file = $_FILES['profile_photo'] ?? null;
         if (!$file || !is_scalar($file['error'] ?? null) || (int)$file['error'] !== UPLOAD_ERR_OK) {
             $errors[] = 'Choose a photo up to 2 MB and try again.';

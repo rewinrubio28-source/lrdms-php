@@ -145,8 +145,10 @@ if ($statusFilter === 'active') {
 }
 $whereSql = $where ? ' WHERE ' . implode(' AND ', $where) : '';
 
+require_once __DIR__ . '/includes/profile_photos.php';
+$photoExpression = profile_photos_available($pdo) ? 'EXISTS(SELECT 1 FROM user_profile_photos photo WHERE photo.user_id = u.id)' : '0';
 $allUsers = $pdo->prepare(
-    'SELECT u.*, r.name AS role_name, EXISTS(SELECT 1 FROM user_profile_photos photo WHERE photo.user_id = u.id) AS has_profile_photo
+    'SELECT u.*, r.name AS role_name, ' . $photoExpression . ' AS has_profile_photo
      FROM users u
      JOIN roles r ON r.id = u.role_id'
     . $whereSql . ' ORDER BY u.created_at DESC'
