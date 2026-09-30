@@ -44,7 +44,7 @@ unset($__ocrUrl);
  *                                  fallback messages and for the extension).
  * @return string
  */
-function ocr_extract($filePath, $originalFileName) {
+function ocr_extract($filePath, $originalFileName, ?callable $progress = null) {
     $ext = strtolower(pathinfo($originalFileName, PATHINFO_EXTENSION));
 
     // Only image/PDF files go through OCR; .docx is text already.
@@ -61,8 +61,10 @@ function ocr_extract($filePath, $originalFileName) {
             . 'very low quality, or in a script Tesseract was not trained on.';
 
     if ($ext !== 'pdf') {
+        if ($progress) $progress(0, 1);
         $r = ocr_service_request($filePath, $originalFileName);
         if (!$r['ok']) return $r['message'];
+        if ($progress) $progress(1, 1);
         return $r['text'] !== '' ? $r['text'] : $noText;
     }
 
@@ -72,7 +74,7 @@ function ocr_extract($filePath, $originalFileName) {
     // "503 Gateway timeout"; short per-page calls do not. If the service is an
     // older version that ignores the page range, it just answers with the whole
     // document and no total_pages, and the loop ends after one call.
-    $chunk = max(1, (int) env_optional('OCR_PAGES_PER_REQUEST', 1));
+    $chunk = $progress ? 1 : max(1, (int) env_optional('OCR_PAGES_PER_REQUEST', 1));
     $parts = [];
     $first = 1;
     do {
@@ -82,13 +84,14 @@ function ocr_extract($filePath, $originalFileName) {
             // Never hand back half a document as if it were complete.
             return $r['message'] . ' (stopped at page ' . $first . ')';
         }
-        if ($r['text'] !== '') $parts[] = $r['text'];
+        $parts[] = $r['text'];
         $total = $r['total_pages'];
+        if ($progress) $progress($total === null ? $last : min($last, $total), $total);
         $first = $last + 1;
     } while ($total !== null && $first <= $total);
 
-    $text = trim(implode("\n\n", $parts));
-    return $text !== '' ? $text : $noText;
+    $text = implode("\n\n[PAGE BREAK]\n\n", $parts);
+    return trim(str_replace('[PAGE BREAK]', '', $text)) !== '' ? $text : $noText;
 }
 
 /**
@@ -133,7 +136,7 @@ function ocr_service_request($filePath, $originalFileName, array $extraFields = 
 
     return [
         'ok'          => true,
-        'text'        => trim($decoded['text']),
+        'text'        => trim($decoded['text'], "\r\n"),
         'total_pages' => isset($decoded['total_pages']) ? (int) $decoded['total_pages'] : null,
     ];
 }

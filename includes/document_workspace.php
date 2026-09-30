@@ -13,10 +13,10 @@ $workspaceOcrFiles = array_filter($docFiles, function ($path) {
 // record is registered, this workspace is the view Version Control,
 // Repository, and Search all land on, and none of those may change a
 // record's metadata — so it's shown here read-only, with no edit control.
-// $canRunOcrSync still uses the repository/edit_metadata permission — that's
+// $canRunOcr still uses the repository/edit_metadata permission — that's
 // a distinct capability (re-extracting text from the attached file), not
 // metadata editing.
-$canRunOcrSync = has_permission('repository', 'edit_metadata');
+$canRunOcr = has_permission('repository', 'edit_metadata');
 require_once __DIR__ . '/retrieval.php';
 $canPreviewOriginal = can_download_record(current_user(), $doc);
 ?>
@@ -82,9 +82,10 @@ $canPreviewOriginal = can_download_record(current_user(), $doc);
     </div>
     <div class="verification-processing">
       <div class="verification-processing__title"><h3>On-demand processing</h3><span><?= !empty($doc['ocr_text']) ? 'OCR on file' : ($workspaceOcrFiles ? 'Not yet scanned' : 'No scannable file') ?></span></div>
+      <?php include __DIR__ . '/ocr_progress.php'; ?>
       <div class="registered-tools">
-        <?php if ($canRunOcrSync && $workspaceOcrFiles): ?>
-        <form method="post" class="flex-fill"><?php csrf_field(); ?><input type="hidden" name="action" value="run_record_ocr"><button type="submit" class="btn btn-light btn-sm w-100"><i class="bi bi-magic me-1"></i>Run OCR Sync</button></form>
+        <?php if ($canRunOcr && $workspaceOcrFiles): ?>
+        <form method="post" class="flex-fill"><?php csrf_field(); ?><input type="hidden" name="action" value="run_record_ocr"><button type="submit" class="btn btn-light btn-sm w-100"><i class="bi bi-magic me-1"></i>Run OCR</button></form>
         <?php endif; ?>
         <?php if (has_permission('repository', 'print_record')): ?>
         <button type="button" class="btn btn-primary btn-sm" id="printRepositoryRecord"><i class="bi bi-printer me-1"></i>Print Record Details</button>

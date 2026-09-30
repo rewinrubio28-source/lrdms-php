@@ -14,7 +14,7 @@
 .intake-ocr { padding: 20px; margin-bottom: 0; }
 .intake-ocr h2 { font-size: 16px; margin-bottom: 8px; }
 .intake-ocr .verification-processing { margin-top: 12px; padding-top: 12px; }
-.intake-ocr__text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.7; color: var(--text-primary); background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 16px 0 0; min-height: 220px; max-height: 500px; overflow: auto; }
+.intake-ocr__text { white-space: pre; overflow-wrap: normal; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.7; color: var(--text-primary); background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 16px 0 0; min-height: 220px; max-height: 500px; overflow: auto; }
 .intake-ocr__empty { padding: 24px 12px; margin: 16px 0 0; text-align: center; color: var(--text-muted); background: var(--surface2); border-radius: 8px; font-size: 13px; }
 @media (max-width: 576px) {
   .main .intake-review-workspace .verification-preview__stage { height: clamp(380px, 70vh, 600px); }

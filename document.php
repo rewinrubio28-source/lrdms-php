@@ -4,6 +4,7 @@ require_once __DIR__ . '/includes/rbac.php';
 require_once __DIR__ . '/includes/audit.php';
 require_once __DIR__ . '/includes/notifications.php';
 require_once __DIR__ . '/includes/ocr.php';
+require_once __DIR__ . '/includes/ocr_jobs.php';
 require_once __DIR__ . '/includes/storage.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/workflow.php';
@@ -88,26 +89,13 @@ if ($needsReview) {
                     }
                 }
             } elseif ($reviewAction === 'run_ocr') {
-                $ocrPaths = array_values(array_filter($reviewFiles, function ($path) {
-                    return in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), ['png', 'jpg', 'jpeg', 'pdf'], true);
-                }));
-                if (!$ocrPaths) $reviewErrors[] = 'This record has no PDF or image file that OCR can read.';
-                else {
-                    $pages = [];
-                    $ocrErrors = [];
-                    foreach ($ocrPaths as $path) {
-                        $text = storage_run_ocr($path);
-                        if (ocr_result_is_placeholder($text)) $ocrErrors[] = $text;
-                        else $pages[] = $text;
-                    }
-                    if ($pages) {
-                        $pdo->prepare('UPDATE documents SET ocr_text=? WHERE id=? AND verified_at IS NULL')->execute([implode("\n\n[PAGE BREAK]\n\n", $pages), $doc['id']]);
-                        log_action('encoding', 'ran_ocr_incoming_document', $doc['doc_number'] . ' — text read from ' . count($pages) . ' file(s).');
-                        $_SESSION['flash_success'] = 'OCR finished. Extracted text was saved to this record.';
-                    }
-                    if ($ocrErrors) $_SESSION['flash_error'] = implode(' ', $ocrErrors);
+                try {
+                    ocr_job_enqueue($pdo, (int)$doc['id'], (int)$user['id']);
+                    $_SESSION['flash_success'] = 'OCR queued. You can leave this page while the scan runs.';
                     header('Location: document.php?id=' . (int)$doc['id'] . $documentReturnSuffix);
                     exit;
+                } catch (Throwable $e) {
+                    $reviewErrors[] = $e instanceof PDOException ? 'Background OCR is not ready. Ask the administrator to apply the database upgrade.' : $e->getMessage();
                 }
             } elseif (in_array($reviewAction, ['register_public', 'register_private', 'Validated', 'Returned for Correction', 'Duplicate', 'Unauthorized Submission'], true)) {
                 try {
@@ -152,11 +140,12 @@ if ($needsReview) {
       <section class="intake-ocr card" aria-labelledby="intake-ocr-title">
         <h2 id="intake-ocr-title"><i class="bi bi-text-paragraph me-2" aria-hidden="true"></i>Extracted document text</h2>
         <p class="text-muted small">OCR results for this record's scanned attachments. Check the original file when verifying the text.</p>
-        <div class="verification-processing"><div class="verification-processing__title"><h3>OCR scan</h3><span><?= !empty($doc['ocr_text']) ? 'OCR on file' : ($ocrReadableFiles ? 'Not yet scanned' : 'No scannable file') ?></span></div><div class="d-flex gap-2"><?php if ($canValidateRecord && $ocrReadableFiles): ?><form method="post" class="flex-fill"><?php csrf_field(); ?><input type="hidden" name="review_action" value="run_ocr"><button type="submit" class="btn btn-light btn-sm w-100"><i class="bi bi-magic me-1"></i>Run OCR Sync</button></form><?php endif; ?></div></div>
+        <div class="verification-processing"><div class="verification-processing__title"><h3>OCR scan</h3><span><?= !empty($doc['ocr_text']) ? 'OCR on file' : ($ocrReadableFiles ? 'Not yet scanned' : 'No scannable file') ?></span></div><div class="d-flex gap-2"><?php if ($canValidateRecord && $ocrReadableFiles): ?><form method="post" class="flex-fill"><?php csrf_field(); ?><input type="hidden" name="review_action" value="run_ocr"><button type="submit" class="btn btn-light btn-sm w-100"><i class="bi bi-magic me-1"></i>Run OCR</button></form><?php endif; ?></div></div>
+        <?php include __DIR__ . '/includes/ocr_progress.php'; ?>
         <?php if (trim((string)($doc['ocr_text'] ?? '')) !== ''): ?>
           <pre class="intake-ocr__text" tabindex="0" aria-label="Extracted OCR text"><?= htmlspecialchars($doc['ocr_text'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></pre>
         <?php else: ?>
-          <p class="intake-ocr__empty">No extracted text yet.<?= $canValidateRecord && $ocrReadableFiles ? ' Use Run OCR Sync to scan this record.' : '' ?></p>
+          <p class="intake-ocr__empty">No extracted text yet.<?= $canValidateRecord && $ocrReadableFiles ? ' Use Run OCR to scan this record.' : '' ?></p>
         <?php endif; ?>
       </section>
       </div>
@@ -239,26 +228,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!has_permission('repository', 'edit_metadata')) {
             $errors[] = 'Your role cannot run OCR on this record.';
         } else {
-            $filesStmt = $pdo->prepare('SELECT file_path FROM document_attachments WHERE document_id=? ORDER BY sort_order, id');
-            $filesStmt->execute([$id]);
-            $paths = array_column($filesStmt->fetchAll(), 'file_path');
-            if (!$paths && !empty($doc['file_path'])) $paths = [$doc['file_path']];
-            $paths = array_filter($paths, function ($path) {
-                return in_array(strtolower(pathinfo(parse_url($path, PHP_URL_PATH) ?: $path, PATHINFO_EXTENSION)), ['pdf', 'png', 'jpg', 'jpeg'], true);
-            });
-            if (!$paths) $errors[] = 'No scannable file is attached to this record.';
-            $pages = [];
-            foreach ($paths as $path) {
-                $text = storage_run_ocr($path);
-                if (ocr_result_is_placeholder($text) || trim((string)$text) === '') {
-                    $errors[] = 'OCR could not extract text from ' . basename(parse_url($path, PHP_URL_PATH) ?: $path) . '. Please try again.';
-                } else $pages[] = $text;
-            }
-            if ($pages && !$errors) {
-                $pdo->prepare('UPDATE documents SET ocr_text=? WHERE id=?')->execute([implode("\n\n[PAGE BREAK]\n\n", $pages), $id]);
-                log_action('repository', 'ran_ocr', $doc['doc_number'] . ': extracted text from ' . count($pages) . ' attachment(s).');
-                $message = 'OCR finished. Extracted text saved.';
-                $doc = fetch_document($pdo, $id);
+            try {
+                ocr_job_enqueue($pdo, $id, (int)$user['id']);
+                $message = 'OCR queued. You can leave this page while the scan runs.';
+            } catch (Throwable $e) {
+                $errors[] = $e instanceof PDOException ? 'Background OCR is not ready. Ask the administrator to apply the database upgrade.' : $e->getMessage();
             }
         }
     } elseif (has_permission('version', 'amend') && $action === 'add_note' && trim($_POST['note'] ?? '') !== '') {

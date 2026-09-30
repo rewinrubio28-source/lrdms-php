@@ -225,11 +225,11 @@ function storage_copy_new_file(string $source, string $destination): bool {
  * to a temp file first. Returns OCR text or an "[OCR ...]" placeholder message,
  * exactly like ocr_extract().
  */
-function storage_run_ocr($path) {
+function storage_run_ocr($path, ?callable $progress = null) {
     require_once __DIR__ . '/ocr.php';
 
     if (!storage_is_remote($path)) {
-        return ocr_extract(__DIR__ . '/../' . $path, basename($path));
+        return ocr_extract(__DIR__ . '/../' . $path, basename($path), $progress);
     }
 
     $name = basename((string) (parse_url($path, PHP_URL_PATH) ?: $path));
@@ -254,7 +254,9 @@ function storage_run_ocr($path) {
         return '[OCR failed] Could not download "' . $name . '" from storage (HTTP ' . $http . ').';
     }
 
-    $text = ocr_extract($tmp, $name);
-    @unlink($tmp);
-    return $text;
+    try {
+        return ocr_extract($tmp, $name, $progress);
+    } finally {
+        @unlink($tmp);
+    }
 }

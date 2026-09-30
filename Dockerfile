@@ -13,6 +13,9 @@ COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr
 RUN install-php-extensions pdo_mysql mbstring gd curl \
     && a2enmod rewrite
 
+RUN apt-get update && apt-get install -y --no-install-recommends supervisor \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /var/www/html
 
 # App code
@@ -42,3 +45,6 @@ RUN { \
   } > /usr/local/etc/php/conf.d/uploads.ini
 RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 EXPOSE 80
+
+COPY deploy/supervisord.conf /etc/supervisor/conf.d/lrdms.conf
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/lrdms.conf"]

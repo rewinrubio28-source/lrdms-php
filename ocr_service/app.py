@@ -32,6 +32,7 @@ os.environ["OMP_THREAD_LIMIT"] = "1"
 from flask import Flask, request, jsonify
 from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 import pytesseract
+from layout import layout_text
 
 app = Flask(__name__)
 
@@ -43,7 +44,7 @@ ALLOWED_IMAGE_EXT = {"png", "jpg", "jpeg"}
 ALLOWED_PDF_EXT = {"pdf"}
 
 # Tesseract config: English + Filipino/Tagalog
-TESSERACT_CONFIG = "--psm 6 --oem 3 -l eng+fil"
+TESSERACT_CONFIG = "--psm 3 --oem 3 -l eng+fil"
 
 # Max seconds Tesseract may spend on ONE image/page. If it hangs, pytesseract
 # kills it and raises, so the request fails fast with a clear error instead of
@@ -91,9 +92,17 @@ def preprocess_image(image):
 
 
 def ocr_image_file(path):
-    image = Image.open(path)
+    with Image.open(path) as image:
+        return ocr_page(ImageOps.exif_transpose(image))
+
+
+def ocr_page(image):
     processed = preprocess_image(image)
-    return pytesseract.image_to_string(processed, config=TESSERACT_CONFIG, timeout=TESSERACT_TIMEOUT)
+    data = pytesseract.image_to_data(
+        processed, config=TESSERACT_CONFIG, timeout=TESSERACT_TIMEOUT,
+        output_type=pytesseract.Output.DICT,
+    )
+    return layout_text(data, processed.width)
 
 
 def ocr_pdf_file(path, first_page=None, last_page=None):
@@ -118,10 +127,9 @@ def ocr_pdf_file(path, first_page=None, last_page=None):
     pages = convert_from_path(path, dpi=OCR_DPI, first_page=first, last_page=last)
     text_parts = []
     for offset, page_image in enumerate(pages):
-        processed = preprocess_image(page_image)
-        page_text = pytesseract.image_to_string(processed, config=TESSERACT_CONFIG, timeout=TESSERACT_TIMEOUT)
-        text_parts.append(f"--- Page {first + offset} ---\n{page_text}")
-    return "\n\n".join(text_parts), total
+        page_text = ocr_page(page_image)
+        text_parts.append(page_text)
+    return "\n\n[PAGE BREAK]\n\n".join(text_parts), total
 
 
 @app.route("/", methods=["GET"])
@@ -160,9 +168,9 @@ def ocr():
     try:
         if ext in ALLOWED_IMAGE_EXT:
             text = ocr_image_file(tmp_path)
-            return jsonify({"text": text.strip()})
+            return jsonify({"text": text})
         text, total_pages = ocr_pdf_file(tmp_path, _int_field("first_page"), _int_field("last_page"))
-        return jsonify({"text": text.strip(), "total_pages": total_pages})
+        return jsonify({"text": text, "total_pages": total_pages})
     except Exception as exc:  # keep the service alive, report the failure to PHP
         return jsonify({"error": str(exc)}), 500
     finally:

@@ -155,3 +155,8 @@ curl "http://localhost/lrdms-php/api/search.php?query=fare%20hike&mode=semantic"
 For coordinated database/upload backups and recovery commands, see [Records backup and recovery](docs/backup-restore.md). Restore creates a separate database and matching uploads and never overwrites the live system.
 
 Since the stack list includes Git + GitHub: a simple `main` + feature-branch flow works fine for a project this size — branch per module (`feature/version-control`, `feature/audit-export`, etc.), PR into `main`, tag a release before your defense so you have a known-good snapshot to demo from.
+
+### Background OCR
+
+Run OCR on saved documents now queues a background scan with page progress.
+See [setup, worker commands, and recovery](docs/background-ocr.md).

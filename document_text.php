@@ -48,9 +48,7 @@ if (empty($doc['ocr_text'])) {
 // page rather than continuously through the whole document.
 $rawText = str_replace("\r\n", "\n", $doc['ocr_text']);
 $pages = preg_split('/\n[ \t]*\[PAGE BREAK\][ \t]*\n|\x0C/i', $rawText);
-$pages = array_map('trim', $pages);
-$pages = array_values(array_filter($pages, function ($p) { return $p !== ''; }));
-if (!$pages) $pages = [trim($rawText)];
+$pages = array_map(static function ($page) { return trim($page, "\r\n"); }, $pages);
 $totalPages = count($pages);
 
 // The page a "Back" link should return to depends on where the document
@@ -114,11 +112,11 @@ include __DIR__ . '/includes/layout_top.php';
 <style>
   .as-filed-page { border: 1px solid #E3E8EF; border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
   .as-filed-page__label { background:#EEF2F7; color:#0B2E59; font-size:12px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; padding:6px 14px; border-bottom:1px solid #E3E8EF; }
-  .as-filed-page__body { padding: 14px 0; }
-  .as-filed-line { display:flex; padding: 1px 14px; }
+  .as-filed-page__body { padding: 14px 0; overflow-x: auto; }
+  .as-filed-line { display:flex; padding: 1px 14px; min-width: max-content; }
   .as-filed-line:hover { background:#F7F9FC; }
   .as-filed-line__num { flex: 0 0 34px; text-align:right; padding-right:12px; color:#9AA5B1; font-size:12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; user-select:none; }
-  .as-filed-line__text { flex:1; font-size:14px; line-height:1.6; color:#1a2b3c; white-space:pre-wrap; word-break:break-word; }
+  .as-filed-line__text { flex:1; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:14px; line-height:1.6; color:#1a2b3c; white-space:pre; }
 </style>
 
 <?php include __DIR__ . '/includes/layout_bottom.php'; ?>

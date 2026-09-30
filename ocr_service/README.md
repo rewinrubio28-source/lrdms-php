@@ -1,5 +1,15 @@
 # LRDMS OCR microservice (PyTesseract)
 
+Scans use automatic page segmentation and word coordinates to approximate the
+original layout in fixed-width text: indentation, heading alignment, column
+spacing, paragraph gaps, and page breaks. Fonts, bold/italics, images, and table
+borders are not reproduced. Keep the original attachment for exact formatting.
+Redeploy the OCR service and PHP app together, then run OCR again on existing
+records to generate the new layout; saved OCR text is not changed automatically.
+
+Run layout regression checks with `python -m unittest discover -s ocr_service -p "test_*.py"`
+from the repository root.
+
 PHP has no OCR engine, so real text recognition runs here, in a small
 Python/Flask service. `includes/ocr.php` calls this over HTTP on
 every upload — same pattern the codebase already documents for the
