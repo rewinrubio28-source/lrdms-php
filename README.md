@@ -109,7 +109,7 @@ Both functions encode the same rules — one as a SQL `WHERE` fragment (for list
 | Legislative Staff | Draft/submit their own documents; view their own drafts plus enacted public documents. |
 | Committee Secretary | Review/endorse documents in `Submitted` / `Under Review` status for their committee; create committee documents. |
 
-Document `status` values: `Draft → Submitted → Under Review → Enacted → (Amended | Superseded | Withdrawn)`. `is_public` is a separate flag — a document can be `Enacted` and still not public if you want a staging period before it's citizen-visible.
+Document lifecycle: `Draft → Submitted → Under Review → Enacted → Amended`. New records accept `Draft`, `Submitted`, `Under Review`, `Enacted`, `Amended`, and `Rejected`. `Superseded` and `Withdrawn` are retired; their database values remain for historical records. `is_public` is a separate flag — a document can be `Enacted` and still not public if you want a staging period before it's citizen-visible.
 
 ## What's real vs. what's a stub
 

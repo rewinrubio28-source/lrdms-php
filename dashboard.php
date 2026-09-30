@@ -27,7 +27,7 @@ foreach ($stmt->fetchAll() as $row) {
 }
 $totalDocs     = array_sum($statusCounts);
 $enactedCount  = $statusCounts['Enacted'] ?? 0;
-$withdrawnCount = $statusCounts['Withdrawn'] ?? 0;
+$rejectedCount = $statusCounts['Rejected'] ?? 0;
 
 // Replaces the old "In Pipeline" (Draft+Submitted+Under Review) tile — that
 // pipeline is owned by System 1, not LRDMS (see includes/workflow.php), and
@@ -256,9 +256,9 @@ include __DIR__ . '/includes/layout_top.php';
       <div class="stat-tile__value"><?= number_format($awaitingVerificationCount) ?></div>
       <div class="stat-tile__sub">Incoming, not yet reviewed</div>
     <?php else: ?>
-      <div class="stat-tile__label">Withdrawn Records</div>
-      <div class="stat-tile__value"><?= number_format($withdrawnCount) ?></div>
-      <div class="stat-tile__sub">Formally withdrawn from file</div>
+      <div class="stat-tile__label">Rejected Records</div>
+      <div class="stat-tile__value"><?= number_format($rejectedCount) ?></div>
+      <div class="stat-tile__sub">Records rejected by the source</div>
     <?php endif; ?>
   </div>
 
@@ -296,7 +296,7 @@ include __DIR__ . '/includes/layout_top.php';
     </header>
     <div class="module-card__body">
       <div class="status-chips">
-        <?php foreach (['Enacted', 'Amended', 'Superseded', 'Withdrawn', 'Rejected'] as $i => $s): ?>
+        <?php foreach (['Enacted', 'Amended', 'Rejected'] as $i => $s): ?>
           <div class="status-chip <?= $s === 'Enacted' ? 'is-emphasis' : '' ?>">
             <span class="status-chip__num"><?= $statusCounts[$s] ?? 0 ?></span>
             <span class="status-chip__label"><?= htmlspecialchars($s) ?></span>

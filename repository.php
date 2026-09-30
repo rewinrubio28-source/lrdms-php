@@ -241,7 +241,7 @@ if ($isAjax) {
       <label class="form-label small text-muted mb-0" for="repo-status">Status</label>
       <select name="status" id="repo-status" class="form-select">
         <option value="All">All statuses</option>
-        <?php foreach (['Enacted', 'Amended', 'Superseded', 'Withdrawn', 'Rejected'] as $s): ?>
+        <?php foreach (['Enacted', 'Amended', 'Rejected'] as $s): ?>
           <option value="<?= $s ?>" <?= $statusFilter === $s ? 'selected' : '' ?>><?= $s ?></option>
         <?php endforeach; ?>
       </select>

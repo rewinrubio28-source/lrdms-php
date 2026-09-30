@@ -116,7 +116,7 @@ $records = $stmt->fetchAll();
 $count = count($records);
 
 $committees = $pdo->query('SELECT id, name FROM committees ORDER BY name')->fetchAll();
-$statusOptions = ['Draft', 'Submitted', 'Under Review', 'Enacted', 'Amended', 'Superseded', 'Withdrawn', 'Rejected'];
+$statusOptions = ['Draft', 'Submitted', 'Under Review', 'Enacted', 'Amended', 'Rejected'];
 
 include __DIR__ . '/includes/layout_top.php';
 ?>

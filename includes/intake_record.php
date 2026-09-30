@@ -13,7 +13,8 @@ function intake_record_values(array $input): array {
     if ($values['source_system'] === 'Manual Encoding') throw new InvalidArgumentException('API submissions must identify an external source.');
     $values['doc_type'] = $input['doc_type'] ?? 'Ordinance';
     if (!in_array($values['doc_type'], ['Ordinance','Resolution','Committee Report','Minutes','Other'], true)) throw new InvalidArgumentException('Invalid document type.');
-    $statuses = ['Draft','Submitted','Under Review','Enacted','Amended','Superseded','Withdrawn','Rejected'];
+    $statuses = ['Draft','Submitted','Under Review','Enacted','Amended','Rejected'];
+    if (in_array($values['source_status'], ['Superseded', 'Withdrawn'], true)) throw new InvalidArgumentException('This legislative status is no longer supported.');
     $values['status'] = $input['status'] ?? (in_array($values['source_status'], $statuses, true) ? $values['source_status'] : 'Submitted');
     if (!in_array($values['status'], $statuses, true)) throw new InvalidArgumentException('Invalid legislative status.');
     if (in_array($values['source_status'], $statuses, true) && $values['status'] !== $values['source_status']) throw new InvalidArgumentException('Status conflicts with source status.');

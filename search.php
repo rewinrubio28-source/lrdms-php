@@ -334,7 +334,7 @@ include __DIR__ . '/includes/layout_top.php';
         <label class="field-label">Status</label>
         <select name="status" class="form-select">
           <option value="">Any Status</option>
-          <?php foreach (['Enacted','Amended','Superseded','Withdrawn','Rejected'] as $s): ?>
+          <?php foreach (['Enacted','Amended','Rejected'] as $s): ?>
             <option value="<?= $s ?>" <?= $statusFilter === $s ? 'selected' : '' ?>><?= $s ?></option>
           <?php endforeach; ?>
         </select>

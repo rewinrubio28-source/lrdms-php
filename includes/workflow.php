@@ -11,12 +11,8 @@
  * that can ever create or move a document through those states.
  *
  * Transition rules (who can do what):
- *   Enacted     → Withdrawn                          (formally withdraw/repeal an
- *                                                       on-file record; Records
- *                                                       Officer / Administrator)
- *   Amended     → (terminal; only set by version control, never this dropdown)
- *   Superseded  → (terminal; reserved for a future consolidation feature)
- *   Withdrawn   → (terminal)
+ *   Enacted     - no manual status transitions
+ *   Amended     - set only by version control
  *
  * 'Draft', 'Submitted', and 'Under Review' remain valid ENUM values in the
  * database (so any pre-existing/legacy or manually-inserted row in one of
@@ -35,10 +31,8 @@ function valid_document_transitions() {
         'Draft'        => [],
         'Submitted'    => [],
         'Under Review' => [],
-        'Enacted'      => ['Withdrawn'],
+        'Enacted'      => [],
         'Amended'      => [],
-        'Superseded'   => [],
-        'Withdrawn'    => [],
     ];
 }
 
@@ -146,7 +140,7 @@ function notify_status_change($doc, $oldStatus, $newStatus, $changedByUser) {
     $changedBy = htmlspecialchars($changedByUser['full_name'] ?? 'System');
     $statusColors = [
         'Draft' => '#6c757d', 'Submitted' => '#0dcaf0', 'Under Review' => '#ffc107',
-        'Enacted' => '#198754', 'Amended' => '#0d6efd', 'Superseded' => '#6c757d', 'Withdrawn' => '#dc3545',
+        'Enacted' => '#198754', 'Amended' => '#0d6efd',
     ];
     $color = $statusColors[$newStatus] ?? '#6c757d';
 
