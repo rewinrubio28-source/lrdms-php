@@ -9,7 +9,7 @@ require_permission('access', 'manage_users');
 $user = current_user();
 $pdo = get_db();
 
-$roles = $pdo->query('SELECT * FROM roles ORDER BY id')->fetchAll();
+$roles = $pdo->query("SELECT * FROM roles WHERE name <> 'Super Admin' ORDER BY id")->fetchAll();
 $assignableRoles = assignable_roles($roles); // only roles ranking below the signed-in user's own
 $committees = $pdo->query('SELECT * FROM committees ORDER BY name')->fetchAll();
 
@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // --- Filter / search state -------------------------------------------------
 $q = trim($_GET['q'] ?? '');
-$roleCounts = $pdo->query('SELECT role_id, COUNT(*) AS total FROM users GROUP BY role_id')->fetchAll(PDO::FETCH_KEY_PAIR);
+$roleCounts = $pdo->query('SELECT u.role_id, COUNT(*) AS total FROM users u WHERE ' . user_directory_clause() . ' GROUP BY u.role_id')->fetchAll(PDO::FETCH_KEY_PAIR);
 $roleFilter = (int)($_GET['role_id'] ?? 0);
 $selectedRoleName = 'All Users';
 foreach ($roles as $roleOption) {
@@ -125,7 +125,7 @@ $committeeFilter = (int)($_GET['committee_id'] ?? 0);
 $statusFilter = $_GET['status'] ?? 'all';
 if (!in_array($statusFilter, ['all', 'active', 'disabled'], true)) $statusFilter = 'all';
 
-$where = [];
+$where = [user_directory_clause()];
 $params = [];
 if ($q !== '') {
     $where[] = '(u.full_name LIKE ? OR u.username LIKE ? OR u.email LIKE ?)';

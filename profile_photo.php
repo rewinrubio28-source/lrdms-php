@@ -9,6 +9,12 @@ $id = (int)($_GET['id'] ?? 0);
 if ($id !== (int)$user['id'] && !has_permission('access', 'manage_users')) {
     http_response_code(403); exit;
 }
+$accountStmt = get_db()->prepare('SELECT u.id, r.name AS role_name FROM users u JOIN roles r ON r.id = u.role_id WHERE u.id = ?');
+$accountStmt->execute([$id]);
+$account = $accountStmt->fetch();
+if (!$account || !can_view_user_account($account, $user)) {
+    http_response_code(404); exit;
+}
 $stmt = get_db()->prepare('SELECT mime_type, image_data FROM user_profile_photos WHERE user_id = ?');
 $stmt->execute([$id]);
 $photo = $stmt->fetch();

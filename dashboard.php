@@ -51,7 +51,7 @@ $canAudit  = has_permission('audit', 'view');
 
 $activeUsers = 0;
 if ($canAccess) {
-    $activeUsers = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE is_active = 1')->fetchColumn();
+    $activeUsers = (int)$pdo->query('SELECT COUNT(*) FROM users u WHERE u.is_active = 1 AND ' . user_directory_clause())->fetchColumn();
 }
 
 // ------------------------------------------------------------
@@ -176,10 +176,11 @@ if ($canAccess) {
     $usersByRole = $pdo->query(
         'SELECT r.name, COUNT(u.id) AS n FROM roles r
          LEFT JOIN users u ON u.role_id = r.id
+         WHERE r.name <> \'Super Admin\'
          GROUP BY r.id, r.name ORDER BY n DESC'
     )->fetchAll();
-    $totalUsers = (int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
-    $inactiveUsers = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE is_active = 0')->fetchColumn();
+    $totalUsers = (int)$pdo->query('SELECT COUNT(*) FROM users u WHERE ' . user_directory_clause())->fetchColumn();
+    $inactiveUsers = (int)$pdo->query('SELECT COUNT(*) FROM users u WHERE u.is_active = 0 AND ' . user_directory_clause())->fetchColumn();
 }
 
 // ------------------------------------------------------------

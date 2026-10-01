@@ -131,6 +131,17 @@ function my_role_rank() {
     return $u ? role_rank($u['role_name']) : 0;
 }
 
+/** Directory visibility only. Never apply this predicate to audit/history queries. */
+function user_directory_clause() {
+    return "u.role_id NOT IN (SELECT id FROM roles WHERE name = 'Super Admin')";
+}
+
+/** Hidden accounts can still open their own profile. */
+function can_view_user_account(array $target, array $viewer) {
+    return $target['role_name'] !== 'Super Admin'
+        || (int)$target['id'] === (int)$viewer['id'];
+}
+
 /** The roles (from a full roles list) the signed-in user is allowed to assign to someone else. */
 function assignable_roles(array $roles) {
     $mine = my_role_rank();

@@ -19,6 +19,17 @@ $success = '';
 // Resolve the target user id (from the URL, or from a submitted form).
 $targetId = (int)($_GET['id'] ?? $_POST['user_id'] ?? 0);
 
+// Check both identifiers before loading details or processing a submitted action.
+foreach (array_unique([$targetId, (int)($_POST['user_id'] ?? $targetId)]) as $accountId) {
+    $visibilityStmt = $pdo->prepare('SELECT u.id, r.name AS role_name FROM users u JOIN roles r ON r.id = u.role_id WHERE u.id = ?');
+    $visibilityStmt->execute([$accountId]);
+    $account = $visibilityStmt->fetch();
+    if (!$account || !can_view_user_account($account, $me)) {
+        http_response_code(404);
+        exit('User not found.');
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // At the very start of the POST handling (right after checking REQUEST_METHOD === 'POST' or form_action):
     if (!validate_csrf()) {

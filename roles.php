@@ -28,7 +28,7 @@ $roles = $pdo->query(
     'SELECT r.*,
        (SELECT COUNT(*) FROM users u WHERE u.role_id = r.id) AS user_count,
        (SELECT COUNT(*) FROM role_permissions rp WHERE rp.role_id = r.id) AS perm_count
-     FROM roles r ORDER BY r.id'
+     FROM roles r WHERE r.name <> \'Super Admin\' ORDER BY r.id'
 )->fetchAll();
 
 // Determine which role we're editing (if any).

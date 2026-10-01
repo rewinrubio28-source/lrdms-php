@@ -1,5 +1,5 @@
 <div class="users-directory" id="users-directory">
-  <?php $directoryStats = $pdo->query('SELECT COUNT(*) AS total, COALESCE(SUM(is_active = 1),0) AS active, COALESCE(SUM(is_active = 0),0) AS disabled FROM users')->fetch(); ?>
+  <?php $directoryStats = $pdo->query('SELECT COUNT(*) AS total, COALESCE(SUM(u.is_active = 1),0) AS active, COALESCE(SUM(u.is_active = 0),0) AS disabled FROM users u WHERE ' . user_directory_clause())->fetch(); ?>
   <div class="users-overview">
     <div class="users-stat"><i class="bi bi-people" aria-hidden="true"></i><div><span>Total users</span><strong><?= (int)$directoryStats['total'] ?></strong></div><small>Across all roles</small></div>
     <div class="users-stat users-stat--green"><i class="bi bi-person-check" aria-hidden="true"></i><div><span>Active accounts</span><strong><?= (int)$directoryStats['active'] ?></strong></div><small>Enabled to sign in</small></div>
