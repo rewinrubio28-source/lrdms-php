@@ -53,4 +53,4 @@ EXPOSE 80
 COPY deploy/supervisord.conf /etc/supervisor/conf.d/lrdms.conf
 # Apply schema and one-time role/reference updates before serving the new code.
 # Failed upgrades stop startup so the UI cannot silently use an outdated database.
-CMD ["/bin/sh", "-c", "php database/upgrade.php && exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/lrdms.conf"]
+CMD ["/bin/sh", "-c", "mkdir -p .runtime && touch .runtime/records.lock && chown www-data:www-data .runtime .runtime/records.lock && chmod 750 .runtime && chmod 660 .runtime/records.lock && php database/upgrade.php && exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/lrdms.conf"]

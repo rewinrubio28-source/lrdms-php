@@ -1,9 +1,13 @@
 <?php
 /** Hold a shared lock for the entire request, including file writes. */
 function records_maintenance_lock(bool $exclusive = false) {
-    $handle = fopen(__DIR__ . '/../.runtime/records.lock', 'c');
-    if (!$handle || !flock($handle, ($exclusive ? LOCK_EX : LOCK_SH) | LOCK_NB)) {
-        if ($handle) fclose($handle);
+    $handle = @fopen(__DIR__ . '/../.runtime/records.lock', 'c');
+    if (!$handle) {
+        error_log('Records maintenance lock could not be opened; check runtime directory and lock file permissions.');
+        throw new RuntimeException('Records service is temporarily unavailable. Please contact your system administrator.');
+    }
+    if (!flock($handle, ($exclusive ? LOCK_EX : LOCK_SH) | LOCK_NB)) {
+        fclose($handle);
         throw new RuntimeException('Records maintenance is in progress or requests are still active. Please retry shortly.');
     }
     return $handle;
