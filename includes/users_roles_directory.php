@@ -19,7 +19,6 @@
     <?php if (has_permission('access', 'manage_roles')): ?><button type="button" class="users-create-role w-100 bg-transparent" data-bs-toggle="modal" data-bs-target="#createRoleModal"><i class="bi bi-plus" aria-hidden="true"></i> Create New Role</button><?php endif; ?>
   </aside>
   <section class="users-members" aria-label="Users in selected role">
-    <?php include __DIR__ . '/records_role_guide.php'; ?>
     <div class="users-members-heading">
       <div><h2><?= htmlspecialchars($selectedRoleName) ?> <span><?= count($allUsers) ?></span></h2><p class="users-section-hint">Manage your team and account access.</p></div>
       <form method="get" class="users-directory-filters">
