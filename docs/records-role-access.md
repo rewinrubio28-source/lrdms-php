@@ -28,7 +28,9 @@ The existing Office > Division fields store the chart's parent unit > section;
 labels now allow Office / Parent unit and Division / Section. Existing references
 are preserved. No employee's position or unit is guessed from their username.
 
-Run `php database/upgrade.php` on deployment. The role migration runs once,
+Docker deployments run `php database/upgrade.php` before starting Apache and
+the worker. A failed upgrade stops startup. For non-Docker deployments, run the
+same command manually before serving the new code. The role migration runs once,
 records previous permission IDs and the new grants in audit_log, and uses a
 transaction. Subsequent upgrades preserve role edits. Existing sessions resolve
 permissions from the database on each request, so changed grants take effect

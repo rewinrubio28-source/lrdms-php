@@ -5,6 +5,9 @@ if (!organization_schema_available($pdo)) {
 }
 $organizationLists = organization_lists($pdo);
 ?>
+<?php if (!$organizationLists['offices'] || !$organizationLists['positions']): ?>
+<div class="col-12"><p class="alert alert-warning">Organizational choices have not been configured yet. An administrator needs to complete the system update or add the organizational entries before assigning staff.</p></div>
+<?php endif; ?>
 <div class="col-12 mb-3" data-organization-form>
   <h4 class="h6 mt-3">Organizational identity</h4>
   <p class="small text-muted">Assign the staff member's organizational unit, section, position, and committee memberships. These assignments do not automatically grant permissions.</p>

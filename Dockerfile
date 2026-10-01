@@ -51,4 +51,6 @@ RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/Allo
 EXPOSE 80
 
 COPY deploy/supervisord.conf /etc/supervisor/conf.d/lrdms.conf
-CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/lrdms.conf"]
+# Apply schema and one-time role/reference updates before serving the new code.
+# Failed upgrades stop startup so the UI cannot silently use an outdated database.
+CMD ["/bin/sh", "-c", "php database/upgrade.php && exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/lrdms.conf"]
