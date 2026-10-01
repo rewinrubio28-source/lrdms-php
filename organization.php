@@ -7,7 +7,7 @@ require_permission('access', 'manage_organization');
 $user = current_user();
 $pdo = get_db();
 $errors = [];
-$types = ['offices' => 'Office', 'divisions' => 'Division', 'positions' => 'Position / Designation', 'committees' => 'Committee'];
+$types = ['offices' => 'Office / Parent unit', 'divisions' => 'Division / Section', 'positions' => 'Position / Designation', 'committees' => 'Committee'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $type = is_string($_POST['type'] ?? null) ? $_POST['type'] : '';
     $name = is_string($_POST['name'] ?? null) ? trim($_POST['name']) : '';

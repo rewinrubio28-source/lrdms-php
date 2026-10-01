@@ -19,6 +19,7 @@ try {
         $process = proc_open([PHP_BINARY, '-d', 'display_errors=stderr', '-r', $code], [0 => STDIN, 1 => STDOUT, 2 => STDERR], $pipes);
         if (!is_resource($process) || proc_close($process) !== 0) throw new RuntimeException('Migration failed: ' . $step . '. Fix the reported cause, then rerun this command.');
     }
+    require __DIR__ . '/migrate_records_role_policy.php';
     foreach (['offices','divisions','positions','user_committees','record_validation_history','integration_receipts','user_profile_photos','record_followups','document_copy_requests'] as $table) $pdo->query("SELECT 1 FROM `$table` LIMIT 0");
     $pdo->query('SELECT records_status, classification, originating_office, originating_division, council_term, registered_at FROM documents LIMIT 0');
     $pdo->query('SELECT office_id, division_id, position_id FROM users LIMIT 0');

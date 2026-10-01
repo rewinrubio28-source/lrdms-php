@@ -108,6 +108,13 @@ function has_permission($module, $action) {
     return _role_has_permission($user['role_id'], $module, $action);
 }
 
+function has_repository_access() {
+    foreach (['view_all', 'view_committee', 'view_own', 'view_public', 'view_memberships', 'view_office', 'view_division'] as $action) {
+        if (has_permission('repository', $action)) return true;
+    }
+    return false;
+}
+
 /**
  * ROLE HIERARCHY for user management.
  *
@@ -254,8 +261,8 @@ function legacy_document_visibility_clause($user) {
             [$user['id']],
         ];
     }
-    // view_public, and any role with no repository grant, sees public docs only.
-    return [$publicClause, []];
+    // Signed-in users need an explicit repository scope, including public access.
+    return [_role_has_permission($user['role_id'], 'repository', 'view_public') ? $publicClause : '1=0', []];
 }
 
 /**
@@ -283,7 +290,7 @@ function legacy_can_view_document($user, $doc) {
         return (int)$doc['owner_id'] === (int)$user['id']
             || $isPublic;
     }
-    return $isPublic;
+    return $isPublic && _role_has_permission($user['role_id'], 'repository', 'view_public');
 }
 
 /** Optional organization scopes, enabled explicitly through role permissions.
@@ -316,6 +323,8 @@ function document_visibility_clause($user) {
 }
 
 function can_view_document($user, $doc) {
+    // Read-only roles cannot bypass intake access through a guessed document URL.
+    if (empty($doc['verified_at']) && (!$user || !_role_has_permission($user['role_id'], 'encoding', 'create'))) return false;
     if (legacy_can_view_document($user, $doc)) return true;
     if (!$user || empty($doc['id'])) return false;
     [$clause, $params] = organization_visibility_clause($user);

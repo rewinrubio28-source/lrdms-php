@@ -52,6 +52,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (validate_csrf()) {
     $formAction = $_POST['form_action'] ?? '';
 
+    // The hidden Super Admin role must never be renamed or stripped of access.
+    if (in_array($formAction, ['update_role', 'delete_role'], true)) {
+        $protected = $pdo->prepare('SELECT name FROM roles WHERE id=?');
+        $protected->execute([(int)($_POST['role_id'] ?? 0)]);
+        $protectedName = $protected->fetchColumn();
+        if (!$protectedName || $protectedName === 'Super Admin' || ($protectedName === 'Administrator' && trim($_POST['name'] ?? $protectedName) !== 'Administrator')) {
+            $errors[] = 'This system role cannot be renamed or modified here.';
+            $formAction = '';
+        }
+    }
+    if (in_array($formAction, ['create_role', 'update_role'], true) && strcasecmp(trim($_POST['name'] ?? ''), 'Super Admin') === 0) {
+        $errors[] = 'This role name is reserved.';
+        $formAction = '';
+    }
+
     if ($formAction === 'create_role') {
         $name = trim($_POST['name'] ?? '');
         $description = trim($_POST['description'] ?? '');

@@ -7,9 +7,10 @@ $organizationLists = organization_lists($pdo);
 ?>
 <div class="col-12 mb-3" data-organization-form>
   <h4 class="h6 mt-3">Organizational identity</h4>
-  <p class="small text-muted">Assign the staff member's office, designation, and committee memberships.</p>
+  <p class="small text-muted">Assign the staff member's organizational unit, section, position, and committee memberships. These assignments do not automatically grant permissions.</p>
+  <?php include __DIR__ . '/records_role_guide.php'; ?>
   <div class="row g-2">
-    <?php foreach (['office_id' => ['Office', 'offices'], 'division_id' => ['Division', 'divisions'], 'position_id' => ['Position / Designation', 'positions']] as $field => [$label, $table]): ?>
+    <?php foreach (['office_id' => ['Office / Parent unit', 'offices'], 'division_id' => ['Division / Section', 'divisions'], 'position_id' => ['Position / Designation', 'positions']] as $field => [$label, $table]): ?>
     <div class="col-md-6">
       <label class="form-label small" for="org-<?= $field ?>"><?= $label ?></label>
       <select class="form-select form-select-sm" name="<?= $field ?>" id="org-<?= $field ?>">

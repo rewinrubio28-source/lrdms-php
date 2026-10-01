@@ -75,6 +75,7 @@ $__sys = (int)($_GET['sys'] ?? 0);
           <?php endif; endif; ?>
         </li>
       <?php endif; ?>
+      <?php if (has_repository_access()): ?>
       <li class="d-flex align-items-center gap-1">
         <a class="nav-item flex-grow-1 <?= current_page('version') ?>" href="version.php"><i class="bi bi-clock-history" aria-hidden="true"></i><span>Version Control</span></a>
       </li>
@@ -90,7 +91,10 @@ $__sys = (int)($_GET['sys'] ?? 0);
           </div>
         </details>
       </li>
+      <?php endif; ?>
+      <?php if (has_permission('search', 'run')): ?>
       <li><a class="nav-item <?= current_page('search') ?>" href="search.php"><i class="bi bi-search" aria-hidden="true"></i><span>Search &amp; Retrieval</span></a></li>
+      <?php endif; ?>
       <?php if (has_permission('access', 'manage_users')): ?>
         <li><a class="nav-item <?= (current_page('users') || current_page('roles') || current_page('user_view') || current_page('organization')) ? 'is-active' : '' ?>" href="users.php"><i class="bi bi-people" aria-hidden="true"></i><span>User Management</span></a></li>
       <?php endif; ?>
