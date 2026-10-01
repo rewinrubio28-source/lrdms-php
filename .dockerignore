@@ -3,6 +3,7 @@
 docs/
 sql/*
 !sql/ocr_jobs.sql
+!sql/privacy.sql
 *.md
 uploads/*
 !uploads/.gitkeep
