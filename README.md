@@ -134,7 +134,13 @@ Dashboard metrics refresh every 15 seconds while the tab is visible. Filter reco
 
 Run `composer install` locally, or rebuild the PHP Docker image, to install the report libraries. Section 3 adds no database migration. See [metric definitions, tests and panel demo](docs/section-3-verification.md). Historical summaries group current visible records by creation month; they do not reconstruct past record states.
 
-### Integration endpoints
+### Dataset imports
+
+Open **Document Intake → Import dataset** to upload UTF-8 CSV, JSON record arrays or native Excel (`.xlsx`) files. Download a template, validate and preview, then confirm up to 1,000 records / 5 MB per batch. Imports remain private and Pending Validation; invalid batches roll back completely. Audit CSV exports now include all matching rows, including result sets larger than 1,000.
+
+Rebuild/redeploy the Docker image to enable the PHP `zip` extension for Excel reading; no new database migration is needed. Local XAMPP requires `extension=zip`. See [Section 4 formats, tests and panel demonstration](docs/section-4-verification.md).
+
+### Integration API
 
 See the [external API contract](docs/external-api.md) for fields, examples, response codes and validation behavior.
 

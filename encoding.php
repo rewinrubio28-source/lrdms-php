@@ -96,6 +96,7 @@ include __DIR__ . '/includes/layout_top.php';
 <?php endif; ?>
 
 <nav class="nav nav-pills gap-2 mb-4" aria-label="Encoding sections">
+  <a class="nav-link" href="import_records.php"><i class="bi bi-upload me-2" aria-hidden="true"></i>Import dataset</a>
   <a class="nav-link <?= $encodingTab === 'incoming' ? 'active' : '' ?>" href="encoding.php" <?= $encodingTab === 'incoming' ? 'aria-current="page"' : '' ?>><i class="bi bi-inbox me-2" aria-hidden="true"></i>Incoming records <span class="intake-count"><?= $intakeTotal ?></span></a>
   <a class="nav-link <?= $encodingTab === 'followups' ? 'active' : '' ?>" href="encoding.php?tab=followups" <?= $encodingTab === 'followups' ? 'aria-current="page"' : '' ?>><i class="bi bi-clock-history me-2" aria-hidden="true"></i>Pending Records &amp; Follow-up</a>
 </nav>

@@ -6,9 +6,14 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/rbac.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/csv_export.php';
 
 require_permission('audit', 'view');
 require_permission('audit', 'export');
+if (($_SERVER['REQUEST_METHOD']??'GET')!=='GET') { http_response_code(405); header('Allow: GET'); exit('Use GET to export.'); }
+foreach (['module','event','role','q','from','to','actor','record','office','outcome'] as $key) {
+    if (isset($_GET[$key]) && (!is_string($_GET[$key]) || strlen($_GET[$key])>1000)) { http_response_code(422); exit('Invalid export filter.'); }
+}
 $pdo = get_db();
 
 $moduleFilter = $_GET['module'] ?? 'All';
@@ -47,26 +52,29 @@ $sql = 'SELECT a.*, u.full_name AS actor_full_name, r.name AS actor_role
         LEFT JOIN users u ON u.id = a.user_id
         LEFT JOIN roles r ON r.id = u.role_id'
         . $whereSql .
-        ' ORDER BY a.created_at DESC LIMIT 1000';
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$logs = $stmt->fetchAll();
-
-header('Content-Type: text/csv');
-header('Content-Disposition: attachment; filename="audit_log.csv"');
-
-$out = fopen('php://output', 'w');
-fputcsv($out, ['Timestamp', 'Username', 'Full Name', 'Role', 'Module', 'Action', 'Detail', 'IP Address']);
-foreach ($logs as $l) {
-    fputcsv($out, [
-        $l['created_at'],
-        $l['username_snapshot'],
-        $l['actor_full_name'] ?? '',
-        $l['actor_role'] ?? '',
-        $l['module'],
-        $l['action'],
-        $l['detail'],
-        $l['ip_address'] ?? '',
-    ]);
+        ' ORDER BY a.created_at DESC, a.id DESC';
+// Build on disk before sending headers: bounded PHP memory, no silent row cap,
+// and query/write failures cannot masquerade as a successful partial download.
+session_write_close();
+$out=tmpfile();
+if (!$out) { http_response_code(503); exit('Export is temporarily unavailable. Please retry.'); }
+$buffered=$pdo->getAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY);
+try {
+    $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY,false);
+    $stmt=$pdo->prepare($sql); $stmt->execute($params);
+    $count=write_audit_csv($out,$stmt);
+    $stmt->closeCursor(); rewind($out);
+    header('Cache-Control: no-store');
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="audit_log.csv"');
+    header('X-Export-Row-Count: '.$count);
+    header('Content-Length: '.fstat($out)['size']);
+    fpassthru($out);
+} catch (Throwable $e) {
+    error_log('Audit export: '.$e->getMessage());
+    http_response_code(500); echo 'Export failed. Please retry or contact your administrator.';
+} finally {
+    if (isset($stmt)) $stmt->closeCursor();
+    $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY,$buffered);
+    fclose($out);
 }
-fclose($out);

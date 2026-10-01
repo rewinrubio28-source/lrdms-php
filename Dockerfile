@@ -10,7 +10,7 @@ FROM php:8.2-apache
 # Fast PHP extension installer (uses pre-built binaries when available,
 # instead of compiling every extension from source — much faster builds).
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions pdo_mysql mbstring gd curl \
+RUN install-php-extensions pdo_mysql mbstring gd curl zip \
     && a2enmod rewrite
 
 RUN apt-get update && apt-get install -y --no-install-recommends supervisor \

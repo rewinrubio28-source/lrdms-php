@@ -69,7 +69,7 @@ $__sys = (int)($_GET['sys'] ?? 0);
       <li><a class="nav-item <?= current_page('dashboard') ?>" href="dashboard.php"><i class="bi bi-grid-1x2" aria-hidden="true"></i><span>Dashboard</span></a></li>
       <?php if (has_permission('encoding', 'create')): ?>
         <li class="d-flex align-items-center gap-1">
-          <a class="nav-item flex-grow-1 <?= current_page('encoding') ?>" href="encoding.php"><i class="bi bi-inbox" aria-hidden="true"></i><span>Document Intake</span></a>
+          <a class="nav-item flex-grow-1 <?= current_page('encoding') || current_page('import_records') ? 'is-active' : '' ?>" href="encoding.php"><i class="bi bi-inbox" aria-hidden="true"></i><span>Document Intake</span></a>
           <?php if (current_user()): $navPdo = get_db(); $navAwaiting = $navPdo->query("SELECT COUNT(*) FROM documents WHERE verified_at IS NULL AND source_system <> 'Manual Encoding'")->fetchColumn(); if ($navAwaiting > 0): ?>
             <a href="encoding.php#awaiting-verification" class="badge text-bg-warning flex-shrink-0" style="font-size:10px; text-decoration:none; padding:3px 7px;"><?= (int)$navAwaiting ?> waiting</a>
           <?php endif; endif; ?>
