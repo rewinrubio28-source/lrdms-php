@@ -62,6 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $isActive = !empty($_POST['is_active']) ? 1 : 0;
         }
         $mustChange = !empty($_POST['must_change_password']) ? 1 : 0;
+        if (($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) || (privileged_mfa_required(['role_id'=>$roleId]) && $email === '')) {
+            $errors[] = 'A valid email address is required for privileged accounts.';
+        }
 
         if ($fullName === '' || $username === '' || !$roleId) {
             $errors[] = 'Full name, username, and role are required.';
@@ -84,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'UPDATE users SET full_name = ?, username = ?, email = ?, role_id = ?, committee_id = ?, is_active = ?, must_change_password = ? WHERE id = ?'
                 );
                 $stmt->execute([$fullName, $username, $email ?: null, $roleId, $committeeId, $isActive, $mustChange, $uid]);
+                revoke_user_sessions($uid);
                 organization_save($pdo, $uid, $organizationValues);
                 log_action('access', 'updated_user', 'user_id=' . $uid . '; organization=' . json_encode($organizationValues));
                 $pdo->commit();
@@ -99,8 +103,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $confirm = $_POST['confirm_password'] ?? '';
         $requireChange = !empty($_POST['must_change_password']) ? 1 : 0;
 
-        if (strlen($newPassword) < 6) {
-            $errors[] = 'Password must be at least 6 characters long.';
+        if (!has_permission('access', 'reset_password')) {
+            $errors[] = 'You do not have permission to reset passwords.';
+        } elseif (($policyError = password_policy_error($newPassword)) !== null) {
+            $errors[] = $policyError;
         } elseif ($newPassword !== $confirm) {
             $errors[] = 'Passwords do not match.';
         } else {
@@ -108,13 +114,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'UPDATE users SET password_hash = ?, must_change_password = ?, failed_attempts = 0, locked_until = NULL WHERE id = ?'
             );
             $stmt->execute([password_hash($newPassword, PASSWORD_DEFAULT), $requireChange, $uid]);
+            revoke_user_sessions($uid);
             log_action('access', 'reset_password', 'user_id=' . $uid . ($requireChange ? ' (force change)' : ''));
             $success = 'Password reset.';
         }
     } elseif ($formAction === 'reset_2fa') {
+        if (privileged_mfa_required($guardTarget)) {
+            $errors[] = 'Two-factor authentication is required for this role and cannot be cleared.';
+        } else {
         $pdo->prepare('UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?')->execute([$uid]);
+        revoke_user_sessions($uid);
         log_action('access', 'reset_2fa', 'user_id=' . $uid);
         $success = 'Two-factor authentication cleared for this user.';
+        }
     } elseif ($formAction === 'clear_lockout') {
         $pdo->prepare('UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?')->execute([$uid]);
         log_action('access', 'cleared_user_lockout', 'user_id=' . $uid);
@@ -279,13 +291,13 @@ include __DIR__ . '/includes/layout_top.php';
         <input type="hidden" name="user_id" value="<?= (int)$target['id'] ?>">
         <div class="mb-2">
           <label class="form-label small">New password</label>
-          <input type="password" name="new_password" class="form-control form-control-sm" required minlength="6" id="pw-new">
+          <input type="password" name="new_password" class="form-control form-control-sm" required minlength="15" id="pw-new">
           <div class="progress mt-1" style="height:4px;">
             <div class="progress-bar" id="pw-strength-bar" role="progressbar" style="width:0%"></div>
           </div>
           <div class="form-text" id="pw-strength-text"></div>
         </div>
-        <div class="mb-2"><label class="form-label small">Confirm password</label><input type="password" name="confirm_password" class="form-control form-control-sm" required minlength="6"></div>
+        <div class="mb-2"><label class="form-label small">Confirm password</label><input type="password" name="confirm_password" class="form-control form-control-sm" required minlength="15"></div>
         <div class="form-check mb-3">
           <input class="form-check-input" type="checkbox" name="must_change_password" id="rc_mcp">
           <label class="form-check-label small" for="rc_mcp">Force a password change on next sign-in</label>
@@ -408,8 +420,8 @@ include __DIR__ . '/includes/layout_top.php';
   if (!input || !bar || !text) return;
   input.addEventListener('input', function () {
     var v = this.value, score = 0;
-    if (v.length >= 6) score++;
-    if (v.length >= 10) score++;
+    if (v.length >= 15) score++;
+    if (v.length >= 20) score++;
     if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
     if (/[0-9]/.test(v)) score++;
     if (/[^A-Za-z0-9]/.test(v)) score++;

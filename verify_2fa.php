@@ -13,6 +13,9 @@ if (isset($_GET['cancel'])) {
     exit;
 }
 
+if (time() - (int)($_SESSION['2fa_started_at'] ?? 0) > 600) {
+    unset($_SESSION['2fa_user_id'], $_SESSION['2fa_login_otp_sent'], $_SESSION['2fa_started_at']);
+}
 $pendingUserId = $_SESSION['2fa_user_id'] ?? null;
 $user = null;
 if ($pendingUserId) {
@@ -44,7 +47,10 @@ function send_login_otp_email($user) {
     if (empty($user['email'])) {
         return 'Your account has no email address on file. Contact your administrator.';
     }
-    require_once __DIR__ . '/config/email.php';
+    require_once is_file(__DIR__ . '/config/email.php') ? __DIR__ . '/config/email.php' : __DIR__ . '/config/email.example.php';
+    if (is_account_locked($user)) return 'Account temporarily locked. Try signing in again after 15 minutes.';
+    if (time() - (int)($_SESSION['2fa_last_sent_at'] ?? 0) < 60) return 'Wait one minute before requesting another code.';
+    $_SESSION['2fa_last_sent_at'] = time();
     $otpCode = generate_login_otp($user['id']);
 
     $emailSubject = 'LRDMS Sign-In Verification Code';
@@ -124,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'No sign-in in progress. Please sign in again.';
     } elseif (verify_login_otp($user['id'], $code)) {
         unset($_SESSION['2fa_login_otp_sent']);
-        complete_login($user);
+        complete_login($user, true);
         log_action('auth', 'login_2fa_complete', $user['username']);
         $redirect = !empty(current_user()['must_change_password']) ? 'profile.php?force=1' : 'dashboard.php';
         header('Location: ' . $redirect);

@@ -1,0 +1,68 @@
+<?php
+if (PHP_SAPI !== 'cli') exit;
+session_start(['save_path'=>sys_get_temp_dir()]);
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/rbac.php';
+require_once __DIR__ . '/../includes/privacy.php';
+if (!in_array(DB_HOST,['localhost','127.0.0.1','::1'],true)) throw new RuntimeException('Local tests only.');
+$pdo=get_db();
+foreach (['users','user_sessions','audit_log','login_otp_codes','password_reset_codes','password_reset_tokens','privacy_events','privacy_requests','user_profile_photos'] as $table) {
+    $ddl=$pdo->query("SHOW CREATE TABLE $table")->fetch(PDO::FETCH_NUM)[1];
+    $ddl=implode("\n",array_filter(explode("\n",$ddl),static fn($line)=>!str_starts_with(trim($line),'CONSTRAINT')));
+    $ddl=preg_replace('/,\n\)/',"\n)",$ddl);
+    $pdo->exec(str_replace('CREATE TABLE','CREATE TEMPORARY TABLE',$ddl));
+}
+$pdo->exec('CREATE TEMPORARY TABLE roles (id INT PRIMARY KEY, name VARCHAR(100))');
+$pdo->exec("INSERT INTO roles VALUES (900,'Administrator'),(901,'Basic'),(902,'Custom role manager'),(903,'Custom user manager')");
+$pdo->exec('CREATE TEMPORARY TABLE permissions (id INT PRIMARY KEY, module VARCHAR(100), action VARCHAR(100))');
+$pdo->exec("INSERT INTO permissions VALUES (1,'access','manage_roles'),(2,'access','manage_users')");
+$pdo->exec('CREATE TEMPORARY TABLE role_permissions (role_id INT, permission_id INT)');
+$pdo->exec('INSERT INTO role_permissions VALUES (902,1),(903,2),(900,1),(900,2)');
+$checks=[];
+function secure_check(bool $ok,string $message): void { if (!$ok) throw new RuntimeException($message); $GLOBALS['checks'][]=$message; }
+function secure_rejected(callable $fn): bool { try { $fn(); } catch (RuntimeException | InvalidArgumentException $e) { return true; } return false; }
+$pdo->prepare("INSERT INTO users (id,full_name,username,email,password_hash,role_id) VALUES (1,'Test','security-test','test@example.invalid',?,901)")->execute([password_hash('Valid-passphrase-123',PASSWORD_DEFAULT)]);
+secure_check(password_policy_error('short')!==null && password_policy_error(str_repeat('a',80))!==null && password_policy_error(str_repeat('a',15))!==null && password_policy_error("long-enough\0password")!==null,'Weak, repeated, oversized and NUL passwords rejected');
+secure_check(password_policy_error('A long memorable phrase')===null,'Passphrases accepted without arbitrary symbol requirements');
+secure_check(!privileged_mfa_required(['role_id'=>901]) && privileged_mfa_required(['role_id'=>902]) && privileged_mfa_required(['role_id'=>900]),'Custom privileged roles and built-in admins require MFA');
+attempt_login('security-test','Valid-passphrase-123');
+$pdo->exec('UPDATE users SET role_id=900 WHERE id=1');
+$GLOBALS['__lrdms_current_user']=false;
+secure_check(current_user()===null,'Role promotion invalidates a password-only session');
+secure_check(attempt_login('security-test','Valid-passphrase-123')==='2fa' && current_user()===null,'Admin with optional MFA flag off still receives challenge');
+$account=get_user_by_username('security-test');
+secure_check(secure_rejected(fn()=>complete_login($account)),'Login completion cannot omit required MFA');
+$otp=generate_login_otp(1);
+for ($i=0;$i<LOGIN_MAX_ATTEMPTS;$i++) verify_login_otp(1,'invalid');
+secure_check(!verify_login_otp(1,$otp) && attempt_login('security-test','Valid-passphrase-123')==='locked','OTP guesses trigger persistent account lockout');
+$pdo->exec('UPDATE users SET failed_attempts=0, locked_until=NULL WHERE id=1');
+$otp=generate_login_otp(1);
+secure_check(verify_login_otp(1,$otp) && !verify_login_otp(1,$otp),'OTP accepted once only');
+complete_login(get_user_by_username('security-test'),true);
+secure_check(current_user()!==null,'MFA-verified admin session is accepted');
+$pdo->exec("INSERT INTO password_reset_codes (user_id,code,expires_at) VALUES (1,'123456',DATE_ADD(NOW(),INTERVAL 5 MINUTE))");
+secure_check(!reset_password_with_code('test@example.invalid','123456','weak'),'Reset helper enforces shared password policy');
+$staleReset=validate_password_reset_code('test@example.invalid','123456');
+$pdo->exec("INSERT INTO password_reset_tokens (user_id,token,expires_at) VALUES (1,'other-reset-link',DATE_ADD(NOW(),INTERVAL 5 MINUTE))");
+$pdo->exec('UPDATE users SET is_active=0 WHERE id=1');
+secure_check(!complete_password_reset('password_reset_codes',$staleReset,'Another strong passphrase') && !$pdo->inTransaction() && $pdo->query('SELECT used_at FROM password_reset_codes LIMIT 1')->fetchColumn()===null,'Disabled account causes reset consumption rollback');
+$pdo->exec('UPDATE users SET is_active=1 WHERE id=1');
+secure_check(reset_password_with_code('test@example.invalid','123456','Another strong passphrase'),'Strong password reset succeeds');
+secure_check(!complete_password_reset('password_reset_codes',$staleReset,'Stale reset passphrase'),'Previously validated reset cannot be consumed twice');
+secure_check(validate_password_reset_token('other-reset-link')===null,'Successful reset invalidates other outstanding reset links');
+$GLOBALS['__lrdms_current_user']=false;
+secure_check(current_user()===null,'Password reset revokes existing sessions');
+privacy_event($pdo,1,'notice','acknowledged');
+privacy_photo_save($pdo,1,'image/png','fixture-bytes');
+privacy_photo_save($pdo,1,null,null);
+secure_check((int)$pdo->query('SELECT COUNT(*) FROM user_profile_photos')->fetchColumn()===0 && (int)$pdo->query("SELECT COUNT(*) FROM privacy_events WHERE purpose='profile_photo'")->fetchColumn()===2,'Photo withdrawal removes current image and preserves consent history');
+privacy_request_create($pdo,1,'Deletion','Please review my account data.');
+$id=(int)$pdo->lastInsertId();
+secure_check(secure_rejected(fn()=>privacy_request_review($pdo,['id'=>1,'role_id'=>901],$id,'Completed','No permission')),'Ordinary users cannot review requests');
+secure_check(secure_rejected(fn()=>privacy_request_review($pdo,['id'=>1,'role_id'=>902],$id,'Completed','Role manager only')),'Role-management permission alone does not grant privacy review');
+privacy_request_review($pdo,['id'=>1,'role_id'=>903],$id,'Under Review','Checking retention requirements.');
+privacy_request_review($pdo,['id'=>1,'role_id'=>903],$id,'Declined','Retained under the approved records procedure.');
+secure_check(secure_rejected(fn()=>privacy_request_review($pdo,['id'=>1,'role_id'=>903],$id,'Completed','Overwrite')),'Closed privacy decisions cannot be overwritten');
+secure_check((int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn()===1,'Deletion requests do not silently delete accounts');
+foreach ($checks as $message) echo "PASS: $message\n";
+echo count($checks) . " security/privacy checks passed; real accounts and records untouched.\n";

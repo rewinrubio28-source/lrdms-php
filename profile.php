@@ -4,6 +4,7 @@ require_once __DIR__ . '/includes/audit.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/organization.php';
 require_once __DIR__ . '/includes/profile_photos.php';
+require_once __DIR__ . '/includes/privacy.php';
 
 require_login();
 $user = current_user();
@@ -23,6 +24,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (in_array($formAction, ['upload_profile_photo', 'remove_profile_photo'], true) && !profile_photos_available($pdo)) {
         $errors[] = 'Profile photos are not available yet. Please contact the administrator.';
+    } elseif (in_array($formAction, ['upload_profile_photo','remove_profile_photo'],true) && !privacy_available($pdo)) {
+        $errors[] = 'Privacy preferences are not available yet. Contact your system administrator.';
+    } elseif ($formAction === 'upload_profile_photo' && ($_POST['photo_consent'] ?? '') !== '1') {
+        $errors[] = 'Please confirm permission to store and display your optional profile photo.';
     } elseif ($formAction === 'upload_profile_photo') {
         $file = $_FILES['profile_photo'] ?? null;
         if (!$file || !is_scalar($file['error'] ?? null) || (int)$file['error'] !== UPLOAD_ERR_OK) {
@@ -36,22 +41,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Use a JPG, PNG, or WebP image up to 4096 ? 4096 pixels.';
             } else {
                 $imageData = file_get_contents($file['tmp_name']);
-                $pdo->prepare('INSERT INTO user_profile_photos (user_id, mime_type, image_data) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE mime_type=VALUES(mime_type), image_data=VALUES(image_data), updated_at=NOW()')
-                    ->execute([$user['id'], $mime, $imageData]);
+                privacy_photo_save($pdo,(int)$user['id'],$mime,$imageData);
                 log_action('auth', 'updated_profile_photo', $user['username']);
                 $success = 'Profile photo updated.';
             }
         }
     } elseif ($formAction === 'remove_profile_photo') {
-        $pdo->prepare('DELETE FROM user_profile_photos WHERE user_id = ?')->execute([$user['id']]);
+        privacy_photo_save($pdo,(int)$user['id'],null,null);
         log_action('auth', 'removed_profile_photo', $user['username']);
         $success = 'Profile photo removed.';
     } elseif ($formAction === 'update_profile') {
         $fullName = trim($_POST['full_name'] ?? '');
         $email = trim($_POST['email'] ?? '');
+        $emailChanged = $email !== ($user['email'] ?? '');
+        if ($emailChanged) {
+            $passwordCheck = $pdo->prepare('SELECT password_hash FROM users WHERE id=?');
+            $passwordCheck->execute([$user['id']]);
+            if (!password_verify($_POST['email_change_password'] ?? '', $passwordCheck->fetchColumn())) $errors[] = 'Confirm your current password to change your email.';
+        }
 
         if ($fullName === '') {
             $errors[] = 'Full name is required.';
+        } elseif (($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) || (privileged_mfa_required($user) && $email === '')) {
+            $errors[] = 'A valid email address is required for account verification.';
         } elseif ($email !== '') {
             $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE email = ? AND id <> ?');
             $stmt->execute([$email, $user['id']]);
@@ -60,9 +72,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         if (!$errors) {
+            if ($email !== ($user['email'] ?? '')) revoke_user_sessions((int)$user['id']);
             $pdo->prepare('UPDATE users SET full_name = ?, email = ? WHERE id = ?')
                 ->execute([$fullName, $email ?: null, $user['id']]);
             log_action('auth', 'updated_profile', $user['username']);
+            if ($emailChanged) { do_logout(); header('Location: public.php'); exit; }
             global $__lrdms_current_user;
             $__lrdms_current_user = false; // re-resolve so the sidebar shows the new name
             $user = current_user();
@@ -80,13 +94,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!password_verify($current, $hash)) {
             $errors[] = 'Your current password is incorrect.';
-        } elseif (strlen($new) < 6) {
-            $errors[] = 'New password must be at least 6 characters long.';
+        } elseif (($policyError = password_policy_error($new)) !== null) {
+            $errors[] = $policyError;
         } elseif ($new !== $confirm) {
             $errors[] = 'New passwords do not match.';
         } else {
             $pdo->prepare('UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?')
                 ->execute([password_hash($new, PASSWORD_DEFAULT), $user['id']]);
+            revoke_user_sessions((int)$user['id'], $_SESSION['session_token'] ?? null);
             log_action('auth', 'password_changed', $user['username']);
             global $__lrdms_current_user;
             $__lrdms_current_user = false; // drop the "must change" flag from the cached user
@@ -101,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($user['email'])) {
             $errors[] = 'Your account has no email address on file. Add one above before enabling 2FA.';
         } else {
-            require_once __DIR__ . '/config/email.php';
+            require_once is_file(__DIR__ . '/config/email.php') ? __DIR__ . '/config/email.php' : __DIR__ . '/config/email.example.php';
             $otpCode = generate_login_otp($user['id']);
 
             $emailSubject = 'LRDMS Two-Factor Setup Code';
@@ -170,7 +185,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$user['id']]);
         $hash = $stmt->fetchColumn();
 
-        if (!password_verify($currentPassword, $hash)) {
+        if (privileged_mfa_required($user)) {
+            $errors[] = 'Two-factor authentication is required for privileged accounts.';
+        } elseif (!password_verify($currentPassword, $hash)) {
             $errors[] = 'Your current password is incorrect. 2FA was not disabled.';
         } else {
             $pdo->prepare('UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?')
@@ -252,6 +269,7 @@ include __DIR__ . '/includes/layout_top.php';
       <form method="post">
         <?php csrf_field(); ?>
         <input type="hidden" name="form_action" value="update_profile">
+        <div class="mb-2"><label class="form-label small" for="email-change-password">Current password (required when changing email)</label><input id="email-change-password" type="password" name="email_change_password" autocomplete="current-password" class="form-control form-control-sm"><div class="form-text">Changing email signs out your devices. Verify the new address on your next MFA sign-in.</div></div>
         <div class="mb-2"><label class="form-label small">Full name</label><input type="text" name="full_name" class="form-control form-control-sm" value="<?= htmlspecialchars($user['full_name']) ?>" required></div>
         <div class="mb-2"><label class="form-label small">Email</label><input type="email" name="email" class="form-control form-control-sm" value="<?= htmlspecialchars($user['email'] ?? '') ?>"></div>
         <div class="mb-2">
@@ -284,13 +302,13 @@ include __DIR__ . '/includes/layout_top.php';
         <div class="mb-2"><label class="form-label small">Current password</label><input type="password" name="current_password" class="form-control form-control-sm" required></div>
         <div class="mb-2">
           <label class="form-label small">New password</label>
-          <input type="password" name="new_password" class="form-control form-control-sm" required minlength="6" id="pw-new">
+          <input type="password" name="new_password" class="form-control form-control-sm" required minlength="15" id="pw-new">
           <div class="progress mt-1" style="height:4px;">
             <div class="progress-bar" id="pw-strength-bar" role="progressbar" style="width:0%"></div>
           </div>
           <div class="form-text" id="pw-strength-text"></div>
         </div>
-        <div class="mb-3"><label class="form-label small">Confirm new password</label><input type="password" name="confirm_password" class="form-control form-control-sm" required minlength="6"></div>
+        <div class="mb-3"><label class="form-label small">Confirm new password</label><input type="password" name="confirm_password" class="form-control form-control-sm" required minlength="15"></div>
         <button class="btn btn-warning btn-sm w-100">Change password</button>
       </form>
     </div>
@@ -299,7 +317,9 @@ include __DIR__ . '/includes/layout_top.php';
   <div class="col-lg-6">
     <div class="card">
       <h3 style="font-size:16px;">Two-factor authentication</h3>
-      <?php if ($user['totp_enabled']): ?>
+      <?php if (privileged_mfa_required($user)): ?>
+        <p class="small"><span class="badge text-bg-success">Required</span> Email verification is required at sign-in for this role and cannot be disabled. Keep your account email up to date.</p>
+      <?php elseif ($user['totp_enabled']): ?>
         <div class="d-flex justify-content-between align-items-center">
           <span class="small">Email code at sign-in: <span class="badge text-bg-success">Enabled</span></span>
         </div>
@@ -380,8 +400,8 @@ include __DIR__ . '/includes/layout_top.php';
   if (!input || !bar || !text) return;
   input.addEventListener('input', function () {
     var v = this.value, score = 0;
-    if (v.length >= 6) score++;
-    if (v.length >= 10) score++;
+    if (v.length >= 15) score++;
+    if (v.length >= 20) score++;
     if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
     if (/[0-9]/.test(v)) score++;
     if (/[^A-Za-z0-9]/.test(v)) score++;

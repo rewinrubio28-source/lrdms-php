@@ -26,8 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_submitted']) &&
     $new_password = $_POST['new_password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
-    if (strlen($new_password) < 6) {
-        $error = 'Password must be at least 6 characters long.';
+    if (($policyError = password_policy_error($new_password)) !== null) {
+        $error = $policyError;
     } elseif ($new_password !== $confirm_password) {
         $error = 'Passwords do not match.';
     } else {
@@ -228,7 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_submitted']) &&
             <label for="newPassword" class="form-label">New Password</label>
             <div class="input-group">
               <span class="input-group-text"><i class="bi bi-lock"></i></span>
-              <input type="password" id="newPassword" name="new_password" class="form-control" placeholder="Enter new password" required minlength="6">
+              <input type="password" id="newPassword" name="new_password" class="form-control" placeholder="Enter new password" required minlength="15">
               <button class="btn btn-outline-secondary password-toggle" type="button" id="toggleNewPassword">
                 <i class="bi bi-eye"></i>
               </button>
@@ -238,7 +238,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_submitted']) &&
             <label for="confirmPassword" class="form-label">Confirm Password</label>
             <div class="input-group">
               <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-              <input type="password" id="confirmPassword" name="confirm_password" class="form-control" placeholder="Confirm new password" required minlength="6">
+              <input type="password" id="confirmPassword" name="confirm_password" class="form-control" placeholder="Confirm new password" required minlength="15">
               <button class="btn btn-outline-secondary password-toggle" type="button" id="toggleConfirmPassword">
                 <i class="bi bi-eye"></i>
               </button>

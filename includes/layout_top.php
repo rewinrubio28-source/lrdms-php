@@ -145,6 +145,7 @@ $__sys = (int)($_GET['sys'] ?? 0);
           <a href="<?= isset($__inSubfolder) ? '../' : '' ?>profile.php" class="account-menu__item" role="menuitem">
             <i class="bi bi-person"></i> My Profile
           </a>
+          <a href="<?= isset($__inSubfolder) ? '../' : '' ?>privacy.php" class="account-menu__item" role="menuitem"><i class="bi bi-shield-check"></i> Privacy &amp; data requests</a>
           <button type="button" class="account-menu__item account-menu__item--button" id="theme-toggle" role="menuitem" aria-label="Toggle dark / light theme">
             <i class="bi bi-moon-stars-fill" id="account-menu-theme-icon"></i>
             <span>Dark Mode</span>

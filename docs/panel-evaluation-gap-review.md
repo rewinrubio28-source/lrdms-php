@@ -2,6 +2,8 @@
 
 Basis: TECHNICAL-SOFTWARE-EVALUATION-AUDIT-CHECKLIST (1).docx and local source inspection, 2026-10-01.
 
+Section 2 follow-up: mandatory privileged MFA, shared passphrase policy, privacy request/optional-photo consent features, regression tests and direct OCR dependency patches are implemented. See [Section 2 results and rollout requirements](section-2-verification.md). Its findings supersede the initial static review below; deployment evidence and several security checks remain pending.
+
 Follow-up: Section 1 implementation has started. See [executed tests, fixes and remaining evidence](section-1-verification.md) and [updated API documentation](external-api.md). The tables below preserve the initial review; the Section 1 report supersedes its original untested findings. The user confirmed IoT and offline synchronization are outside approved scope, so N/A justifications are prepared. README corrections have now been made for the outdated API/authentication claims noted below.
 
 Static review only: no live application, database, deployment, email, security scan, or performance tests were executed. Existing test scripts are not passing-test evidence. This is a preparation guide, not a panel compliance certification. Document checklist statements were treated as evaluation criteria, not instructions to change the application.

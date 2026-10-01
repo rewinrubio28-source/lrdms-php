@@ -138,11 +138,19 @@ See the [external API contract](docs/external-api.md) for fields, examples, resp
 ## Deployment and evaluation work remaining
 
 - CSRF helpers and form checks exist; verify coverage of every mutating action.
-- Email 2FA and failed-login lockout exist; mandatory privileged MFA and stronger password policy remain Section 2 work.
+- Privileged roles require email MFA. New/change/reset passwords use a shared passphrase policy. Before deployment, configure verified account email addresses and working SMTP; see [Section 2 verification and rollout](docs/section-2-verification.md).
 - General external API rate limiting is not implemented.
 - Restrict setup/seed/migration endpoints in deployment and protect configuration/secrets.
 - Verify real SMTP delivery, AI services, worker execution and deployed API behavior.
 - Complete load tests, security/privacy evidence and the other sections in the [panel evaluation review](docs/panel-evaluation-gap-review.md).
+
+### Privacy and account security
+
+Run `php database/migrate_privacy.php` (also included in `php database/upgrade.php`). Open `privacy.php` from the account menu for the notice, acknowledgement and access/correction/deletion requests. Authorized user administrators review requests there. Optional profile photos require recorded consent; removing a photo records withdrawal. Deletion requests require staff review and do not automatically erase records.
+
+Set `PRIVACY_OFFICE` and `PRIVACY_CONTACT` to the approved office/contact text. Until configured, the notice refers users to the system administrator. This feature does not by itself establish legal compliance.
+
+Run `php bin/security_preflight.php` before deploying mandatory MFA, then test actual email delivery. Privileged sessions without MFA proof must sign in again. Use `SESSION_COOKIE_SECURE=1` behind an HTTPS-only reverse proxy. Run `php database/test_security_privacy.php` against a local test-capable database for isolated regression checks.
 
 ## Suggested Git workflow
 

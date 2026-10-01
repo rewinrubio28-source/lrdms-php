@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-01",
+  "scope": "Pinned direct OCR dependencies only; excludes transitive dependencies, BERT, OS packages and deployed images.",
+  "tool": "pip-audit 2.10.1",
+  "before": [
+    {
+      "name": "flask",
+      "version": "3.0.3",
+      "advisories": [
+        "PYSEC-2026-2151"
+      ]
+    },
+    {
+      "name": "pytesseract",
+      "version": "0.3.13",
+      "advisories": []
+    },
+    {
+      "name": "pillow",
+      "version": "10.4.0",
+      "advisories": [
+        "PYSEC-2026-165",
+        "PYSEC-2026-2249",
+        "PYSEC-2026-2250",
+        "PYSEC-2026-2252",
+        "PYSEC-2026-2253",
+        "PYSEC-2026-2254",
+        "PYSEC-2026-2255",
+        "PYSEC-2026-2256",
+        "PYSEC-2026-2257",
+        "PYSEC-2026-2874",
+        "PYSEC-2026-3451",
+        "PYSEC-2026-3453",
+        "PYSEC-2026-3454",
+        "PYSEC-2026-3493",
+        "PYSEC-2026-3494",
+        "PYSEC-2026-3495",
+        "PYSEC-2026-3496"
+      ]
+    },
+    {
+      "name": "pdf2image",
+      "version": "1.17.0",
+      "advisories": []
+    },
+    {
+      "name": "gunicorn",
+      "version": "22.0.0",
+      "advisories": []
+    }
+  ],
+  "after": [
+    {
+      "name": "flask",
+      "version": "3.1.3",
+      "advisories": []
+    },
+    {
+      "name": "pytesseract",
+      "version": "0.3.13",
+      "advisories": []
+    },
+    {
+      "name": "pillow",
+      "version": "12.3.0",
+      "advisories": []
+    },
+    {
+      "name": "pdf2image",
+      "version": "1.17.0",
+      "advisories": []
+    },
+    {
+      "name": "gunicorn",
+      "version": "22.0.0",
+      "advisories": []
+    }
+  ]
+}

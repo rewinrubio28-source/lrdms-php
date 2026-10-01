@@ -108,7 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <p>This is an automated message from LRDMS. Please do not reply to this email.</p>
                         </div>
                     </div>
-                </body>
+                <div class="text-center py-3"><a href="privacy.php">Privacy notice and data requests</a></div>
+</body>
                 </html>
                 ';
 
@@ -166,8 +167,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newPassword = $_POST['new_password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
 
-        if (strlen($newPassword) < 6) {
-            $forgotResetError = 'Password must be at least 6 characters long.';
+        if (($policyError = password_policy_error($newPassword)) !== null) {
+            $forgotResetError = $policyError;
             $forgotStep = 'reset';
         } elseif ($newPassword !== $confirmPassword) {
             $forgotResetError = 'Passwords do not match.';
@@ -978,7 +979,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
                       <label for="newPassword" class="form-label">New Password</label>
                       <div class="form-icon-input has-toggle" id="newPasswordFieldWrap">
                         <i class="bi bi-lock form-control-icon-left"></i>
-                        <input type="password" id="newPassword" name="new_password" class="form-control" placeholder="Enter new password" required minlength="6">
+                        <input type="password" id="newPassword" name="new_password" class="form-control" placeholder="Enter new password" required minlength="15">
                         <button class="toggle-password-btn" type="button" id="toggleNewPassword" aria-label="Toggle password visibility">
                           <i class="bi bi-eye"></i>
                         </button>
@@ -989,7 +990,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
                       <label for="confirmPassword" class="form-label">Confirm Password</label>
                       <div class="form-icon-input has-toggle" id="confirmPasswordFieldWrap">
                         <i class="bi bi-lock-fill form-control-icon-left"></i>
-                        <input type="password" id="confirmPassword" name="confirm_password" class="form-control" placeholder="Confirm new password" required minlength="6">
+                        <input type="password" id="confirmPassword" name="confirm_password" class="form-control" placeholder="Confirm new password" required minlength="15">
                         <button class="toggle-password-btn" type="button" id="toggleConfirmPassword" aria-label="Toggle password visibility">
                           <i class="bi bi-eye"></i>
                         </button>
@@ -1261,8 +1262,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
           var cpwVal = confirmPassword ? confirmPassword.value : '';
           var valid = true;
 
-          if (!pwVal || pwVal.length < 6) {
-            setFieldError('newPasswordFieldWrap', 'newPasswordError', true, 'Password must be at least 6 characters.');
+          if (!pwVal || Array.from(pwVal).length < 15) {
+            setFieldError('newPasswordFieldWrap', 'newPasswordError', true, 'Use a passphrase of at least 15 characters.');
             valid = false;
           } else {
             setFieldError('newPasswordFieldWrap', 'newPasswordError', false);
@@ -1384,6 +1385,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
       <?php endif; ?>
    </script>
 
+<div class="text-center py-3"><a href="privacy.php">Privacy notice and data requests</a></div>
 </body>
 
 </html>

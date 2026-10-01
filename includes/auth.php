@@ -20,9 +20,15 @@
  */
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/audit.php';
+require_once __DIR__ . '/security_policy.php';
 
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    session_start([
+        'use_strict_mode' => true,
+        'cookie_httponly' => true,
+        'cookie_samesite' => 'Lax',
+        'cookie_secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || env_optional('SESSION_COOKIE_SECURE','0') === '1',
+    ]);
 }
 
 if (!defined('LOGIN_MAX_ATTEMPTS')) define('LOGIN_MAX_ATTEMPTS', 5);
@@ -81,9 +87,7 @@ function attempt_login($username, $password) {
         return false;
     }
 
-    // Valid password — reset the lockout counters.
-    $stmt = $pdo->prepare('UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?');
-    $stmt->execute([$user['id']]);
+    // Reset failure counters only after the entire sign-in, including MFA.
 
     $stmt = $pdo->prepare('SELECT name FROM roles WHERE id = ?');
     $stmt->execute([$user['role_id']]);
@@ -92,8 +96,11 @@ function attempt_login($username, $password) {
     // 2FA gate: hold the login until a valid emailed code is entered.
     // (2FA is now set up purely by email — an account can have
     // totp_enabled = 1 with no totp_secret at all.)
-    if (!empty($user['totp_enabled'])) {
+    if (!empty($user['totp_enabled']) || privileged_mfa_required($user)) {
+        unset($_SESSION['user_id'], $_SESSION['session_token'], $_SESSION['mfa_session_token'], $_SESSION['2fa_login_otp_sent']);
         $_SESSION['2fa_user_id'] = (int)$user['id'];
+        $_SESSION['2fa_started_at'] = time();
+        $GLOBALS['__lrdms_current_user'] = false;
         return '2fa';
     }
 
@@ -106,8 +113,11 @@ function attempt_login($username, $password) {
  * the user session. Called after the password check (attempt_login) or
  * after a valid 2FA code (verify_2fa.php).
  */
-function complete_login($user) {
+function complete_login($user, bool $mfaVerified = false) {
     $pdo = get_db();
+    if ((!empty($user['totp_enabled']) || privileged_mfa_required($user)) && !$mfaVerified) {
+        throw new RuntimeException('Complete two-factor verification before signing in.');
+    }
     if (empty($user['role_name'])) {
         $stmt = $pdo->prepare('SELECT name FROM roles WHERE id = ?');
         $stmt->execute([$user['role_id']]);
@@ -135,9 +145,11 @@ function complete_login($user) {
     $_SESSION['role_name']     = $user['role_name'];
     $_SESSION['committee_id']  = $user['committee_id'];
     $_SESSION['session_token'] = $token;
-    unset($_SESSION['2fa_user_id']);
+    if ($mfaVerified) $_SESSION['mfa_session_token'] = $token;
+    else unset($_SESSION['mfa_session_token']);
+    unset($_SESSION['2fa_user_id'], $_SESSION['2fa_started_at'], $_SESSION['2fa_login_otp_sent']);
 
-    $stmt = $pdo->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?');
+    $stmt = $pdo->prepare('UPDATE users SET last_login_at = NOW(), failed_attempts=0, locked_until=NULL WHERE id = ?');
     $stmt->execute([$user['id']]);
 
     // Invalidate the per-request cache so the next current_user() re-resolves.
@@ -180,7 +192,7 @@ function current_user() {
     $stmt->execute([$_SESSION['session_token']]);
     $user = $stmt->fetch();
 
-    if (!$user) {
+    if (!$user || (privileged_mfa_required($user) && ($_SESSION['mfa_session_token'] ?? '') !== $user['session_token'])) {
         // Session revoked or account disabled — drop the local state.
         unset($_SESSION['user_id'], $_SESSION['session_token']);
         $__lrdms_current_user = null;
@@ -377,12 +389,12 @@ function generate_login_otp($user_id) {
  * marked used (single use) and true is returned.
  */
 function verify_login_otp($user_id, $code) {
-    $code = trim((string)$code);
-    if ($code === '' || !ctype_digit($code)) {
-        return false;
-    }
-
     $pdo = get_db();
+    $account = $pdo->prepare('SELECT is_active, locked_until FROM users WHERE id=?');
+    $account->execute([$user_id]);
+    $account = $account->fetch();
+    if (!$account || !$account['is_active'] || is_account_locked($account)) return false;
+    $code = is_string($code) ? trim($code) : '';
     $stmt = $pdo->prepare(
         'SELECT id, expires_at FROM login_otp_codes
          WHERE user_id = ? AND code = ? AND used_at IS NULL'
@@ -390,14 +402,16 @@ function verify_login_otp($user_id, $code) {
     $stmt->execute([$user_id, $code]);
     $row = $stmt->fetch();
 
-    if (!$row || strtotime($row['expires_at']) < time()) {
+    if (!preg_match('/^[0-9]{6}$/D', $code) || !$row || strtotime($row['expires_at']) <= time()) {
+        $pdo->prepare('UPDATE users SET failed_attempts=failed_attempts+1, locked_until=CASE WHEN failed_attempts>=? THEN DATE_ADD(NOW(), INTERVAL ' . LOGIN_LOCK_MINUTES . ' MINUTE) ELSE locked_until END WHERE id=?')
+            ->execute([LOGIN_MAX_ATTEMPTS, $user_id]);
         return false;
     }
 
-    $stmt = $pdo->prepare('UPDATE login_otp_codes SET used_at = NOW() WHERE id = ?');
+    $stmt = $pdo->prepare('UPDATE login_otp_codes SET used_at = NOW() WHERE id = ? AND used_at IS NULL AND expires_at > NOW()');
     $stmt->execute([$row['id']]);
 
-    return true;
+    return $stmt->rowCount() === 1;
 }
 
 /* ============================================================
@@ -468,6 +482,7 @@ function validate_password_reset_code($email, $code) {
     }
 
     return [
+        'reset_id' => $record['id'],
         'user_id' => $record['user_id'],
         'username' => $record['username'],
         'email' => $record['email']
@@ -500,6 +515,7 @@ function validate_password_reset_token($token) {
     }
 
     return [
+        'reset_id' => $record['id'],
         'user_id' => $record['user_id'],
         'username' => $record['username'],
         'email' => $record['email']
@@ -512,55 +528,40 @@ function validate_password_reset_token($token) {
  * Clearing the reset clears any forced-change flag and the lockout counters.
  */
 function reset_password_with_code($email, $code, $new_password) {
-    $pdo = get_db();
-
+    if (password_policy_error($new_password) !== null) return false;
     $user = validate_password_reset_code($email, $code);
-    if (!$user) {
-        return false;
-    }
-
-    $password_hash = password_hash($new_password, PASSWORD_BCRYPT);
-
-    $stmt = $pdo->prepare(
-        'UPDATE users SET password_hash = ?, must_change_password = 0,
-                failed_attempts = 0, locked_until = NULL WHERE id = ?'
-    );
-    $stmt->execute([$password_hash, $user['user_id']]);
-
-    $stmt = $pdo->prepare(
-        'UPDATE password_reset_codes SET used_at = NOW() WHERE code = ? AND user_id = ?'
-    );
-    $stmt->execute([$code, $user['user_id']]);
-
-    return true;
+    return $user ? complete_password_reset('password_reset_codes', $user, $new_password) : false;
 }
 
-/**
- * Reset user password using token.
- * Returns true on success, or false on failure.
- */
 function reset_password($token, $new_password) {
-    $pdo = get_db();
-
+    if (password_policy_error($new_password) !== null) return false;
     $user = validate_password_reset_token($token);
-    if (!$user) {
+    return $user ? complete_password_reset('password_reset_tokens', $user, $new_password) : false;
+}
+
+/** Consume once and revoke old credentials/sessions in the same transaction. */
+function complete_password_reset(string $table, array $user, string $password): bool {
+    if (!in_array($table, ['password_reset_codes','password_reset_tokens'], true) || password_policy_error($password) !== null) return false;
+    $pdo = get_db();
+    $pdo->beginTransaction();
+    try {
+        $consume = $pdo->prepare("UPDATE $table SET used_at=NOW() WHERE id=? AND user_id=? AND used_at IS NULL AND expires_at>NOW()");
+        $consume->execute([$user['reset_id'],$user['user_id']]);
+        if ($consume->rowCount() !== 1) { $pdo->rollBack(); return false; }
+        $change = $pdo->prepare('UPDATE users SET password_hash=?, must_change_password=0, failed_attempts=0, locked_until=NULL WHERE id=? AND is_active=1');
+        $change->execute([password_hash($password,PASSWORD_BCRYPT),$user['user_id']]);
+        if ($change->rowCount() !== 1) { $pdo->rollBack(); return false; }
+        foreach (['password_reset_codes','password_reset_tokens'] as $pendingTable) {
+            $pdo->prepare("UPDATE $pendingTable SET used_at=NOW() WHERE user_id=? AND used_at IS NULL")->execute([$user['user_id']]);
+        }
+        revoke_user_sessions((int)$user['user_id']);
+        $pdo->commit();
+        return true;
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        error_log('Password reset transaction failed.');
         return false;
     }
-
-    $password_hash = password_hash($new_password, PASSWORD_BCRYPT);
-
-    $stmt = $pdo->prepare(
-        'UPDATE users SET password_hash = ?, must_change_password = 0,
-                failed_attempts = 0, locked_until = NULL WHERE id = ?'
-    );
-    $stmt->execute([$password_hash, $user['user_id']]);
-
-    $stmt = $pdo->prepare(
-        'UPDATE password_reset_tokens SET used_at = NOW() WHERE token = ?'
-    );
-    $stmt->execute([$token]);
-
-    return true;
 }
 
 /* ============================================================

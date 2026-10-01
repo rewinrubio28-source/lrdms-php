@@ -35,12 +35,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $organizationValues = organization_input($pdo, $_POST, $errors);
         $password = $_POST['password'] ?? '';
         $requireChange = !empty($_POST['must_change_password']);
+        if (($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) || (privileged_mfa_required(['role_id'=>$roleId]) && $email === '')) {
+            $errors[] = 'A valid email address is required for privileged accounts.';
+        }
 
         $oldInput = [
             'fullName' => $fullName,
             'username' => $username,
             'email' => $email,
-            'password' => $password,
+            'password' => '',
             'roleId' => $roleId,
             'committeeId' => $committeeId,
             'requireChange' => $requireChange,
@@ -48,8 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($fullName === '' || $username === '' || $password === '' || !$roleId) {
             $errors[] = 'Full name, username, password, and role are required.';
-        } elseif (strlen($password) < 6) {
-            $errors[] = 'Password must be at least 6 characters long.';
+        } elseif (($policyError = password_policy_error($password)) !== null) {
+            $errors[] = $policyError;
         } elseif (!can_assign_role_id($roleId, $roles)) {
             $errors[] = 'You are not allowed to create a user with that role.';
         } else {
@@ -209,7 +212,8 @@ include __DIR__ . '/includes/layout_top.php';
             </div>
             <div class="col-md-6">
               <label class="form-label small">Temporary password</label>
-              <input type="text" name="password" class="form-control" value="<?= htmlspecialchars($oldInput['password'] ?? '') ?>" required>
+              <input type="password" name="password" class="form-control" autocomplete="new-password" minlength="15" required aria-describedby="create-password-help">
+              <div class="form-text" id="create-password-help">Use a passphrase of at least 15 characters (maximum 72 bytes).</div>
             </div>
             <div class="col-md-6">
               <label class="form-label small">System role</label>

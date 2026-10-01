@@ -15,7 +15,10 @@ function auth_check(bool $ok,string $message): void {
     if (!$ok) throw new RuntimeException($message);
     $GLOBALS['auth_checks'][]=$message; // Defer output until session/header operations finish.
 }
-$role=$pdo->query('SELECT id FROM roles ORDER BY id LIMIT 1')->fetchColumn();
+$role=null;
+foreach ($pdo->query('SELECT id AS role_id, name AS role_name FROM roles')->fetchAll() as $candidate) {
+    if (!privileged_mfa_required($candidate)) { $role=$candidate['role_id']; break; }
+}
 if (!$role) throw new RuntimeException('At least one role is required.');
 $pdo->prepare('INSERT INTO users (id,full_name,username,email,password_hash,role_id) VALUES (1,?,?,?,?,?)')
     ->execute(['Test User','auth-test','auth-test@example.invalid',password_hash('Test-password-123',PASSWORD_DEFAULT),$role]);
