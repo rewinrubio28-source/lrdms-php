@@ -128,6 +128,14 @@ OCR uses the Python service in `ocr_service/`; background extraction on saved re
 
 ## API endpoints
 
+### Dashboard analytics and reports
+
+Dashboard metrics refresh every 15 seconds while the tab is visible. Filter records by creation dates, document type and current status; select a month bar or document-type label to inspect matching records. Dashboard summary exports are available as PDF, native Excel (`.xlsx`) and UTF-8 CSV and respect the same role visibility and filters. Search history is private to the user unless their role has audit access.
+
+Run `composer install` locally, or rebuild the PHP Docker image, to install the report libraries. Section 3 adds no database migration. See [metric definitions, tests and panel demo](docs/section-3-verification.md). Historical summaries group current visible records by creation month; they do not reconstruct past record states.
+
+### Integration endpoints
+
 See the [external API contract](docs/external-api.md) for fields, examples, response codes and validation behavior.
 
 - `POST api/upload_document.php`: JSON or multipart intake. Required fields are `doc_number` and `title`. Incoming records start private and Pending Validation; authorized staff review/register them.

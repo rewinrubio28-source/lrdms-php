@@ -2,6 +2,8 @@
 
 Basis: TECHNICAL-SOFTWARE-EVALUATION-AUDIT-CHECKLIST (1).docx and local source inspection, 2026-10-01.
 
+Section 3 follow-up: shared dashboard metrics, 15-second auto-refresh, date/type/status filters, interactive drill-down, monthly history and PDF/XLSX/CSV summary exports are implemented and locally tested. See [Section 3 evidence and live-demo steps](section-3-verification.md). The original Section 3 gaps below are superseded by that report; live panel validation remains outstanding.
+
 Section 2 follow-up: mandatory privileged MFA, shared passphrase policy, privacy request/optional-photo consent features, regression tests and direct OCR dependency patches are implemented. See [Section 2 results and rollout requirements](section-2-verification.md). Its findings supersede the initial static review below; deployment evidence and several security checks remain pending.
 
 Follow-up: Section 1 implementation has started. See [executed tests, fixes and remaining evidence](section-1-verification.md) and [updated API documentation](external-api.md). The tables below preserve the initial review; the Section 1 report supersedes its original untested findings. The user confirmed IoT and offline synchronization are outside approved scope, so N/A justifications are prepared. README corrections have now been made for the outdated API/authentication claims noted below.
