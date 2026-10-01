@@ -111,8 +111,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $savedSearches = list_saved_searches($pdo, $user['id']);
 
 if ($hasCriteria) {
+    $searchExecution = ['effective_mode' => 'keyword', 'fallback' => false];
     $results = $mode === 'semantic' && $query !== ''
-        ? semantic_search($pdo, $query, $visClause, $visParams, null)
+        ? semantic_search($pdo, $query, $visClause, $visParams, null, $searchExecution)
         : keyword_search($pdo, $query, $visClause, $visParams, null);
 
     // Apply client-side filters (no changes to search functions)
@@ -149,8 +150,8 @@ if ($hasCriteria) {
     }
 
     $stmt = $pdo->prepare('INSERT INTO search_log (user_id, query, search_type, results_count) VALUES (?,?,?,?)');
-    $stmt->execute([$user['id'], $query, $mode, count($results)]);
-    log_action('search', 'ran_search', "($mode) \"$query\" — " . count($results) . ' results');
+    $stmt->execute([$user['id'], $query, $searchExecution['effective_mode'], count($results)]);
+    log_action('search', 'ran_search', 'requested=' . $mode . ' effective=' . $searchExecution['effective_mode'] . ' query=' . $query . ' results=' . count($results));
     $searchTotal = count($results);
     $searchPages = max(1, (int)ceil($searchTotal / 20));
     $searchPage = min($searchPage, $searchPages);
@@ -446,6 +447,9 @@ include __DIR__ . '/includes/layout_top.php';
 </div>
 
 <div class="card">
+  <?php if (!empty($searchExecution['fallback'])): ?>
+    <div class="alert alert-warning" role="status">Semantic search is temporarily unavailable. Showing keyword matches instead.</div>
+  <?php endif; ?>
   <?php if (!$hasCriteria): ?>
     <p class="text-muted mb-0">Enter a keyword or choose filters to find a registered record.</p>
   <?php elseif (!$results): ?>

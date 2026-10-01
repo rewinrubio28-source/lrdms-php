@@ -14,7 +14,9 @@ require_once __DIR__ . '/env.php';
 load_env_file();
 
 // Load PHPMailer
-require_once __DIR__ . '/../vendor/autoload.php';
+if (is_file(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -24,8 +26,8 @@ use PHPMailer\PHPMailer\Exception;
 // silently sending nothing (password resets, 2FA codes depend on this).
 define('SMTP_HOST', env_optional('SMTP_HOST', 'smtp.gmail.com'));
 define('SMTP_PORT', (int) env_optional('SMTP_PORT', 587));
-define('SMTP_USERNAME', env_required('SMTP_USERNAME'));
-define('SMTP_PASSWORD', env_required('SMTP_PASSWORD'));
+define('SMTP_USERNAME', env_optional('SMTP_USERNAME', ''));
+define('SMTP_PASSWORD', env_optional('SMTP_PASSWORD', ''));
 define('SMTP_FROM_EMAIL', env_optional('SMTP_FROM_EMAIL', SMTP_USERNAME));
 define('SMTP_FROM_NAME', env_optional('SMTP_FROM_NAME', 'LRDMS System'));
 
@@ -41,6 +43,10 @@ define('BASE_URL', env_optional('BASE_URL', 'http://localhost/lrdms-php'));
  * @return bool True if sent successfully
  */
 function send_email($to, $subject, $body) {
+    if (!class_exists(PHPMailer::class) || SMTP_USERNAME === '' || SMTP_PASSWORD === '') {
+        error_log('Email unavailable: install Composer dependencies and configure SMTP_USERNAME and SMTP_PASSWORD.');
+        return false;
+    }
     $mail = new PHPMailer(true);
 
     try {

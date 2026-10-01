@@ -19,6 +19,7 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/semantic_search.php';
 require_once __DIR__ . '/../includes/audit.php';
+require_once __DIR__ . '/../includes/external_api.php';
 
 header('Content-Type: application/json');
 
@@ -26,23 +27,12 @@ header('Content-Type: application/json');
 // same value as api/upload_document.php uses. Never hardcode it here.
 require_once __DIR__ . '/../config/env.php';
 load_env_file();
-define('API_SHARED_KEY', env_required('API_SHARED_KEY'));
-
-$providedKey = $_SERVER['HTTP_X_API_KEY'] ?? '';
-if (!hash_equals(API_SHARED_KEY, $providedKey)) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Invalid or missing API key.']);
-    exit;
+external_api_require_request('GET');
+try {
+    [$query, $mode] = external_api_search_parameters($_GET);
+} catch (InvalidArgumentException $e) {
+    external_api_error(422, $e->getMessage());
 }
-
-$query = trim($_GET['query'] ?? '');
-if ($query === '') {
-    http_response_code(422);
-    echo json_encode(['error' => 'query parameter is required.']);
-    exit;
-}
-
-$mode = ($_GET['mode'] ?? 'keyword') === 'semantic' ? 'semantic' : 'keyword';
 
 $pdo = get_db();
 // Same public-visibility rule as includes/rbac.php's document_visibility_clause()
@@ -50,17 +40,20 @@ $pdo = get_db();
 // be public" flag; a document keeps showing here after being Amended/Withdrawn/
 // Superseded (that's the point of a records archive), just never at the
 // pre-filing stage (Draft/Submitted/Under Review), which isn't LRDMS's to show.
-$visClause = "is_public = 1 AND status NOT IN ('Draft','Submitted','Under Review')";
+$visClause = "d.verified_at IS NOT NULL AND d.is_public = 1 AND d.status NOT IN ('Draft','Submitted','Under Review')";
+$searchExecution = ['effective_mode' => 'keyword', 'fallback' => false];
 $results = $mode === 'semantic'
-    ? semantic_search($pdo, $query, $visClause, [])
+    ? semantic_search($pdo, $query, $visClause, [], 25, $searchExecution)
     : keyword_search($pdo, $query, $visClause, []);
 
 $stmt = $pdo->prepare('INSERT INTO search_log (user_id, query, search_type, results_count) VALUES (NULL, ?, ?, ?)');
-$stmt->execute([$query, $mode, count($results)]);
-log_action('search', 'api_query', 'external → "' . $query . '" (' . $mode . ') — ' . count($results) . ' results');
+$stmt->execute([$query, $searchExecution['effective_mode'], count($results)]);
+log_action('search', 'api_query', 'external requested=' . $mode . ' effective=' . $searchExecution['effective_mode'] . ' query=' . $query . ' results=' . count($results));
 
 echo json_encode([
     'mode' => $mode,
+    'effective_mode' => $searchExecution['effective_mode'],
+    'fallback' => $searchExecution['fallback'],
     'query' => $query,
     'results' => array_map(function ($d) {
         return [

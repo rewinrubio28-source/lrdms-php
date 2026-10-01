@@ -55,6 +55,7 @@ $loginError = isset($_GET['login_error']) && $_GET['login_error'] == 1;
 $forgotStep = 'email';
 $forgotEmail = '';
 $forgotCodeSent = false;
+$forgotRequested = isset($_POST['forgot_submitted']) || isset($_POST['forgot_code_submitted']) || isset($_POST['forgot_reset_submitted']);
 $forgotCodeError = '';
 $forgotResetError = '';
 $forgotResetSuccess = false;
@@ -67,10 +68,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (validate_csrf()) {
         $forgotEmail = trim($_POST['reset_email'] ?? '');
         if ($forgotEmail !== '' && filter_var($forgotEmail, FILTER_VALIDATE_EMAIL)) {
-            require_once __DIR__ . '/config/email.php';
+            require_once is_file(__DIR__ . '/config/email.php')
+                ? __DIR__ . '/config/email.php'
+                : __DIR__ . '/config/email.example.php';
+            unset($_SESSION['forgot_email'], $_SESSION['forgot_code']);
 
             $codeData = generate_password_reset_code($forgotEmail);
-            $forgotCodeSent = (bool)$codeData;
+            $forgotCodeSent = false;
 
             if ($codeData) {
                 $emailSubject = 'LRDMS Password Reset Code';
@@ -108,21 +112,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </html>
                 ';
 
-                send_email($codeData['email'], $emailSubject, $emailBody);
+                $forgotCodeSent = send_email($codeData['email'], $emailSubject, $emailBody);
+                if (!$forgotCodeSent) {
+                    $forgotCodeError = 'Could not send the reset code. Please try again later or contact your administrator.';
+                }
+            }
+            if (!$codeData || $forgotCodeSent) {
                 $_SESSION['forgot_email'] = $forgotEmail;
                 $forgotStep = 'code';
             }
 
             log_action('auth', 'password_reset_request', $forgotEmail);
+        } else {
+            $forgotCodeError = 'Enter a valid email address.';
         }
         }
     } elseif (isset($_POST['forgot_code_submitted'])) {
+        $forgotStep = 'code';
+        $forgotEmail = $_SESSION['forgot_email'] ?? '';
         if (!validate_csrf()) {
             $forgotCodeError = 'Security token expired. Please refresh the page and try again.';
         }
         if (validate_csrf()) {
-        // Use session email if available, otherwise fall back to POST
-        $forgotEmail = $_SESSION['forgot_email'] ?? trim($_POST['reset_email'] ?? '');
+        // Keep the verification request tied to this session.
+        $forgotEmail = $_SESSION['forgot_email'] ?? '';
         $forgotCode = trim($_POST['reset_code'] ?? '');
 
         if ($forgotEmail !== '' && $forgotCode !== '') {
@@ -141,13 +154,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         }
     } elseif (isset($_POST['forgot_reset_submitted'])) {
+        $forgotStep = 'reset';
+        $forgotEmail = $_SESSION['forgot_email'] ?? '';
         if (!validate_csrf()) {
             $forgotResetError = 'Security token expired. Please refresh the page and try again.';
         }
         if (validate_csrf()) {
         // Use session email if available
-        $forgotEmail = $_SESSION['forgot_email'] ?? trim($_POST['reset_email'] ?? '');
-        $forgotCode = $_SESSION['forgot_code'] ?? trim($_POST['reset_code'] ?? '');
+        $forgotEmail = $_SESSION['forgot_email'] ?? '';
+        $forgotCode = $_SESSION['forgot_code'] ?? '';
         $newPassword = $_POST['new_password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
 
@@ -165,8 +180,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 unset($_SESSION['forgot_email'], $_SESSION['forgot_code']);
                 log_action('auth', 'password_reset_complete', $forgotEmail);
             } else {
-                $forgotResetError = 'Failed to reset password. Please try again.';
-                $forgotStep = 'reset';
+                $forgotCodeError = 'Your reset code has expired or was already used. Request a new code.';
+                unset($_SESSION['forgot_email'], $_SESSION['forgot_code']);
+                $forgotStep = 'email';
             }
         }
         }
@@ -904,6 +920,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
                     <div>If an account exists for that email, a reset code has been sent.</div>
                   </div>
 
+                  <div class="alert alert-danger d-none" id="resetEmailAlert" role="alert"><span id="resetEmailAlertText"></span></div>
                   <form id="forgotPasswordForm" method="post">
                     <?php csrf_field(); ?>
                     <input type="hidden" name="forgot_submitted" value="1">
@@ -911,7 +928,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
                       <label for="resetEmail" class="form-label">Email</label>
                       <div class="form-icon-input" id="resetEmailFieldWrap">
                         <i class="bi bi-envelope form-control-icon-left"></i>
-                        <input type="email" id="resetEmail" name="reset_email" class="form-control" placeholder="name@example.com" required>
+                        <input type="email" id="resetEmail" name="reset_email" class="form-control" placeholder="name@example.com" value="<?php echo htmlspecialchars($forgotEmail); ?>" required>
                       </div>
                       <div class="field-error d-none" id="resetEmailError"><i class="bi bi-exclamation-circle-fill"></i><span>Email is required.</span></div>
                     </div>
@@ -920,7 +937,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
                 </div>
 
                 <div id="forgotStepCode" class="d-none">
-                  <div class="login-subtext">Enter the 6-digit code sent to your email.</div>
+                  <div class="login-subtext">If an active account exists for that email, a 6-digit code has been sent. It expires in 10 minutes.</div>
 
                   <div class="alert alert-danger d-flex align-items-center gap-2 py-2 small mb-3 d-none" id="resetCodeAlert" role="alert">
                     <i class="bi bi-exclamation-triangle-fill"></i>
@@ -935,11 +952,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
                       <label for="resetCode" class="form-label">Reset Code</label>
                       <div class="form-icon-input" id="resetCodeFieldWrap">
                         <i class="bi bi-key form-control-icon-left"></i>
-                        <input type="text" id="resetCode" name="reset_code" class="form-control" placeholder="123456" maxlength="6" required>
+                        <input type="text" id="resetCode" name="reset_code" class="form-control" placeholder="123456" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required>
                       </div>
                       <div class="field-error d-none" id="resetCodeError"><i class="bi bi-exclamation-circle-fill"></i><span>Code is required.</span></div>
                     </div>
                     <button type="submit" class="btn btn-login-submit w-100">Verify code</button>
+                    <button type="button" class="btn btn-link w-100 mt-2" onclick="showForgotStep('email')">Request a new code or change email</button>
                   </form>
                 </div>
 
@@ -1294,7 +1312,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
         var forgotResetCode = document.getElementById('forgotResetCode');
         if (forgotCodeEmail) forgotCodeEmail.value = emailVal;
         if (forgotResetEmail) forgotResetEmail.value = emailVal;
-        if (forgotResetCode) forgotResetCode.value = codeVal;
+        if (forgotResetCode && codeVal) forgotResetCode.value = codeVal;
       }
 
       if (forgotEmail) {
@@ -1332,7 +1350,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
         if (forgotView) forgotView.classList.remove('d-none');
         showForgotStep('success');
       });
-      <?php elseif ($forgotStep === 'code' || $forgotStep === 'reset'): ?>
+      <?php elseif ($forgotRequested || $forgotStep === 'code' || $forgotStep === 'reset'): ?>
       document.addEventListener('DOMContentLoaded', function() {
         var signInView = document.getElementById('signInView');
         var forgotView = document.getElementById('forgotPasswordView');
@@ -1345,8 +1363,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
 
       <?php if ($forgotCodeError): ?>
       document.addEventListener('DOMContentLoaded', function() {
-        var alertEl = document.getElementById('resetCodeAlert');
-        var alertText = document.getElementById('resetCodeAlertText');
+        var alertEl = document.getElementById(<?php echo json_encode($forgotStep === 'email' ? 'resetEmailAlert' : 'resetCodeAlert'); ?>);
+        var alertText = document.getElementById(<?php echo json_encode($forgotStep === 'email' ? 'resetEmailAlertText' : 'resetCodeAlertText'); ?>);
         if (alertEl && alertText) {
           alertText.textContent = <?php echo json_encode($forgotCodeError); ?>;
           alertEl.classList.remove('d-none');

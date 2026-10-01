@@ -35,7 +35,13 @@ unset($__bertUrl);
 // Optional shared secret - must match BERT_API_KEY on the BERT service.
 define('BERT_API_KEY', (string) env_optional('BERT_API_KEY', ''));
 
-function semantic_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit = 25) {
+function semantic_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit = 25, &$execution = null) {
+    $execution = ['effective_mode' => 'semantic', 'fallback' => false];
+    $fallback = function () use ($pdo, $query, $whereClause, $whereParams, $fallbackLimit, &$execution) {
+        $execution = ['effective_mode' => 'keyword', 'fallback' => true];
+        return keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
+    };
+    if (!function_exists('curl_init')) return $fallback();
     $ch = curl_init(BERT_SERVICE_URL);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['query' => $query]));
@@ -46,6 +52,7 @@ function semantic_search($pdo, $query, $whereClause, $whereParams, $fallbackLimi
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
@@ -53,15 +60,19 @@ function semantic_search($pdo, $query, $whereClause, $whereParams, $fallbackLimi
     // Service unreachable, errored, or returned something unexpected —
     // fall back to keyword search rather than breaking the page.
     if ($response === false || $httpCode !== 200) {
-        return keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
+        return $fallback();
     }
 
     $decoded = json_decode($response, true);
-    $matchedIds = $decoded['document_ids'] ?? null;
+    $matchedIds = is_array($decoded) ? ($decoded['document_ids'] ?? null) : null;
 
-    if ($matchedIds === null) {
-        return keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
+    if (!is_array($matchedIds) || !array_is_list($matchedIds) || count($matchedIds) > 1000) {
+        return $fallback();
     }
+    foreach ($matchedIds as $id) {
+        if (!is_int($id) || $id < 1) return $fallback();
+    }
+    $matchedIds = array_values(array_unique($matchedIds));
 
     if (!$matchedIds) {
         return [];

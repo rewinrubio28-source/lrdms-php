@@ -445,13 +445,16 @@ function generate_password_reset_code($email) {
  * Returns user data if valid, or null if invalid/expired.
  */
 function validate_password_reset_code($email, $code) {
+    if (!is_string($code) || !preg_match('/^[0-9]{6}$/D', $code)) {
+        return null;
+    }
     $pdo = get_db();
 
     $stmt = $pdo->prepare(
         'SELECT prc.id, prc.user_id, prc.expires_at, prc.used_at, u.username, u.email
          FROM password_reset_codes prc
          JOIN users u ON u.id = prc.user_id
-         WHERE u.email = ? AND prc.code = ? AND prc.used_at IS NULL'
+         WHERE u.email = ? AND prc.code = ? AND prc.used_at IS NULL AND u.is_active = 1'
     );
     $stmt->execute([$email, $code]);
     $record = $stmt->fetch();
@@ -483,7 +486,7 @@ function validate_password_reset_token($token) {
         'SELECT prt.id, prt.user_id, prt.expires_at, prt.used_at, u.username, u.email
          FROM password_reset_tokens prt
          JOIN users u ON u.id = prt.user_id
-         WHERE prt.token = ? AND prt.used_at IS NULL'
+         WHERE prt.token = ? AND prt.used_at IS NULL AND u.is_active = 1'
     );
     $stmt->execute([$token]);
     $record = $stmt->fetch();

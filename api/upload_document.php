@@ -10,6 +10,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/audit.php';
 require_once __DIR__ . '/../includes/storage.php';
 require_once __DIR__ . '/../includes/intake_record.php';
+require_once __DIR__ . '/../includes/external_api.php';
 
 header('Content-Type: application/json');
 
@@ -18,24 +19,16 @@ header('Content-Type: application/json');
 // Variables tab for production. Never hardcode it here.
 require_once __DIR__ . '/../config/env.php';
 load_env_file();
-define('API_SHARED_KEY', env_required('API_SHARED_KEY'));
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Use POST.']);
-    exit;
-}
-
-$providedKey = $_SERVER['HTTP_X_API_KEY'] ?? '';
-if (!hash_equals(API_SHARED_KEY, $providedKey)) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Invalid or missing API key.']);
-    exit;
-}
+external_api_require_request('POST');
 
 $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
-$isMultipart = stripos($contentType, 'multipart/form-data') !== false;
+$mediaType = strtolower(trim(explode(';', $contentType, 2)[0]));
+$isMultipart = $mediaType === 'multipart/form-data';
+if (!$isMultipart && $mediaType !== 'application/json') {
+    external_api_error(415, 'Use application/json or multipart/form-data.');
+}
 
+try {
 if ($isMultipart) {
     // is_public arrives as a checkbox/string in a form post, unlike JSON's
     // native boolean — normalize it the same way either shape ends up used.
@@ -44,10 +37,9 @@ if ($isMultipart) {
         $input['is_public'] = filter_var($input['is_public'], FILTER_VALIDATE_BOOLEAN);
     }
 } else {
-    $input = json_decode(file_get_contents('php://input'), true);
+    $input = external_api_json_payload(file_get_contents('php://input'));
 }
 
-try {
     if (!is_array($input)) throw new InvalidArgumentException('A valid document payload is required.');
     $recordValues = intake_record_values($input);
 } catch (InvalidArgumentException $e) {

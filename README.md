@@ -4,7 +4,7 @@ This is the **Legislative Records & Document Management System** subsystem of th
 
 Built with **native PHP, MySQL, and Bootstrap 5** — no framework, per the project's chosen stack.
 
-> **Where this system's responsibility starts and stops:** see [`docs/SCOPE_DECISION.md`](docs/SCOPE_DECISION.md) — it walks through the client's actual drafting-to-first-reading process flow and confirms LRDMS picks up only once a document is formally Enacted, not before.
+> **Where this system's responsibility starts and stops:** see [`docs/ordinance-process-workflow.md`](docs/ordinance-process-workflow.md) — it walks through the client's actual drafting-to-first-reading process flow and confirms LRDMS picks up only once a document is formally Enacted, not before.
 
 ## Tech stack
 
@@ -25,7 +25,16 @@ Built with **native PHP, MySQL, and Bootstrap 5** — no framework, per the proj
 4. **Check `config/database.php`** — the defaults (`localhost` / `root` / no password) match a stock XAMPP install. Change them if yours is different.
 5. **Run the seed script once**, in your browser: `http://localhost/lrdms-php/database/seed.php`. This creates demo user accounts (with real hashed passwords — that has to happen in PHP, not in the SQL file) and a handful of sample documents.
 6. **Delete or move `database/seed.php`** out of the web root once you've run it — it's not something you want reachable in a real deployment.
-7. Go to `http://localhost/lrdms-php/login.php` and sign in.
+7. Go to `http://localhost/lrdms-php/public.php` and sign in.
+
+### Password reset email setup
+
+Run `composer install` to install PHPMailer, then set `SMTP_USERNAME` and
+`SMTP_PASSWORD` in your local `.env` (use an app password for Gmail).
+Optional settings are `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM_EMAIL`, and
+`SMTP_FROM_NAME`. The forgot-password flow uses `config/email.example.php`
+when no local `config/email.php` override exists. Delivery failures appear
+on the email form; successful requests proceed to the six-digit code form.
 
 ### Applying the Revision Plan v5 database update
 
@@ -78,7 +87,7 @@ lrdms-php/
 │   ├── upload_document.php   → System 1 / System 2 push documents here
 │   ├── search.php            → System 9 / Citizen Engagement query here
 │   └── export_audit.php      → CSV export of the audit log
-├── login.php / logout.php / index.php
+├── public.php / logout.php / index.php
 ├── dashboard.php             → Module 00 — Overview
 ├── encoding.php              → Module 01 — Encoding & Submission
 ├── version.php               → Module 02 — Version Control (history, comparison, rollback)
@@ -111,44 +120,29 @@ Both functions encode the same rules — one as a SQL `WHERE` fragment (for list
 
 Document lifecycle: `Draft → Submitted → Under Review → Enacted → Amended`. New records accept `Draft`, `Submitted`, `Under Review`, `Enacted`, `Amended`, and `Rejected`. `Superseded` and `Withdrawn` are retired; their database values remain for historical records. `is_public` is a separate flag — a document can be `Enacted` and still not public if you want a staging period before it's citizen-visible.
 
-## What's real vs. what's a stub
+## Implementation and verification
 
-Being upfront about this matters for a thesis defense — a panel will ask.
+Authentication/session management, email 2FA, account lockout, role permissions, document intake/review, repository retrieval, version history and audit logging are implemented. Implementation alone does not establish panel compliance; see the [Section 1 verification record](docs/section-1-verification.md) for executed checks and outstanding live tests.
 
-- **Everything except OCR and semantic search is fully functional today**: login/sessions, the permission engine, encoding, the repository with filtering, version control (amend → new linked row, old one marked `Amended`; a standalone Module 02 with a revision timeline, side-by-side version comparison, and rollback/restore that creates a new current version rather than deleting history), change notes, the audit trail, user management, and both REST API endpoints.
-- **Keyword search is real** — a parameterized `LIKE` query against `documents.title` and `documents.ocr_text` (there's also a `FULLTEXT` index on those columns in the schema if you want to switch to `MATCH() AGAINST()` for better ranking later).
-- **OCR is implemented** (`includes/ocr.php`), backed by a small Python microservice (`ocr_service/` — Flask + PyTesseract + pdf2image) that PHP calls over HTTP via `cURL`. If that service isn't running, `ocr_extract()` falls back to a labeled placeholder automatically so encoding never breaks. See `ocr_service/README.md` to run it.
-- **Semantic (BERT) search is implemented** (`includes/semantic_search.php`), backed by a small Python microservice (`bert_service/` — Flask + `sentence-transformers`) that PHP calls over HTTP via `cURL`. If that service isn't running, `semantic_search()` falls back to `keyword_search()` automatically so the search page never breaks. See `bert_service/README.md` to run it.
+OCR uses the Python service in `ocr_service/`; background extraction on saved records requires the worker. Failed background scans preserve existing text. BERT semantic search uses `bert_service/` and falls back to keyword search when the service is unavailable or returns invalid results. The search page displays this fallback, and the external API exposes `effective_mode` and `fallback`. Keyword fallback is not evidence of AI accuracy.
 
 ## API endpoints
 
-Both require an `X-API-Key` header — the shared secret is a constant at the top of each file (`change-this-shared-key`). **Move that to an environment variable before any real deployment.**
+See the [external API contract](docs/external-api.md) for fields, examples, response codes and validation behavior.
 
-**Ingest** (System 1 / System 2 push a finalized document in):
-```bash
-curl -X POST http://localhost/lrdms-php/api/upload_document.php \
-  -H "X-API-Key: change-this-shared-key" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"An Ordinance Regulating E-Trike Operations","doc_number":"2026-067","doc_type":"Ordinance","sponsor":"Councilor P. Villanueva","enactment_date":"2026-07-08"}'
-```
+- `POST api/upload_document.php`: JSON or multipart intake. Required fields are `doc_number` and `title`. Incoming records start private and Pending Validation; authorized staff review/register them.
+- `GET api/search.php?query=traffic&mode=keyword`: searches verified public records. Supports `keyword` and `semantic` modes.
+- Both external endpoints require `X-API-Key`, matched against `API_SHARED_KEY` from the environment or local `.env`.
+- `api/export_audit.php` is a separate session/permission-protected CSV export.
 
-**Retrieve** (System 9 / Citizen Engagement query, read-only, enacted + public only):
-```bash
-curl "http://localhost/lrdms-php/api/search.php?query=fare%20hike" \
-  -H "X-API-Key: change-this-shared-key"
+## Deployment and evaluation work remaining
 
-# Add &mode=semantic to route through the BERT microservice instead of keyword LIKE matching
-curl "http://localhost/lrdms-php/api/search.php?query=fare%20hike&mode=semantic" \
-  -H "X-API-Key: change-this-shared-key"
-```
-
-## Known gaps to close before any real deployment
-
-- **No CSRF tokens** on the forms yet — add a per-session token check before this touches real data.
-- **API key is a hardcoded constant** — move it to an environment variable / untracked config file.
-- **No rate limiting** on the API endpoints or login form.
-- **`config/database.php` and `database/seed.php`** should move outside the web root (or at minimum be deleted/blocked) in production.
-- **2FA** isn't implemented — fold it into `includes/auth.php` if you need it.
+- CSRF helpers and form checks exist; verify coverage of every mutating action.
+- Email 2FA and failed-login lockout exist; mandatory privileged MFA and stronger password policy remain Section 2 work.
+- General external API rate limiting is not implemented.
+- Restrict setup/seed/migration endpoints in deployment and protect configuration/secrets.
+- Verify real SMTP delivery, AI services, worker execution and deployed API behavior.
+- Complete load tests, security/privacy evidence and the other sections in the [panel evaluation review](docs/panel-evaluation-gap-review.md).
 
 ## Suggested Git workflow
 

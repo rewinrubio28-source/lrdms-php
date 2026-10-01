@@ -5,7 +5,7 @@ require_once __DIR__ . '/includes/audit.php';
 ensure_csrf_token();
 
 $token = $_GET['token'] ?? '';
-$error = '';
+$error = $token ? '' : 'Missing password reset token. Please request a new password reset link.';
 $success = false;
 
 // Validate token first to check if it's valid
@@ -186,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_submitted']) &&
         </a>
       </div>
 
-    <?php elseif (!$token || $error): ?>
+    <?php elseif (!$user): ?>
       <!-- Invalid Token State -->
       <div class="reset-card-header" style="background: linear-gradient(160deg, #dc3545 0%, #b02a37 100%);">
         <i class="bi bi-exclamation-circle"></i>
