@@ -46,7 +46,7 @@ if ($user && $available) {
 $contact=(string)env_optional('PRIVACY_CONTACT','Contact your system administrator.');
 $controller=(string)env_optional('PRIVACY_OFFICE','The office operating this LRDMS installation');
 ?>
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Privacy and data requests — LRDMS</title><link rel="stylesheet" href="Arsha/assets/vendor/bootstrap/css/bootstrap.min.css"><link rel="stylesheet" href="assets/css/action-links.css?v=1">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Privacy and data requests — LRDMS</title><link rel="stylesheet" href="Arsha/assets/vendor/bootstrap/css/bootstrap.min.css"><link rel="stylesheet" href="assets/css/action-links.css?v=2">
 </head>
 <body><main class="container py-4" style="max-width:960px">
 <a class="action-link" href="<?= $user?'profile.php':'public.php' ?>">Back to <?= $user?'profile':'sign in' ?></a>

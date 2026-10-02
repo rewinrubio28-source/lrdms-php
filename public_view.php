@@ -212,7 +212,7 @@ if ($doc) {
     h1 { font-size:22px; }
   }
 </style>
-<link rel="stylesheet" href="assets/css/action-links.css?v=1">
+<link rel="stylesheet" href="assets/css/action-links.css?v=2">
 </head>
 <body>
 

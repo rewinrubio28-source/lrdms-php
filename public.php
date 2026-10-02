@@ -834,7 +834,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
     }
   </style>
 
-<link rel="stylesheet" href="assets/css/action-links.css?v=1">
+<link rel="stylesheet" href="assets/css/action-links.css?v=2">
 </head>
 
 <body class="index-page">

@@ -1,4 +1,9 @@
 /* Compact button treatment for text actions and record links. */
+/* Keep links and action controls free of underlines in every interaction state. */
+a, a:hover, a:focus, a:active,
+button, button:hover, button:focus, button:active {
+  text-decoration: none !important;
+}
 a.action-link[hidden] { display: none !important; }
 a.action-link {
   display: inline-flex;
