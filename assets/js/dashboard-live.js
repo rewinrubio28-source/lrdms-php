@@ -3,8 +3,8 @@
   const form = document.getElementById('dashboard-filters');
   const region = document.getElementById('dashboard-live');
   const status = document.getElementById('dashboard-refresh-status');
-  if (!form || !region || !status) return;
-  let applied = new URLSearchParams(new FormData(form));
+  if (!region || !status) return;
+  let applied = new URLSearchParams(form ? new FormData(form) : region.dataset.query);
   let controller = null;
   let stopped = false;
   function links(query) {
@@ -13,7 +13,8 @@
       params.set('format', link.dataset.dashboardExport);
       link.href = 'api/export_dashboard.php?' + params;
     });
-    document.getElementById('dashboard-records-link').href = 'dashboard_records.php?' + query;
+    const recordsLink = document.getElementById('dashboard-records-link');
+    if (recordsLink) recordsLink.href = 'dashboard_records.php?' + query;
   }
   async function refresh(query, apply = false) {
     if (stopped) return;
@@ -46,8 +47,8 @@
       if (controller === request) { controller = null; region.removeAttribute('aria-busy'); }
     }
   }
-  form.addEventListener('submit', event => { event.preventDefault(); refresh(new URLSearchParams(new FormData(form)), true); });
-  document.getElementById('dashboard-refresh').addEventListener('click', () => refresh(applied));
+  form?.addEventListener('submit', event => { event.preventDefault(); refresh(new URLSearchParams(new FormData(form)), true); });
+  document.getElementById('dashboard-refresh')?.addEventListener('click', () => refresh(applied));
   setInterval(() => { if (!document.hidden) refresh(applied); }, 15000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(applied); });
 })();

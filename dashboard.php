@@ -36,9 +36,9 @@ include __DIR__ . '/includes/layout_top.php';
   </div>
 </div>
 
-<?php include __DIR__ . '/includes/dashboard_controls.php'; ?>
-<div id="dashboard-live"><?php include __DIR__ . '/includes/dashboard_panels.php'; ?></div>
-<script src="assets/js/dashboard-live.js" defer></script>
+<p id="dashboard-refresh-status" class="visually-hidden" role="status"></p>
+<div id="dashboard-live" data-query="<?= htmlspecialchars(http_build_query($filters), ENT_QUOTES, 'UTF-8') ?>"><?php include __DIR__ . '/includes/dashboard_panels.php'; ?></div>
+<script src="assets/js/dashboard-live.js?v=2" defer></script>
 <!-- Notification Bell Dropdown Panel -->
 <div class="notif-dropdown" id="notif-dropdown">
   <div class="notif-dropdown__header">
