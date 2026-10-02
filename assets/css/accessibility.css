@@ -1,0 +1,21 @@
+/* Shared accessibility overrides; loaded after module styles. */
+html:not(.dark) { --text-muted: #52627a; --text-subtle: #52627a; }
+html.dark { --text-subtle: #acbdd2; }
+.btn-primary { background-color: #2b5d96; border-color: #2b5d96; color: #fff; }
+.sidebar > nav { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.skip-link { position: fixed; left: 12px; top: 8px; transform: translateY(-200%); z-index: 10000; padding: 12px 18px; background: #112d4e; color: #fff; border: 2px solid #fff; border-radius: 6px; }
+.skip-link:focus { transform: none; color: #fff; }
+:is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #112d4e !important; outline-offset: 3px;
+  box-shadow: 0 0 0 3px #fff !important;
+}
+html.dark :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline-color: #fff !important; box-shadow: 0 0 0 3px #112d4e !important;
+}
+.submit-status { margin: .5rem 0; color: var(--text-primary); }
+[aria-disabled="true"] { cursor: wait; }
+.lrdms-submit-loading { display: inline-block; margin-right: .5rem; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+@media print { .skip-link, .submit-status { display: none; } }

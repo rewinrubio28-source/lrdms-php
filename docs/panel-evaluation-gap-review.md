@@ -2,6 +2,8 @@
 
 Basis: TECHNICAL-SOFTWARE-EVALUATION-AUDIT-CHECKLIST (1).docx and local source inspection, 2026-10-01.
 
+Section 7 follow-up: shared keyboard navigation, persistent feedback, POST loading/payload fixes and contrast improvements are implemented. Focused Chrome checks passed for the shared layout and Reports/Import previews in both themes at three widths. See [Section 7 evidence and remaining user/accessibility testing](section-7-verification.md). Full module coverage, assistive-technology trials and live user testing remain outstanding; this is not a site-wide accessibility certification.
+
 Section 6 follow-up: full schema dictionary/ERD, normalization rationale, query-plan benchmarks, seven indexes, version-link foreign keys, stronger restore checks and an opt-in 02:00 backup worker are implemented. A synthetic full-schema recovery drill passed. See [Section 6 evidence and hosting requirements](section-6-verification.md). Persistent backup storage, live scheduler activation and deployed-schema verification remain outstanding.
 
 Section 5 follow-up: customizable records reports, filtering/sorting/grouping, branded PDFs, dedicated print output and private scheduled report generation are implemented and locally tested. See [Section 5 tests, deployment and remaining panel evidence](section-5-verification.md). The user chose secure in-app downloads; the checklist's email-log evidence still needs panel acceptance of generation history/worker logs as an alternative. Production scheduling and physical printing remain to be demonstrated.

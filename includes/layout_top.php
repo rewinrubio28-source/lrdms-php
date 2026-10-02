@@ -49,6 +49,7 @@ $__sys = (int)($_GET['sys'] ?? 0);
 <link rel="stylesheet" href="<?= isset($__inSubfolder) ? '../' : '' ?>assets/css/module-banners.css?v=9">
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <div class="app-shell">
   <aside class="sidebar">
     <div class="brand">
@@ -65,6 +66,7 @@ $__sys = (int)($_GET['sys'] ?? 0);
       <div class="user-box__role"><?= htmlspecialchars($__user['role_name']) ?></div>
     </div>
 
+    <nav aria-label="Main navigation">
     <ul class="nav-list">
       <li><a class="nav-item <?= current_page('dashboard') ?>" href="dashboard.php"><i class="bi bi-grid-1x2" aria-hidden="true"></i><span>Dashboard</span></a></li>
       <?php if (has_repository_access()): ?>
@@ -105,6 +107,7 @@ $__sys = (int)($_GET['sys'] ?? 0);
         <li><a class="nav-item <?= current_page('audit_trail') ?>" href="audit_trail.php"><i class="bi bi-journal-check" aria-hidden="true"></i><span>Audit Trail</span></a></li>
       <?php endif; ?>
     </ul>
+    </nav>
 
     <?php endif; ?>
   </aside>
@@ -121,22 +124,22 @@ $__sys = (int)($_GET['sys'] ?? 0);
   <template id="account-menu-tpl">
     <div class="header-actions-group">
       <div class="notif-bell" id="notif-bell">
-        <button type="button" class="notif-bell__toggle" id="notif-bell-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Notifications">
+        <button type="button" class="notif-bell__toggle" id="notif-bell-toggle" aria-controls="notif-bell-dropdown" aria-expanded="false" aria-label="Notifications">
           <i class="bi bi-bell"></i>
           <span class="notif-bell__badge" id="notif-bell-badge" hidden>0</span>
         </button>
-        <div class="notif-bell__dropdown" id="notif-bell-dropdown" role="menu">
+        <div class="notif-bell__dropdown" id="notif-bell-dropdown" role="region" aria-label="Notifications">
           <div class="notif-bell__header">
             <span>Notifications</span>
             <button type="button" class="notif-bell__mark-all" id="notif-bell-mark-all">Mark all as read</button>
           </div>
-          <div class="notif-bell__list" id="notif-bell-list">
+          <div class="notif-bell__list" id="notif-bell-list" aria-live="polite">
             <div class="notif-bell__empty">Loading…</div>
           </div>
         </div>
       </div>
       <div class="account-menu">
-        <button type="button" class="account-menu__toggle" id="account-menu-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
+        <button type="button" class="account-menu__toggle" id="account-menu-toggle" aria-controls="account-menu-dropdown" aria-expanded="false" aria-label="Account menu">
           <?php if ($__hasHeaderPhoto): ?>
             <img class="account-menu__photo" src="<?= isset($__inSubfolder) ? '../' : '' ?>profile_photo.php?id=<?= (int)$__user['id'] ?>" alt="Your profile photo" onerror="this.hidden=true; this.nextElementSibling.hidden=false;">
             <i class="bi bi-person-circle" hidden aria-hidden="true"></i>
@@ -144,21 +147,21 @@ $__sys = (int)($_GET['sys'] ?? 0);
             <i class="bi bi-person-circle" aria-hidden="true"></i>
           <?php endif; ?>
         </button>
-        <div class="account-menu__dropdown" id="account-menu-dropdown" role="menu">
+        <div class="account-menu__dropdown" id="account-menu-dropdown" role="region" aria-label="Account options">
           <div class="account-menu__header">
             <div class="account-menu__name"><?= htmlspecialchars($__user['full_name']) ?></div>
             <div class="account-menu__role"><?= htmlspecialchars($__user['role_name']) ?></div>
           </div>
-          <a href="<?= isset($__inSubfolder) ? '../' : '' ?>profile.php" class="account-menu__item" role="menuitem">
+          <a href="<?= isset($__inSubfolder) ? '../' : '' ?>profile.php" class="account-menu__item">
             <i class="bi bi-person"></i> My Profile
           </a>
-          <a href="<?= isset($__inSubfolder) ? '../' : '' ?>privacy.php" class="account-menu__item" role="menuitem"><i class="bi bi-shield-check"></i> Privacy &amp; data requests</a>
-          <button type="button" class="account-menu__item account-menu__item--button" id="theme-toggle" role="menuitem" aria-label="Toggle dark / light theme">
+          <a href="<?= isset($__inSubfolder) ? '../' : '' ?>privacy.php" class="account-menu__item"><i class="bi bi-shield-check"></i> Privacy &amp; data requests</a>
+          <button type="button" class="account-menu__item account-menu__item--button" id="theme-toggle" aria-label="Toggle dark / light theme">
             <i class="bi bi-moon-stars-fill" id="account-menu-theme-icon"></i>
             <span>Dark Mode</span>
             <span class="account-menu__switch" id="account-menu-switch" aria-hidden="true"><span class="account-menu__switch-knob"></span></span>
           </button>
-          <a href="<?= isset($__inSubfolder) ? '../' : '' ?>logout.php" class="account-menu__item account-menu__item--danger" role="menuitem">
+          <a href="<?= isset($__inSubfolder) ? '../' : '' ?>logout.php" class="account-menu__item account-menu__item--danger">
             <i class="bi bi-box-arrow-right"></i> Log out
           </a>
         </div>
@@ -172,4 +175,4 @@ $__sys = (int)($_GET['sys'] ?? 0);
   <!-- Toast notification container (floating, auto-dismiss) -->
   <div id="lrdms-toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1100;"></div>
 
-  <main class="main">
+  <main class="main" id="main-content" tabindex="-1">

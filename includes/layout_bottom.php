@@ -75,7 +75,7 @@
       if (!node.contains(e.target)) closeMenu();
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeMenu();
+      if (e.key === 'Escape' && dropdown.classList.contains('is-open')) { closeMenu(); toggleBtn.focus(); }
     });
 
     // Dark mode switch — same .dark class as before, now scoped to this
@@ -194,7 +194,7 @@
       if (!bell.contains(e.target)) closeBell();
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeBell();
+      if (e.key === 'Escape' && bellDropdown.classList.contains('is-open')) { closeBell(); bellToggle.focus(); }
     });
     // Opening the account menu should close the bell, and vice versa.
     toggleBtn.addEventListener('click', function () { closeBell(); });
@@ -277,6 +277,7 @@
     var overlay = document.getElementById('sidebar-overlay');
     if (!toggle || !sidebar || !overlay) return;
     var mobile = window.matchMedia('(max-width: 992px)');
+    var main = document.getElementById('main-content');
     sidebar.id = sidebar.id || 'app-sidebar';
     toggle.setAttribute('aria-controls', sidebar.id);
     toggle.setAttribute('aria-expanded', 'false');
@@ -287,12 +288,15 @@
     close.innerHTML = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
     sidebar.prepend(close);
     function openSidebar() {
+      if (!mobile.matches) return;
+      if (main) main.inert = true;
       sidebar.classList.add('is-open'); overlay.classList.add('is-open');
       document.body.classList.add('sidebar-open');
       toggle.setAttribute('aria-expanded', 'true');
       close.focus();
     }
     function closeSidebar(restoreFocus) {
+      if (main) main.inert = false;
       sidebar.classList.remove('is-open'); overlay.classList.remove('is-open');
       document.body.classList.remove('sidebar-open');
       toggle.setAttribute('aria-expanded', 'false');
@@ -313,63 +317,7 @@
     });
   })();
 </script>
-<script>
-  // Submit button loading state — show spinner on all POST forms.
-  (function () {
-    document.querySelectorAll('form[method="post"]').forEach(function (form) {
-      form.addEventListener('submit', function () {
-        var btn = this.querySelector('button[type="submit"], button:not([type])');
-        if (btn && !btn.disabled) {
-          btn.disabled = true;
-          btn.dataset.origHtml = btn.innerHTML;
-          btn.innerHTML = '<span class="lrdms-submit-loading" style="display:inline-block;"></span> Saving…';
-        }
-      });
-      // Reset button state after page reload if form wasn't submitted
-      window.addEventListener('load', function () {
-        form.querySelectorAll('button[disabled]').forEach(function (b) {
-          if (b.dataset.origHtml) {
-            b.innerHTML = b.dataset.origHtml;
-            b.disabled = false;
-          }
-        });
-      });
-    });
-  })();
-</script>
-<script>
-  // Toast notifications — convert existing .alert-success / .alert-danger
-  // banners into floating Bootstrap toasts that auto-dismiss.
-  (function () {
-    var container = document.getElementById('lrdms-toast-container');
-    if (!container) return;
-    function findPageAlert(selector) {
-      return Array.from(document.querySelectorAll(selector)).find(function (element) {
-        return !element.closest('.modal, [hidden], .d-none') && element.textContent.trim() !== '';
-      });
-    }
-    var alertSuccess = findPageAlert('.alert-success');
-    var alertDanger = findPageAlert('.alert-danger');
-    var alertEl = alertSuccess || alertDanger;
-    if (!alertEl) return;
-    var type = alertSuccess ? 'success' : 'danger';
-    var icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-    var iconColor = type === 'success' ? 'text-success' : 'text-danger';
-    var msg = alertEl.textContent.trim();
-    alertEl.classList.add('d-none');
-    var toastEl = document.createElement('div');
-    toastEl.className = 'toast align-items-center border-0';
-    toastEl.setAttribute('role', 'alert');
-    toastEl.innerHTML =
-      '<div class="d-flex">' +
-        '<div class="toast-body"><i class="bi ' + icon + ' ' + iconColor + ' me-2"></i>' + msg + '</div>' +
-        '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>' +
-      '</div>';
-    toastEl.classList.add(type === 'success' ? 'bg-success' : 'bg-danger', 'text-white');
-    container.appendChild(toastEl);
-    var toast = new bootstrap.Toast(toastEl, { delay: 4000, autohide: true });
-    toast.show();
-  })();
-</script>
+<link rel="stylesheet" href="<?= isset($__inSubfolder) ? '../' : '' ?>assets/css/accessibility.css?v=1">
+<script src="<?= isset($__inSubfolder) ? '../' : '' ?>assets/js/accessibility.js?v=1"></script>
 </body>
 </html>
