@@ -46,9 +46,10 @@ if ($user && $available) {
 $contact=(string)env_optional('PRIVACY_CONTACT','Contact your system administrator.');
 $controller=(string)env_optional('PRIVACY_OFFICE','The office operating this LRDMS installation');
 ?>
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Privacy and data requests — LRDMS</title><link rel="stylesheet" href="Arsha/assets/vendor/bootstrap/css/bootstrap.min.css"></head>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Privacy and data requests — LRDMS</title><link rel="stylesheet" href="Arsha/assets/vendor/bootstrap/css/bootstrap.min.css"><link rel="stylesheet" href="assets/css/action-links.css?v=1">
+</head>
 <body><main class="container py-4" style="max-width:960px">
-<a href="<?= $user?'profile.php':'public.php' ?>">Back to <?= $user?'profile':'sign in' ?></a>
+<a class="action-link" href="<?= $user?'profile.php':'public.php' ?>">Back to <?= $user?'profile':'sign in' ?></a>
 <h1 class="h3 mt-3">Privacy and data requests</h1>
 <p class="text-muted">Notice version <?= htmlspecialchars(PRIVACY_NOTICE_VERSION) ?></p>
 <p><?= htmlspecialchars($controller) ?> uses account identity, contact details, role/office information, documents, request history and security activity to provide records management, access control, recovery and accountability.</p>
@@ -59,7 +60,7 @@ $controller=(string)env_optional('PRIVACY_OFFICE','The office operating this LRD
 <p><strong>Contact:</strong> <?= htmlspecialchars($contact) ?></p>
 <?php if ($error): ?><div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div><?php endif; ?>
 <?php if (isset($_GET['saved'])): ?><div class="alert alert-success" role="status">Your update has been recorded.</div><?php endif; ?>
-<?php if (!$user): ?><p><a href="public.php">Sign in</a> to record your acknowledgement or submit a request. If you cannot sign in, use the contact above.</p>
+<?php if (!$user): ?><p><a class="action-link" href="public.php">Sign in</a> to record your acknowledgement or submit a request. If you cannot sign in, use the contact above.</p>
 <?php elseif (!$available): ?><p class="alert alert-warning">Request tracking is not available yet. Please use the contact above.</p>
 <?php else: ?>
 <form method="post" class="mb-4"><?php csrf_field(); ?><input type="hidden" name="action" value="acknowledge"><button class="btn btn-outline-primary">I have read this notice</button><p class="form-text">Acknowledgement records receipt of the notice. It is not blanket consent to all processing.</p></form>

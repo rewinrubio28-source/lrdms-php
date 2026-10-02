@@ -33,7 +33,7 @@ $organizationLists = organization_lists($pdo);
     <p class="form-text">The primary committee is included automatically. Additional memberships grant document access only when the role has View Assigned Committees enabled.</p>
   </fieldset>
   <?php if (has_permission('access', 'manage_organization')): ?>
-  <a href="organization.php" class="small">Manage offices, divisions, positions, and committees</a>
+  <a href="organization.php" class="small action-link">Manage offices, divisions, positions, and committees</a>
   <?php endif; ?>
 </div>
 <script>

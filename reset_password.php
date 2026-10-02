@@ -164,6 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_submitted']) &&
     }
   </style>
 
+<link rel="stylesheet" href="assets/css/action-links.css?v=1">
 </head>
 
 <body>
@@ -251,7 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_submitted']) &&
 
         <div class="text-center mt-4">
           <small class="text-muted">
-            <a href="public.php" class="text-decoration-none">Back to Sign In</a>
+            <a href="public.php" class="text-decoration-none action-link">Back to Sign In</a>
           </small>
         </div>
       </div>

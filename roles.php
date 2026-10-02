@@ -175,7 +175,7 @@ include __DIR__ . '/includes/layout_top.php';
       <i class="bi bi-list"></i>
     </button>
     <div>
-      <a class="small text-muted text-decoration-none" href="users.php?open=add-user">← Back to users</a>
+      <a class="small text-decoration-none action-link" href="users.php?open=add-user">← Back to users</a>
       <h1 class="topbar__title">Roles &amp; Permissions</h1>
       <p class="module-banner-description">Manage system roles and their permissions.</p>
     </div>

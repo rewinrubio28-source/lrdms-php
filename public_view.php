@@ -212,6 +212,7 @@ if ($doc) {
     h1 { font-size:22px; }
   }
 </style>
+<link rel="stylesheet" href="assets/css/action-links.css?v=1">
 </head>
 <body>
 
@@ -221,7 +222,7 @@ if ($doc) {
       <img src="Arsha/assets/img/manila logo.png" alt="Manila City Seal" class="topbar__logo">
       <div>MANILA CITY HALL<small>Legislative Records &amp; Document Management</small></div>
     </div>
-    <a class="topbar__back" href="public.php#legislation">← Back to home</a>
+    <a class="topbar__back action-link" href="public.php#legislation">← Back to home</a>
   </div>
 </div>
 
@@ -231,7 +232,7 @@ if ($doc) {
       <i class="bi bi-file-earmark-x not-found-icon"></i>
       <h1>Document not found</h1>
       <p>The document you are looking for is not available for public viewing, or may have been removed.</p>
-      <p style="margin-top:16px"><a href="public.php#legislation" style="font-weight:600">← Return to published laws</a></p>
+      <p style="margin-top:16px"><a class="action-link" href="public.php#legislation" style="font-weight:600">← Return to published laws</a></p>
     </div>
   </div>
 <?php else: ?>
@@ -318,7 +319,7 @@ if ($doc) {
       <div class="doc-amendment">
         <h4><i class="bi bi-arrow-repeat"></i> Amendment History</h4>
         <p>This document has been <?= strtolower($nextVersion['status']) === 'amended' ? 'amended' : 'superseded' ?> by
-          <a href="public_view.php?id=<?= (int)$nextVersion['id'] ?>"><?= htmlspecialchars($nextVersion['doc_number'] ?? $nextVersion['title']) ?></a>
+          <a class="action-link" href="public_view.php?id=<?= (int)$nextVersion['id'] ?>"><?= htmlspecialchars($nextVersion['doc_number'] ?? $nextVersion['title']) ?></a>
           <?= $nextVersion['enactment_date'] ? ' · ' . date('M j, Y', strtotime($nextVersion['enactment_date'])) : '' ?>.
         </p>
       </div>
@@ -342,7 +343,7 @@ if ($doc) {
       <iframe id="lightboxIframe" title="Document attachment preview" style="display:none;"></iframe>
     </div>
     <div class="lightbox__footer">
-      <a id="lightboxFullLink" href="#" target="_blank">Open in new tab →</a>
+      <a class="action-link" id="lightboxFullLink" href="#" target="_blank">Open in new tab →</a>
     </div>
   </div>
 </div>

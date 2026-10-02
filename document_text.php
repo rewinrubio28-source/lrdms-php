@@ -70,7 +70,7 @@ if (($_GET['download'] ?? '') === '1') {
 include __DIR__ . '/includes/layout_top.php';
 ?>
 <div class="mb-2">
-  <a href="<?= htmlspecialchars($backUrl) ?>" class="text-decoration-none small text-muted"><i class="bi bi-arrow-left"></i> Back to document</a>
+  <a href="<?= htmlspecialchars($backUrl) ?>" class="text-decoration-none small action-link"><i class="bi bi-arrow-left"></i> Back to document</a>
 </div>
 <div class="topbar" data-banner-date="<?= date('M j, Y') ?>">
   <div class="d-flex align-items-center gap-2">

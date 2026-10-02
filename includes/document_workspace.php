@@ -51,7 +51,7 @@ $canPreviewOriginal = can_download_record(current_user(), $doc);
       <?php endif; ?>
     </div>
     <?php if (count($docFiles) > 1 && $canPreviewOriginal): ?>
-      <a href="#filePreviewModal" class="registered-all-files open-file-modal" data-files="<?= htmlspecialchars(json_encode(array_map('record_file_url', $docFiles)), ENT_QUOTES, 'UTF-8') ?>" data-bs-toggle="modal" data-bs-target="#filePreviewModal">View all <?= count($docFiles) ?> attachments <i class="bi bi-arrow-right"></i></a>
+      <a href="#filePreviewModal" class="registered-all-files open-file-modal action-link" data-files="<?= htmlspecialchars(json_encode(array_map('record_file_url', $docFiles)), ENT_QUOTES, 'UTF-8') ?>" data-bs-toggle="modal" data-bs-target="#filePreviewModal">View all <?= count($docFiles) ?> attachments <i class="bi bi-arrow-right"></i></a>
     <?php endif; ?>
   </section>
   <section class="verification-panel card">

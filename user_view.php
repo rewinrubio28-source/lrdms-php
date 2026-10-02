@@ -222,7 +222,7 @@ include __DIR__ . '/includes/layout_top.php';
       <i class="bi bi-list"></i>
     </button>
     <div>
-      <a class="small text-muted text-decoration-none" href="users.php">← Back to users</a>
+      <a class="small text-decoration-none action-link" href="users.php">← Back to users</a>
       <h1 class="topbar__title">
         <?= $target ? htmlspecialchars($target['full_name']) : 'User not found' ?>
         <?php if ($target): ?>
@@ -240,9 +240,9 @@ include __DIR__ . '/includes/layout_top.php';
 <?php if ($errors): ?><div class="alert alert-danger"><?php foreach ($errors as $e) echo htmlspecialchars($e) . '<br>'; ?></div><?php endif; ?>
 
 <?php if (!$target): ?>
-  <div class="card"><p class="text-muted small mb-0">No user with that ID exists. <a href="users.php">Back to users →</a></p></div>
+  <div class="card"><p class="text-muted small mb-0">No user with that ID exists. <a class="action-link" href="users.php">Back to users →</a></p></div>
 <?php elseif (!$canManageTarget): ?>
-  <div class="card"><p class="text-muted small mb-0">Only a higher role can manage this account. <a href="users.php">Back to users →</a></p></div>
+  <div class="card"><p class="text-muted small mb-0">Only a higher role can manage this account. <a class="action-link" href="users.php">Back to users →</a></p></div>
 <?php else: ?>
 
 <div class="row g-3">

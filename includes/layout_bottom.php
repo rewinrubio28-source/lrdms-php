@@ -319,5 +319,6 @@
 </script>
 <link rel="stylesheet" href="<?= isset($__inSubfolder) ? '../' : '' ?>assets/css/accessibility.css?v=1">
 <script src="<?= isset($__inSubfolder) ? '../' : '' ?>assets/js/accessibility.js?v=1"></script>
+<link rel="stylesheet" href="<?= isset($__inSubfolder) ? '../' : '' ?>assets/css/action-links.css?v=1">
 </body>
 </html>

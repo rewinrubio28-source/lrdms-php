@@ -73,7 +73,7 @@
         <h3>Encoding &amp; Submission</h3>
         <p class="module-card__subtitle">Document intake &amp; status pipeline</p>
       </div>
-      <a class="module-card__link" href="encoding.php">Open module →</a>
+      <a class="module-card__link action-link" href="encoding.php">Open module →</a>
     </header>
     <div class="module-card__body">
       <div class="status-chips">
@@ -90,7 +90,7 @@
           <?php foreach ($recentDocs as $d): ?>
             <li>
               <div class="mini-list__main">
-                <a class="mini-list__title" href="document.php?id=<?= (int)$d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a>
+                <a class="mini-list__title action-link" href="document.php?id=<?= (int)$d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a>
                 <span class="mini-list__meta"><?= htmlspecialchars($d['doc_number']) ?> · <?= htmlspecialchars($d['doc_type']) ?></span>
               </div>
               <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $d['status'])) ?>"><?= htmlspecialchars($d['status']) ?></span>
@@ -125,7 +125,7 @@
           <?php foreach ($myRecentDocs as $d): ?>
             <li>
               <div class="mini-list__main">
-                <a class="mini-list__title" href="document.php?id=<?= (int)$d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a>
+                <a class="mini-list__title action-link" href="document.php?id=<?= (int)$d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a>
                 <span class="mini-list__meta"><?= htmlspecialchars($d['doc_number']) ?> · <?= htmlspecialchars($d['doc_type']) ?></span>
               </div>
               <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $d['status'])) ?>"><?= htmlspecialchars($d['status']) ?></span>
@@ -176,12 +176,12 @@
         <h3>Legislative Repository</h3>
         <p class="module-card__subtitle">Collection by document type</p>
       </div>
-      <a class="module-card__link" href="repository.php">Open module →</a>
+      <a class="module-card__link action-link" href="repository.php">Open module →</a>
     </header>
     <div class="module-card__body">
       <?php foreach ($typeCounts as $t): ?>
         <div class="bar-row">
-          <a class="bar-label" href="<?= htmlspecialchars(dashboard_drill_url($filters,['type'=>$t['doc_type']])) ?>"><?= htmlspecialchars($t['doc_type']) ?></a>
+          <a class="bar-label action-link" href="<?= htmlspecialchars(dashboard_drill_url($filters,['type'=>$t['doc_type']])) ?>"><?= htmlspecialchars($t['doc_type']) ?></a>
           <div class="bar-track"><div class="bar-fill bar-fill--primary" style="width: <?= _dash_pct((int)$t['n'], $totalDocs) ?>%"></div></div>
           <span class="bar-value"><?= (int)$t['n'] ?></span>
         </div>
@@ -209,7 +209,7 @@
         <h3>Version Control</h3>
         <p class="module-card__subtitle">Revision chains &amp; amendment history</p>
       </div>
-      <a class="module-card__link" href="version.php">Open module →</a>
+      <a class="module-card__link action-link" href="version.php">Open module →</a>
     </header>
     <div class="module-card__body">
       <div class="split-stats" style="grid-template-columns: repeat(3, 1fr); margin-top:0; margin-bottom:14px;">
@@ -232,7 +232,7 @@
           <?php foreach ($versionedHeads as $vh): ?>
             <li>
               <div class="mini-list__main">
-                <a class="mini-list__title" href="document.php?id=<?= (int)$vh['id'] ?>"><?= htmlspecialchars($vh['title']) ?></a>
+                <a class="mini-list__title action-link" href="document.php?id=<?= (int)$vh['id'] ?>"><?= htmlspecialchars($vh['title']) ?></a>
                 <span class="mini-list__meta"><?= htmlspecialchars($vh['doc_number']) ?> · <?= (int)$vh['versions'] ?> version(s) in period</span>
               </div>
               <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $vh['status'])) ?>"><?= htmlspecialchars($vh['status']) ?></span>
@@ -252,7 +252,7 @@
         <h3>Search and Document Retrieval</h3>
         <p class="module-card__subtitle"><?= $canAudit ? 'Search activity for the selected dates' : 'Your search activity for the selected dates' ?></p>
       </div>
-      <a class="module-card__link" href="search.php">Open module →</a>
+      <a class="module-card__link action-link" href="search.php">Open module →</a>
     </header>
     <div class="module-card__body">
       <div class="bar-row">
@@ -295,7 +295,7 @@
         <h3>Access Control &amp; Security</h3>
         <p class="module-card__subtitle">Current user totals (date filters apply to records and activity)</p>
       </div>
-      <a class="module-card__link" href="users.php">Open module →</a>
+      <a class="module-card__link action-link" href="users.php">Open module →</a>
     </header>
     <div class="module-card__body">
       <?php foreach ($usersByRole as $ur): ?>
@@ -327,7 +327,7 @@
         <h3>Recent Activity</h3>
         <p class="module-card__subtitle">Latest audit trail events</p>
       </div>
-      <a class="module-card__link" href="audit_trail.php">View trail →</a>
+      <a class="module-card__link action-link" href="audit_trail.php">View trail →</a>
     </header>
     <div class="module-card__body">
       <?php if ($recent): ?>

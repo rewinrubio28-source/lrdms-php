@@ -228,6 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       font-family: 'Poppins', monospace;
     }
   </style>
+<link rel="stylesheet" href="assets/css/action-links.css?v=1">
 </head>
 
 <body>
@@ -289,7 +290,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="text-center mt-4">
           <small class="text-muted">
             Not receiving the email? Contact your administrator to reset 2FA, or
-            <a href="verify_2fa.php?cancel=1" class="text-decoration-none">use a different account</a>.
+            <a href="verify_2fa.php?cancel=1" class="text-decoration-none action-link">use a different account</a>.
           </small>
         </div>
       <?php endif; ?>

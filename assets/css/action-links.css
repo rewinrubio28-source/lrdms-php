@@ -1,0 +1,29 @@
+/* Compact button treatment for text actions and record links. */
+a.action-link[hidden] { display: none !important; }
+a.action-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 30px;
+  padding: .3rem .65rem;
+  border: 1px solid #2b5d96;
+  border-radius: 6px;
+  background: #eef2f8;
+  color: #234b75;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+  cursor: pointer;
+}
+a.action-link:hover, a.action-link:active { background: #2b5d96; color: #fff; text-decoration: none; }
+a.action-link:focus-visible { outline: 3px solid #112d4e; outline-offset: 3px; box-shadow: 0 0 0 3px #fff; }
+html.dark a.action-link { background: #1a3050; border-color: #9fc9f5; color: #d6e0ee; }
+html.dark a.action-link:hover { background: #2b5d96; color: #fff; }
+@media (pointer: coarse) { a.action-link { min-height: 40px; } }

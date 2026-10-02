@@ -137,7 +137,7 @@ function render_repository_results(array $documents, array $attachmentsByDoc = [
             <div class="doc-card__body">
               <div class="doc-card__row">
                 <div class="doc-card__label">Title:</div>
-              <div class="doc-card__value doc-card__value--title"><a href="document.php?id=<?= $d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a></div>
+              <div class="doc-card__value doc-card__value--title"><a class="action-link" href="document.php?id=<?= $d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a></div>
               </div>
               <div class="doc-card__row">
                 <div class="doc-card__label">Type:</div>

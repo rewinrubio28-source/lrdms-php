@@ -123,7 +123,7 @@ include __DIR__ . '/includes/layout_top.php';
         <tbody>
           <?php foreach ($awaitingVerification as $doc): ?>
           <tr>
-            <td class="intake-document"><span class="intake-reference"><?= htmlspecialchars($doc['doc_number']) ?></span><a href="document.php?id=<?= (int)$doc['id'] ?>"><?= htmlspecialchars($doc['title']) ?></a><small><?= htmlspecialchars($doc['doc_type']) ?></small></td>
+            <td class="intake-document"><span class="intake-reference"><?= htmlspecialchars($doc['doc_number']) ?></span><a class="action-link" href="document.php?id=<?= (int)$doc['id'] ?>"><?= htmlspecialchars($doc['title']) ?></a><small><?= htmlspecialchars($doc['doc_type']) ?></small></td>
             <td><span class="intake-status <?= $doc['records_status'] === 'Validated' ? 'is-ready' : (in_array($doc['records_status'], ['Returned for Correction', 'Duplicate', 'Unauthorized Submission'], true) ? 'is-attention' : '') ?>"><?= htmlspecialchars($doc['records_status'] ?: 'Not specified') ?></span></td>
             <td><?= htmlspecialchars($doc['source_system']) ?></td>
             <td class="text-nowrap text-muted small"><?= htmlspecialchars(date('M j, Y g:i A', strtotime($doc['created_at']))) ?></td>

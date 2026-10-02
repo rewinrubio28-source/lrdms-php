@@ -122,7 +122,7 @@ if ($needsReview) {
     ?>
     <link rel="stylesheet" href="assets/css/document-workspace.css?v=10">
     <div class="mb-2">
-      <a href="<?= htmlspecialchars($searchReturn ?: 'encoding.php#awaiting-verification', ENT_QUOTES, 'UTF-8') ?>" class="text-decoration-none small text-muted"><i class="bi bi-arrow-left"></i> <?= $searchReturn !== '' ? $documentReturnLabel : 'Back to incoming records' ?></a>
+      <a href="<?= htmlspecialchars($searchReturn ?: 'encoding.php#awaiting-verification', ENT_QUOTES, 'UTF-8') ?>" class="text-decoration-none small action-link"><i class="bi bi-arrow-left"></i> <?= $searchReturn !== '' ? $documentReturnLabel : 'Back to incoming records' ?></a>
     </div>
     <div class="topbar" data-banner-date="<?= date('M j, Y') ?>">
       <div class="d-flex align-items-center gap-2">
@@ -401,14 +401,14 @@ if ($flashSuccess) {
     echo '<div style="position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;justify-content:center;padding:16px;pointer-events:none;">
         <div style="background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;padding:14px 24px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);font-size:14px;font-weight:500;pointer-events:auto;display:flex;align-items:center;gap:10px;animation:slideDown .4s ease;">
             <i class="bi bi-check-circle-fill" style="font-size:18px;"></i>
-            ' . $flashSuccess . ' <a href="repository.php" style="color:#047857;font-weight:700;white-space:nowrap;">View in repository →</a>
+            ' . $flashSuccess . ' <a class="action-link" href="repository.php">View in repository →</a>
         </div>
     </div>
     <style>@keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}</style>';
 }
 ?>
 <div class="mb-2">
-  <a href="<?= htmlspecialchars($searchReturn ?: 'repository.php', ENT_QUOTES, 'UTF-8') ?>" class="text-decoration-none small text-muted"><i class="bi bi-arrow-left"></i> <?= $searchReturn !== '' ? $documentReturnLabel : 'Back to Repository' ?></a>
+  <a href="<?= htmlspecialchars($searchReturn ?: 'repository.php', ENT_QUOTES, 'UTF-8') ?>" class="text-decoration-none small action-link"><i class="bi bi-arrow-left"></i> <?= $searchReturn !== '' ? $documentReturnLabel : 'Back to Repository' ?></a>
 </div>
 <div class="topbar" data-banner-date="<?= date('M j, Y') ?>">
   <div class="d-flex align-items-center gap-2">

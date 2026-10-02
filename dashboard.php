@@ -54,7 +54,7 @@ include __DIR__ . '/includes/layout_top.php';
     </li>
   </ul>
   <div class="notif-dropdown__footer" id="notif-footer" style="display:none;">
-    <a class="notif-dropdown__view-all" href="audit_trail.php">View all activity →</a>
+    <a class="notif-dropdown__view-all action-link" href="audit_trail.php">View all activity →</a>
   </div>
 </div>
 

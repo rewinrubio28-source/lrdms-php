@@ -24,7 +24,7 @@ $hasProfilePhoto = (bool)$photoQuery->fetchColumn();
     <label for="profile-photo" class="form-label small">Choose photo</label>
     <input type="file" name="profile_photo" id="profile-photo" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp" required aria-describedby="photo-help">
     <p id="photo-help" class="form-text">JPG, PNG, or WebP. Maximum 2 MB and 4096 × 4096 pixels.</p>
-    <div class="form-check mb-2"><input id="photo-consent" class="form-check-input" type="checkbox" name="photo_consent" value="1" required><label class="form-check-label small" for="photo-consent">I agree to store and display my optional profile photo in the staff directory. I can withdraw this by removing my photo. <a href="privacy.php">Privacy notice</a></label></div>
+    <div class="form-check mb-2"><input id="photo-consent" class="form-check-input" type="checkbox" name="photo_consent" value="1" required><label class="form-check-label small" for="photo-consent">I agree to store and display my optional profile photo in the staff directory. I can withdraw this by removing my photo. <a class="action-link" href="privacy.php">Privacy notice</a></label></div>
     <button class="btn btn-primary btn-sm">Save photo</button>
   </form>
   <?php if ($hasProfilePhoto): ?>

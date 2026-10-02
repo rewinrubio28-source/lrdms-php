@@ -397,7 +397,7 @@ include __DIR__ . '/includes/layout_top.php';
 <?php if (!$selected): ?>
 <?php if ($selectedId): ?><div class="alert alert-warning">This version is unavailable or you do not have access to it.</div><?php endif; ?>
 <?php include __DIR__ . '/includes/version_history_workspace.php'; ?>
-<?php else: ?><a class="version-back" href="version.php">&larr; Back to Version History</a><?php endif; ?>
+<?php else: ?><a class="version-back action-link" href="version.php">&larr; Back to Version History</a><?php endif; ?>
   <?php if ($selected): ?>
     <!-- ============================================================
          LEGISLATIVE RECORD PROFILE
@@ -412,7 +412,7 @@ include __DIR__ . '/includes/layout_top.php';
           <div class="text-muted small mb-1">Version Status</div>
           <span class="version-chip <?= empty($selected['next_version_id']) ? 'is-current' : '' ?>"><?= empty($selected['next_version_id']) ? 'CURRENT' : 'EARLIER VERSION' ?> &middot; v<?= $selectedVersion ?></span>
           <div class="text-muted small mt-3 mb-1">Legislative Status (from source)</div>
-          <?php if ($selectedVersion < $chainTotal): ?><a class="d-block small mb-2" href="version.php?doc=<?= (int)$chainDesc[0]['id'] ?>">Go to current v<?= $chainTotal ?> &rarr;</a><?php endif; ?>
+          <?php if ($selectedVersion < $chainTotal): ?><a class="small mb-2 action-link" href="version.php?doc=<?= (int)$chainDesc[0]['id'] ?>">Go to current v<?= $chainTotal ?> &rarr;</a><?php endif; ?>
 
           <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $selected['status'])) ?> lrdms-stamp-lg">● <?= htmlspecialchars($selected['status']) ?></span>
           <?php $stage = legislative_stage_caption($selected['status']); if ($stage): ?>
@@ -479,14 +479,14 @@ include __DIR__ . '/includes/layout_top.php';
             <?php foreach ($relationships as $label => $items): foreach ($items as $it): ?>
               <div class="lrdms-related-row">
                 <span class="lrdms-related-tag"><?= htmlspecialchars($label) ?></span>
-                <a href="version.php?doc=<?= $it['doc']['id'] ?>&tab=overview"><?= htmlspecialchars($it['doc']['doc_number']) ?></a>
+                <a class="action-link" href="version.php?doc=<?= $it['doc']['id'] ?>&tab=overview"><?= htmlspecialchars($it['doc']['doc_number']) ?></a>
               </div>
             <?php endforeach; endforeach; ?>
           <?php endif; ?>
-          <a href="version.php?doc=<?= $selected['id'] ?>&tab=related" class="small">View all related legislation →</a>
+          <a href="version.php?doc=<?= $selected['id'] ?>&tab=related" class="small action-link">View all related legislation →</a>
 
           <h4 class="lrdms-subhead mt-3">Full document</h4>
-          <p><a href="document.php?id=<?= (int)$selected['id'] ?>&amp;return=<?= rawurlencode('version.php?doc=' . (int)$selected['id'] . '&tab=' . $tab) ?>">Open full document record →</a></p>
+          <p><a class="action-link" href="document.php?id=<?= (int)$selected['id'] ?>&amp;return=<?= rawurlencode('version.php?doc=' . (int)$selected['id'] . '&tab=' . $tab) ?>">Open full document record →</a></p>
         </div>
       </div>
 
@@ -544,7 +544,7 @@ include __DIR__ . '/includes/layout_top.php';
             <div class="vtimeline__meta">
               <?= $isFirst ? 'Filed' : 'Edited' ?> by <?= htmlspecialchars($node['owner_name']) ?>
               · <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $node['status'])) ?>"><?= htmlspecialchars($node['status']) ?></span>
-              · <a href="document.php?id=<?= (int)$node['id'] ?>&amp;return=<?= rawurlencode('version.php?doc=' . (int)$selected['id'] . '&tab=history') ?>">View full document →</a>
+              · <a class="action-link" href="document.php?id=<?= (int)$node['id'] ?>&amp;return=<?= rawurlencode('version.php?doc=' . (int)$selected['id'] . '&tab=history') ?>">View full document →</a>
             </div>
           </div>
         <?php endforeach; ?>
@@ -637,7 +637,7 @@ include __DIR__ . '/includes/layout_top.php';
           <?php foreach ($items as $it): $rd = $it['doc']; ?>
             <div class="lrdms-related-card">
               <div>
-                <a href="version.php?doc=<?= $rd['id'] ?>&tab=overview" class="doc-title" style="text-decoration:none;font-weight:600;"><?= htmlspecialchars($rd['doc_number']) ?></a>
+                <a href="version.php?doc=<?= $rd['id'] ?>&tab=overview" class="doc-title action-link" style="text-decoration:none;font-weight:600;"><?= htmlspecialchars($rd['doc_number']) ?></a>
                 <span class="text-muted small">— <?= htmlspecialchars($rd['title']) ?></span>
                 <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $rd['status'])) ?> ms-2"><?= htmlspecialchars($rd['status']) ?></span>
               </div>
