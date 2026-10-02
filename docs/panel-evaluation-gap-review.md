@@ -2,6 +2,8 @@
 
 Basis: TECHNICAL-SOFTWARE-EVALUATION-AUDIT-CHECKLIST (1).docx and local source inspection, 2026-10-01.
 
+Section 5 follow-up: customizable records reports, filtering/sorting/grouping, branded PDFs, dedicated print output and private scheduled report generation are implemented and locally tested. See [Section 5 tests, deployment and remaining panel evidence](section-5-verification.md). The user chose secure in-app downloads; the checklist's email-log evidence still needs panel acceptance of generation history/worker logs as an alternative. Production scheduling and physical printing remain to be demonstrated.
+
 Section 4 follow-up: CSV/Excel/JSON dataset imports with validation, preview, atomic bulk save and audit evidence are implemented. Audit CSV now exports all matching rows without its former 1,000-row cap. See [Section 4 tests, supported formats and live-demo requirements](section-4-verification.md). This supersedes the original Section 4 dataset/import/export gaps below; live validation and the documented format/size limitations remain.
 
 Section 3 follow-up: shared dashboard metrics, 15-second auto-refresh, date/type/status filters, interactive drill-down, monthly history and PDF/XLSX/CSV summary exports are implemented and locally tested. See [Section 3 evidence and live-demo steps](section-3-verification.md). The original Section 3 gaps below are superseded by that report; live panel validation remains outstanding.

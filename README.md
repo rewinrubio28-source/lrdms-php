@@ -134,6 +134,14 @@ Dashboard metrics refresh every 15 seconds while the tab is visible. Filter reco
 
 Run `composer install` locally, or rebuild the PHP Docker image, to install the report libraries. Section 3 adds no database migration. See [metric definitions, tests and panel demo](docs/section-3-verification.md). Historical summaries group current visible records by creation month; they do not reconstruct past record states.
 
+### Custom and scheduled reports
+
+Open **Reports** to choose record columns, creation dates, type/status/search filters, sorting and grouped counts. Authorized users can export branded PDF, Excel or CSV, or open a dedicated print view. Reports honor current repository visibility and refuse to silently truncate result sets larger than 1,000 records.
+
+Users with repository download permission can schedule daily, weekly or monthly private PDFs. Reports appear in their own generation history and remain downloadable for 30 days, subject to current access checks. Delivery is in-app; no report emails are sent.
+
+Rebuild/redeploy to apply the additive reports migration through the normal startup upgrade and activate the supervised report worker. Local setup: `php database/migrate_reports.php`, then `php bin/report_worker.php`; PHP GD must be enabled for the PDF seal. See [Section 5 verification, schedule periods and panel evidence](docs/section-5-verification.md).
+
 ### Dataset imports
 
 Open **Document Intake → Import dataset** to upload UTF-8 CSV, JSON record arrays or native Excel (`.xlsx`) files. Download a template, validate and preview, then confirm up to 1,000 records / 5 MB per batch. Imports remain private and Pending Validation; invalid batches roll back completely. Audit CSV exports now include all matching rows, including result sets larger than 1,000.
