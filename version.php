@@ -479,7 +479,7 @@ include __DIR__ . '/includes/layout_top.php';
             <?php foreach ($relationships as $label => $items): foreach ($items as $it): ?>
               <div class="lrdms-related-row">
                 <span class="lrdms-related-tag"><?= htmlspecialchars($label) ?></span>
-                <a class="action-link" href="version.php?doc=<?= $it['doc']['id'] ?>&tab=overview"><?= htmlspecialchars($it['doc']['doc_number']) ?></a>
+                <a href="version.php?doc=<?= $it['doc']['id'] ?>&tab=overview"><?= htmlspecialchars($it['doc']['doc_number']) ?></a>
               </div>
             <?php endforeach; endforeach; ?>
           <?php endif; ?>
@@ -637,7 +637,7 @@ include __DIR__ . '/includes/layout_top.php';
           <?php foreach ($items as $it): $rd = $it['doc']; ?>
             <div class="lrdms-related-card">
               <div>
-                <a href="version.php?doc=<?= $rd['id'] ?>&tab=overview" class="doc-title action-link" style="text-decoration:none;font-weight:600;"><?= htmlspecialchars($rd['doc_number']) ?></a>
+                <a href="version.php?doc=<?= $rd['id'] ?>&tab=overview" class="doc-title" style="text-decoration:none;font-weight:600;"><?= htmlspecialchars($rd['doc_number']) ?></a>
                 <span class="text-muted small">— <?= htmlspecialchars($rd['title']) ?></span>
                 <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $rd['status'])) ?> ms-2"><?= htmlspecialchars($rd['status']) ?></span>
               </div>

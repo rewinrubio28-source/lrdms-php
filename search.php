@@ -373,7 +373,7 @@ include __DIR__ . '/includes/layout_top.php';
       <?php foreach ($savedSearches as $s): ?>
         <li class="d-flex justify-content-between align-items-center border-bottom py-2">
           <div>
-            <a href="search.php?<?= htmlspecialchars(saved_search_query_string($s['criteria'])) ?>" class="text-decoration-none action-link">
+            <a href="search.php?<?= htmlspecialchars(saved_search_query_string($s['criteria'])) ?>" class="text-decoration-none">
               <i class="bi bi-star-fill text-warning me-1"></i><strong><?= htmlspecialchars($s['name']) ?></strong>
             </a>
             <div class="text-muted small mt-1">
@@ -481,7 +481,7 @@ include __DIR__ . '/includes/layout_top.php';
           <div class="result-card__icon doctype-badge doctype-badge--<?= $typeClass ?>"><i class="bi <?= $icon ?>"></i></div>
           <div class="result-card__body">
             <div class="result-card__top">
-              <a href="document.php?id=<?= $d['id'] ?>&amp;return=<?= $documentSearchReturn ?>" class="result-card__title action-link"><?= highlight_terms($d['title'], $query) ?></a>
+              <a href="document.php?id=<?= $d['id'] ?>&amp;return=<?= $documentSearchReturn ?>" class="result-card__title"><?= highlight_terms($d['title'], $query) ?></a>
               <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $d['status'])) ?>"><?= htmlspecialchars($d['status']) ?></span>
             </div>
             <div class="result-card__meta">

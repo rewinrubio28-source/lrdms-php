@@ -319,7 +319,7 @@ if ($doc) {
       <div class="doc-amendment">
         <h4><i class="bi bi-arrow-repeat"></i> Amendment History</h4>
         <p>This document has been <?= strtolower($nextVersion['status']) === 'amended' ? 'amended' : 'superseded' ?> by
-          <a class="action-link" href="public_view.php?id=<?= (int)$nextVersion['id'] ?>"><?= htmlspecialchars($nextVersion['doc_number'] ?? $nextVersion['title']) ?></a>
+          <a href="public_view.php?id=<?= (int)$nextVersion['id'] ?>"><?= htmlspecialchars($nextVersion['doc_number'] ?? $nextVersion['title']) ?></a>
           <?= $nextVersion['enactment_date'] ? ' · ' . date('M j, Y', strtotime($nextVersion['enactment_date'])) : '' ?>.
         </p>
       </div>

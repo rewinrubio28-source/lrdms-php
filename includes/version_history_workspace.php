@@ -36,7 +36,7 @@ $link = static function ($params) { return 'version.php?' . http_build_query(arr
     <tr class="<?= $focus && $focus['id'] == $r['id'] ? 'is-selected' : '' ?>" data-version-row>
      <td><span class="version-chip <?= empty($r['next_version_id']) ? 'is-current' : '' ?>">v<?= $info['number'] ?></span><?php if (empty($r['next_version_id'])): ?><small class="version-current">Current</small><?php endif; ?></td>
      <td class="version-number"><?= $vh($r['doc_number']) ?></td>
-     <td><a class="version-record-title action-link" href="<?= $vh($link(['focus' => $r['id']])) ?>"><?= $vh($r['title']) ?></a><div class="version-row-meta"><?= $info['total'] === 1 ? 'Single version' : $info['total'] . ' versions in chain' ?> &middot; <span class="stamp stamp--<?= $vh(strtolower(str_replace(' ', '-', $r['status']))) ?>"><?= $vh($r['status']) ?></span></div></td>
+     <td><a class="version-record-title" href="<?= $vh($link(['focus' => $r['id']])) ?>"><?= $vh($r['title']) ?></a><div class="version-row-meta"><?= $info['total'] === 1 ? 'Single version' : $info['total'] . ' versions in chain' ?> &middot; <span class="stamp stamp--<?= $vh(strtolower(str_replace(' ', '-', $r['status']))) ?>"><?= $vh($r['status']) ?></span></div></td>
      <td><span class="version-type"><?= $vh($r['doc_type']) ?></span></td><td><?= $vh($r['owner_name']) ?></td><td class="version-date"><?= $vh(date('M j, Y g:i A', strtotime($r['created_at']))) ?></td><td><a class="btn btn-sm btn-outline-primary" href="version.php?doc=<?= (int)$r['id'] ?>">View</a></td>
     </tr>
    <?php endforeach; ?>

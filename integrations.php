@@ -217,7 +217,7 @@ include __DIR__ . '/includes/layout_top.php';
           <?php foreach ($records as $d): ?>
             <tr>
               <td class="doc-number"><?= htmlspecialchars($d['doc_number']) ?></td>
-              <td><a class="doc-title action-link" href="document.php?id=<?= (int)$d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a></td>
+              <td><a class="doc-title" href="document.php?id=<?= (int)$d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a></td>
               <td><?= htmlspecialchars($d['sponsor'] ?: '—') ?></td>
               <td><?= htmlspecialchars($d['committee_name'] ?: '—') ?></td>
               <td><span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $d['status'])) ?>"><?= htmlspecialchars($d['status']) ?></span></td>

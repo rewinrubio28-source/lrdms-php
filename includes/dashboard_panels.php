@@ -90,7 +90,7 @@
           <?php foreach ($recentDocs as $d): ?>
             <li>
               <div class="mini-list__main">
-                <a class="mini-list__title action-link" href="document.php?id=<?= (int)$d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a>
+                <a class="mini-list__title" href="document.php?id=<?= (int)$d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a>
                 <span class="mini-list__meta"><?= htmlspecialchars($d['doc_number']) ?> · <?= htmlspecialchars($d['doc_type']) ?></span>
               </div>
               <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $d['status'])) ?>"><?= htmlspecialchars($d['status']) ?></span>
@@ -125,7 +125,7 @@
           <?php foreach ($myRecentDocs as $d): ?>
             <li>
               <div class="mini-list__main">
-                <a class="mini-list__title action-link" href="document.php?id=<?= (int)$d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a>
+                <a class="mini-list__title" href="document.php?id=<?= (int)$d['id'] ?>"><?= htmlspecialchars($d['title']) ?></a>
                 <span class="mini-list__meta"><?= htmlspecialchars($d['doc_number']) ?> · <?= htmlspecialchars($d['doc_type']) ?></span>
               </div>
               <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $d['status'])) ?>"><?= htmlspecialchars($d['status']) ?></span>
@@ -181,7 +181,7 @@
     <div class="module-card__body">
       <?php foreach ($typeCounts as $t): ?>
         <div class="bar-row">
-          <a class="bar-label action-link" href="<?= htmlspecialchars(dashboard_drill_url($filters,['type'=>$t['doc_type']])) ?>"><?= htmlspecialchars($t['doc_type']) ?></a>
+          <a class="bar-label" href="<?= htmlspecialchars(dashboard_drill_url($filters,['type'=>$t['doc_type']])) ?>"><?= htmlspecialchars($t['doc_type']) ?></a>
           <div class="bar-track"><div class="bar-fill bar-fill--primary" style="width: <?= _dash_pct((int)$t['n'], $totalDocs) ?>%"></div></div>
           <span class="bar-value"><?= (int)$t['n'] ?></span>
         </div>
@@ -232,7 +232,7 @@
           <?php foreach ($versionedHeads as $vh): ?>
             <li>
               <div class="mini-list__main">
-                <a class="mini-list__title action-link" href="document.php?id=<?= (int)$vh['id'] ?>"><?= htmlspecialchars($vh['title']) ?></a>
+                <a class="mini-list__title" href="document.php?id=<?= (int)$vh['id'] ?>"><?= htmlspecialchars($vh['title']) ?></a>
                 <span class="mini-list__meta"><?= htmlspecialchars($vh['doc_number']) ?> · <?= (int)$vh['versions'] ?> version(s) in period</span>
               </div>
               <span class="stamp stamp--<?= strtolower(str_replace(' ', '-', $vh['status'])) ?>"><?= htmlspecialchars($vh['status']) ?></span>
