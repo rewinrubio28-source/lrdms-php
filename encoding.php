@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $awaitingVerification = $pdo->query(
     "SELECT * FROM documents
      WHERE verified_at IS NULL AND source_system <> 'Manual Encoding'
-     ORDER BY created_at ASC"
+     ORDER BY created_at ASC, id ASC"
 )->fetchAll();
 
 $awaitingVerification = array_values(array_filter($awaitingVerification, static function ($record) use ($user) { return can_view_document($user, $record); }));

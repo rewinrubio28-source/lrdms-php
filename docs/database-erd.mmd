@@ -1,0 +1,237 @@
+erDiagram
+    access_requests {
+        bigint id PK
+        int document_id FK
+        int requester_id FK
+        int decided_by FK
+    }
+    documents ||--o{ access_requests : document_id
+    users |o--o{ access_requests : requester_id
+    users |o--o{ access_requests : decided_by
+    access_request_reviews {
+        bigint id PK
+        bigint request_id FK
+        int reviewer_id FK
+    }
+    access_requests ||--o{ access_request_reviews : request_id
+    users |o--o{ access_request_reviews : reviewer_id
+    application_migrations {
+        varchar name PK
+    }
+    archive_transfers {
+        bigint id PK
+        int document_id FK
+        int prepared_by FK
+    }
+    documents ||--o{ archive_transfers : document_id
+    users |o--o{ archive_transfers : prepared_by
+    audit_log {
+        int id PK
+        int user_id FK
+    }
+    users |o--o{ audit_log : user_id
+    committees {
+        int id PK
+    }
+    divisions {
+        int id PK
+        int office_id FK
+    }
+    offices |o--o{ divisions : office_id
+    documents {
+        int id PK
+        int committee_id FK
+        int owner_id FK
+        int previous_version_id FK
+        int next_version_id FK
+    }
+    users ||--o{ documents : owner_id
+    committees |o--o{ documents : committee_id
+    documents |o--o{ documents : next_version_id
+    documents |o--o{ documents : previous_version_id
+    document_attachments {
+        int id PK
+        int document_id FK
+    }
+    documents ||--o{ document_attachments : document_id
+    document_change_notes {
+        int id PK
+        int document_id FK
+        int created_by FK
+    }
+    documents ||--o{ document_change_notes : document_id
+    users ||--o{ document_change_notes : created_by
+    document_copy_requests {
+        int id PK
+        int document_id FK
+        int requester_id FK
+        int reviewed_by FK
+    }
+    documents ||--o{ document_copy_requests : document_id
+    users ||--o{ document_copy_requests : requester_id
+    users |o--o{ document_copy_requests : reviewed_by
+    document_relationships {
+        int id PK
+        int document_id FK
+        int related_id FK
+        int created_by FK
+    }
+    documents ||--o{ document_relationships : document_id
+    documents ||--o{ document_relationships : related_id
+    users ||--o{ document_relationships : created_by
+    integration_receipts {
+        bigint id PK
+        int received_by FK
+        int lrdms_record_id FK
+    }
+    users |o--o{ integration_receipts : received_by
+    documents |o--o{ integration_receipts : lrdms_record_id
+    login_otp_codes {
+        int id PK
+        int user_id FK
+    }
+    users ||--o{ login_otp_codes : user_id
+    notifications {
+        int id PK
+        int user_id FK
+        int document_id FK
+    }
+    users ||--o{ notifications : user_id
+    documents |o--o{ notifications : document_id
+    ocr_jobs {
+        int document_id PK
+    }
+    documents ||--o| ocr_jobs : document_id
+    offices {
+        int id PK
+    }
+    password_reset_codes {
+        int id PK
+        int user_id FK
+    }
+    users ||--o{ password_reset_codes : user_id
+    password_reset_tokens {
+        int id PK
+        int user_id FK
+    }
+    users ||--o{ password_reset_tokens : user_id
+    permissions {
+        int id PK
+    }
+    positions {
+        int id PK
+    }
+    privacy_events {
+        bigint id PK
+        int user_id FK
+    }
+    users ||--o{ privacy_events : user_id
+    privacy_requests {
+        bigint id PK
+        int user_id FK
+        int reviewed_by FK
+    }
+    users ||--o{ privacy_requests : user_id
+    users |o--o{ privacy_requests : reviewed_by
+    recently_viewed_documents {
+        int id PK
+        int user_id FK
+        int document_id FK
+    }
+    users ||--o{ recently_viewed_documents : user_id
+    documents ||--o{ recently_viewed_documents : document_id
+    record_access_rules {
+        bigint id PK
+        int document_id FK
+        int user_id FK
+        int role_id FK
+        int office_id FK
+        int committee_id FK
+        int created_by FK
+    }
+    documents ||--o{ record_access_rules : document_id
+    users |o--o{ record_access_rules : user_id
+    roles |o--o{ record_access_rules : role_id
+    offices |o--o{ record_access_rules : office_id
+    committees |o--o{ record_access_rules : committee_id
+    users |o--o{ record_access_rules : created_by
+    record_followups {
+        bigint id PK
+        int document_id FK
+        int recorded_by FK
+    }
+    documents ||--o{ record_followups : document_id
+    users ||--o{ record_followups : recorded_by
+    record_validation_history {
+        bigint id PK
+        int document_id FK
+        int actor_id FK
+    }
+    documents ||--o{ record_validation_history : document_id
+    users |o--o{ record_validation_history : actor_id
+    report_runs {
+        bigint id PK
+        bigint schedule_id FK
+        int user_id FK
+    }
+    report_schedules ||--o{ report_runs : schedule_id
+    users ||--o{ report_runs : user_id
+    report_schedules {
+        bigint id PK
+        int user_id FK
+    }
+    users ||--o{ report_schedules : user_id
+    retention_reviews {
+        bigint id PK
+        int document_id FK
+        int reviewed_by FK
+    }
+    documents ||--o{ retention_reviews : document_id
+    users |o--o{ retention_reviews : reviewed_by
+    roles {
+        int id PK
+    }
+    role_permissions {
+        int role_id PK
+        int permission_id PK
+    }
+    roles ||--o{ role_permissions : role_id
+    permissions ||--o{ role_permissions : permission_id
+    saved_searches {
+        int id PK
+        int user_id FK
+    }
+    users ||--o{ saved_searches : user_id
+    search_log {
+        int id PK
+        int user_id FK
+    }
+    users |o--o{ search_log : user_id
+    users {
+        int id PK
+        int role_id FK
+        int committee_id FK
+        int office_id FK
+        int division_id FK
+        int position_id FK
+    }
+    divisions |o--o{ users : division_id
+    offices |o--o{ users : office_id
+    positions |o--o{ users : position_id
+    roles ||--o{ users : role_id
+    committees |o--o{ users : committee_id
+    user_committees {
+        int user_id PK
+        int committee_id PK
+    }
+    users ||--o{ user_committees : user_id
+    committees ||--o{ user_committees : committee_id
+    user_profile_photos {
+        int user_id PK
+    }
+    users ||--o| user_profile_photos : user_id
+    user_sessions {
+        int id PK
+        int user_id FK
+    }
+    users ||--o{ user_sessions : user_id

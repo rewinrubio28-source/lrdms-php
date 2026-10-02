@@ -1,0 +1,297 @@
+{
+  "environment": "Local synthetic temporary tables; warm-cache SQL only, not live request latency",
+  "server": "10.4.32-MariaDB",
+  "rows_per_table": 20000,
+  "runs_per_query": 10,
+  "queries": {
+    "Document-number duplicate check": {
+      "before": {
+        "median_ms": 40.075,
+        "result_rows": 1,
+        "result_hash": "9d4e5c901b9a908df71b50ecd8f8fe0de704ffc441d3df782b8aaf6aeb46ce38",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "documents",
+            "type": "ALL",
+            "possible_keys": null,
+            "key": null,
+            "key_len": null,
+            "ref": null,
+            "rows": "20048",
+            "Extra": "Using where"
+          }
+        ]
+      },
+      "after": {
+        "median_ms": 6.04,
+        "result_rows": 1,
+        "result_hash": "9d4e5c901b9a908df71b50ecd8f8fe0de704ffc441d3df782b8aaf6aeb46ce38",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "documents",
+            "type": "ref",
+            "possible_keys": "idx_document_number",
+            "key": "idx_document_number",
+            "key_len": "242",
+            "ref": "const",
+            "rows": "1",
+            "Extra": "Using where; Using index"
+          }
+        ]
+      }
+    },
+    "Date-filtered records": {
+      "before": {
+        "median_ms": 22.464,
+        "result_rows": 54,
+        "result_hash": "f3447bc15ef9e1b35b753bf7a5de25c7baae1aabee68155c430f219218c598ae",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "documents",
+            "type": "ALL",
+            "possible_keys": null,
+            "key": null,
+            "key_len": null,
+            "ref": null,
+            "rows": "20048",
+            "Extra": "Using where; Using filesort"
+          }
+        ]
+      },
+      "after": {
+        "median_ms": 2.362,
+        "result_rows": 54,
+        "result_hash": "f3447bc15ef9e1b35b753bf7a5de25c7baae1aabee68155c430f219218c598ae",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "documents",
+            "type": "range",
+            "possible_keys": "idx_document_created",
+            "key": "idx_document_created",
+            "key_len": "5",
+            "ref": null,
+            "rows": "54",
+            "Extra": "Using where; Using index"
+          }
+        ]
+      }
+    },
+    "Incoming queue": {
+      "before": {
+        "median_ms": 16.887,
+        "result_rows": 50,
+        "result_hash": "590422898aeffb46f714a3f798e34fb5a3dbfad96d3faeef2556d137785ed25e",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "documents",
+            "type": "ALL",
+            "possible_keys": null,
+            "key": null,
+            "key_len": null,
+            "ref": null,
+            "rows": "20048",
+            "Extra": "Using where; Using filesort"
+          }
+        ]
+      },
+      "after": {
+        "median_ms": 0.548,
+        "result_rows": 50,
+        "result_hash": "590422898aeffb46f714a3f798e34fb5a3dbfad96d3faeef2556d137785ed25e",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "documents",
+            "type": "ref",
+            "possible_keys": "idx_document_intake",
+            "key": "idx_document_intake",
+            "key_len": "6",
+            "ref": "const",
+            "rows": "2000",
+            "Extra": "Using where; Using index"
+          }
+        ]
+      }
+    },
+    "Audit date export": {
+      "before": {
+        "median_ms": 20.615,
+        "result_rows": 54,
+        "result_hash": "eaff50c68cc6dbc4d51684bbc89434409526570e0de3ae37bf6c38bef57c9900",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "audit_log",
+            "type": "ALL",
+            "possible_keys": null,
+            "key": null,
+            "key_len": null,
+            "ref": null,
+            "rows": "20256",
+            "Extra": "Using where; Using filesort"
+          }
+        ]
+      },
+      "after": {
+        "median_ms": 0.585,
+        "result_rows": 54,
+        "result_hash": "eaff50c68cc6dbc4d51684bbc89434409526570e0de3ae37bf6c38bef57c9900",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "audit_log",
+            "type": "range",
+            "possible_keys": "idx_audit_created",
+            "key": "idx_audit_created",
+            "key_len": "5",
+            "ref": null,
+            "rows": "54",
+            "Extra": "Using where; Using index"
+          }
+        ]
+      }
+    },
+    "Audit module/date export": {
+      "before": {
+        "median_ms": 15.061,
+        "result_rows": 28,
+        "result_hash": "4421e0b89101c9a5a698390166e270706711d98faf0ff21d62d92000b4523a2d",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "audit_log",
+            "type": "ALL",
+            "possible_keys": null,
+            "key": null,
+            "key_len": null,
+            "ref": null,
+            "rows": "20256",
+            "Extra": "Using where; Using filesort"
+          }
+        ]
+      },
+      "after": {
+        "median_ms": 0.617,
+        "result_rows": 28,
+        "result_hash": "4421e0b89101c9a5a698390166e270706711d98faf0ff21d62d92000b4523a2d",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "audit_log",
+            "type": "range",
+            "possible_keys": "idx_audit_created,idx_audit_module_created",
+            "key": "idx_audit_module_created",
+            "key_len": "247",
+            "ref": null,
+            "rows": "28",
+            "Extra": "Using where; Using index"
+          }
+        ]
+      }
+    },
+    "Search date metrics": {
+      "before": {
+        "median_ms": 14.991,
+        "result_rows": 1,
+        "result_hash": "1961332d83975579dbc2c0a51cedf27980053053c9de1da41a322454dc659bf1",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "search_log",
+            "type": "ALL",
+            "possible_keys": null,
+            "key": null,
+            "key_len": null,
+            "ref": null,
+            "rows": "20234",
+            "Extra": "Using where; Using temporary; Using filesort"
+          }
+        ]
+      },
+      "after": {
+        "median_ms": 0.68,
+        "result_rows": 1,
+        "result_hash": "1961332d83975579dbc2c0a51cedf27980053053c9de1da41a322454dc659bf1",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "search_log",
+            "type": "range",
+            "possible_keys": "idx_search_created",
+            "key": "idx_search_created",
+            "key_len": "5",
+            "ref": null,
+            "rows": "54",
+            "Extra": "Using where; Using index; Using temporary; Using filesort"
+          }
+        ]
+      }
+    },
+    "Own search history": {
+      "before": {
+        "median_ms": 0.655,
+        "result_rows": 8,
+        "result_hash": "da3eaf34ed00709ca52a1867768a285c583a342b83025f85a2427c40d12654b7",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "search_log",
+            "type": "ref",
+            "possible_keys": "user_id",
+            "key": "user_id",
+            "key_len": "5",
+            "ref": "const",
+            "rows": "20",
+            "Extra": "Using where; Using filesort"
+          }
+        ]
+      },
+      "after": {
+        "median_ms": 0.416,
+        "result_rows": 8,
+        "result_hash": "da3eaf34ed00709ca52a1867768a285c583a342b83025f85a2427c40d12654b7",
+        "explain": [
+          {
+            "id": 1,
+            "select_type": "SIMPLE",
+            "table": "search_log",
+            "type": "ref",
+            "possible_keys": "user_id,idx_search_user_created",
+            "key": "idx_search_user_created",
+            "key_len": "5",
+            "ref": "const",
+            "rows": "20",
+            "Extra": "Using where; Using index"
+          }
+        ]
+      }
+    }
+  },
+  "indexes_added": [
+    "documents.idx_document_number",
+    "documents.idx_document_created",
+    "documents.idx_document_intake",
+    "audit_log.idx_audit_created",
+    "audit_log.idx_audit_module_created",
+    "search_log.idx_search_created",
+    "search_log.idx_search_user_created"
+  ]
+}

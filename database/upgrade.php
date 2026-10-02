@@ -3,7 +3,7 @@
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 define('LRDMS_BACKUP_CLI', true);
 require_once __DIR__ . '/../config/database.php';
-$steps = ['migrate_revision_v5.php', 'migrate_organization_permissions.php', 'migrate_action_permissions.php', 'migrate_council_term.php', 'migrate_profile_photos.php', 'migrate_record_followups.php', 'migrate_retrieval.php', 'migrate_ocr_jobs.php', 'migrate_privacy.php', 'migrate_reports.php'];
+$steps = ['migrate_revision_v5.php', 'migrate_organization_permissions.php', 'migrate_action_permissions.php', 'migrate_council_term.php', 'migrate_profile_photos.php', 'migrate_record_followups.php', 'migrate_retrieval.php', 'migrate_ocr_jobs.php', 'migrate_privacy.php', 'migrate_reports.php', 'migrate_database_indexes.php'];
 try {
     $lock = records_maintenance_lock(true);
     $pdo = get_db();

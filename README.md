@@ -174,6 +174,12 @@ Set `PRIVACY_OFFICE` and `PRIVACY_CONTACT` to the approved office/contact text. 
 
 Run `php bin/security_preflight.php` before deploying mandatory MFA, then test actual email delivery. Privileged sessions without MFA proof must sign in again. Use `SESSION_COOKIE_SECURE=1` behind an HTTPS-only reverse proxy. Run `php database/test_security_privacy.php` against a local test-capable database for isolated regression checks.
 
+## Database architecture and recovery
+
+See the [database architecture](docs/database-architecture.md), [complete data dictionary](docs/database-data-dictionary.md), [query benchmarks](docs/database-performance.md) and [Section 6 verification](docs/section-6-verification.md). Startup upgrade installs targeted indexes and version-reference constraints; it stops if existing version links contain missing targets.
+
+The backup tool verifies uploaded/request-letter files and every declared foreign key before declaring a restore complete. A supervised daily **02:00 Asia/Manila** backup worker is available but disabled until a protected persistent `BACKUP_DIR` is configured and `BACKUP_ENABLED=1`. It supports a single app instance with local uploads; S3/object storage needs coordinated bucket recovery. See [backup setup and restore procedure](docs/backup-restore.md).
+
 ## Suggested Git workflow
 
 For coordinated database/upload backups and recovery commands, see [Records backup and recovery](docs/backup-restore.md). Restore creates a separate database and matching uploads and never overwrites the live system.

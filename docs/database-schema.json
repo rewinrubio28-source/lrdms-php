@@ -1,0 +1,4811 @@
+{
+  "server_version": "10.4.32-MariaDB",
+  "tables": {
+    "access_requests": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "requester_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "requester_name",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "requester_email",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "purpose",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "request_letter_path",
+          "COLUMN_TYPE": "varchar(500)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "status",
+          "COLUMN_TYPE": "enum('Pending','Granted','Denied','Appeal Pending','Closed')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'Pending'",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "decision_note",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "decided_by",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "decided_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "updated_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "on update current_timestamp()",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "decided_by",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "decided_by",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "document_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_access_request_status",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "status",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_access_request_status",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "created_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "requester_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "requester_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "access_requests_ibfk_1",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "access_requests_ibfk_2",
+          "COLUMN_NAME": "requester_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        },
+        {
+          "CONSTRAINT_NAME": "access_requests_ibfk_3",
+          "COLUMN_NAME": "decided_by",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        }
+      ]
+    },
+    "access_request_reviews": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "request_id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "reviewer_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "action",
+          "COLUMN_TYPE": "enum('Granted','Denied','Appeal Filed','Appeal Resolved','Note')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "note",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "request_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "request_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "reviewer_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "reviewer_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "access_request_reviews_ibfk_1",
+          "COLUMN_NAME": "request_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "access_requests",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "access_request_reviews_ibfk_2",
+          "COLUMN_NAME": "reviewer_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        }
+      ]
+    },
+    "application_migrations": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "name",
+          "COLUMN_TYPE": "varchar(100)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "applied_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "name",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": []
+    },
+    "archive_transfers": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "destination_system",
+          "COLUMN_TYPE": "varchar(100)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'System 8'",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "status",
+          "COLUMN_TYPE": "enum('Prepared','Transferred','Failed','Cancelled')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'Prepared'",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "external_reference_id",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "prepared_by",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "transferred_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "note",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "document_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "prepared_by",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "prepared_by",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "archive_transfers_ibfk_1",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "archive_transfers_ibfk_2",
+          "COLUMN_NAME": "prepared_by",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        }
+      ]
+    },
+    "audit_log": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "username_snapshot",
+          "COLUMN_TYPE": "varchar(60)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "module",
+          "COLUMN_TYPE": "varchar(60)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "action",
+          "COLUMN_TYPE": "varchar(100)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "detail",
+          "COLUMN_TYPE": "varchar(500)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "ip_address",
+          "COLUMN_TYPE": "varchar(45)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "idx_audit_created",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "created_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_audit_created",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_audit_module_created",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "module",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_audit_module_created",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "created_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_audit_module_created",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 3,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "user_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "audit_log_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        }
+      ]
+    },
+    "committees": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "name",
+          "COLUMN_TYPE": "varchar(150)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": []
+    },
+    "divisions": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "office_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "name",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "is_active",
+          "COLUMN_TYPE": "tinyint(1)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "1",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "uq_division_office",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "office_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "uq_division_office",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "name",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "divisions_ibfk_1",
+          "COLUMN_NAME": "office_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "offices",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        }
+      ]
+    },
+    "documents": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "doc_number",
+          "COLUMN_TYPE": "varchar(60)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "title",
+          "COLUMN_TYPE": "varchar(500)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "description",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "doc_type",
+          "COLUMN_TYPE": "enum('Ordinance','Resolution','Committee Report','Minutes','Other')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'Other'",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "sponsor",
+          "COLUMN_TYPE": "varchar(150)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "committee_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "owner_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "status",
+          "COLUMN_TYPE": "enum('Draft','Submitted','Under Review','Enacted','Amended','Superseded','Withdrawn','Rejected')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'Draft'",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "is_public",
+          "COLUMN_TYPE": "tinyint(1)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "0",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "verified_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "source_system",
+          "COLUMN_TYPE": "varchar(100)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'Manual Encoding'",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "enactment_date",
+          "COLUMN_TYPE": "date",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "file_path",
+          "COLUMN_TYPE": "varchar(500)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "ocr_text",
+          "COLUMN_TYPE": "mediumtext",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "body",
+          "COLUMN_TYPE": "longtext",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "previous_version_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "next_version_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "updated_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "on update current_timestamp()",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "records_status",
+          "COLUMN_TYPE": "enum('Submitted','Pending Validation','Returned for Correction','Validated','Registered','Active','Archive Eligible','Archive Preparation','Transferred to Archive System','Duplicate','Unauthorized Submission')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'Registered'",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "classification",
+          "COLUMN_TYPE": "enum('PUBLIC','INTERNAL','RESTRICTED','CONFIDENTIAL')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'INTERNAL'",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "originating_office",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "originating_division",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "submitter_position",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "responsible_custodian",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "related_legislative_item",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "source_record_id",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "source_status",
+          "COLUMN_TYPE": "varchar(100)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "source_status_date",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "status_last_synced",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "received_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "registered_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "validation_note",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "pending_since",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "follow_up_due_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "agenda_monitoring_due_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "retention_period_years",
+          "COLUMN_TYPE": "smallint(5) unsigned",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "disposal_reference",
+          "COLUMN_TYPE": "varchar(255)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "council_term",
+          "COLUMN_TYPE": "smallint(5) unsigned",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "committee_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "committee_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "fk_documents_previous_version_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "previous_version_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "ft_search",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "title",
+          "SUB_PART": null,
+          "INDEX_TYPE": "FULLTEXT"
+        },
+        {
+          "INDEX_NAME": "ft_search",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "ocr_text",
+          "SUB_PART": null,
+          "INDEX_TYPE": "FULLTEXT"
+        },
+        {
+          "INDEX_NAME": "ft_search",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 3,
+          "COLUMN_NAME": "body",
+          "SUB_PART": null,
+          "INDEX_TYPE": "FULLTEXT"
+        },
+        {
+          "INDEX_NAME": "idx_documents_council_term",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "council_term",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_document_created",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "created_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_document_created",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_document_intake",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "verified_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_document_intake",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "created_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_document_number",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "doc_number",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_next_version",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "next_version_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "owner_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "owner_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "documents_ibfk_1",
+          "COLUMN_NAME": "owner_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        },
+        {
+          "CONSTRAINT_NAME": "documents_ibfk_2",
+          "COLUMN_NAME": "committee_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "committees",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        },
+        {
+          "CONSTRAINT_NAME": "fk_documents_next_version_id",
+          "COLUMN_NAME": "next_version_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        },
+        {
+          "CONSTRAINT_NAME": "fk_documents_previous_version_id",
+          "COLUMN_NAME": "previous_version_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        }
+      ]
+    },
+    "document_attachments": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "file_path",
+          "COLUMN_TYPE": "varchar(500)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "display_name",
+          "COLUMN_TYPE": "varchar(255)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "sort_order",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "0",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "idx_document",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_document",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "sort_order",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "document_attachments_ibfk_1",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        }
+      ]
+    },
+    "document_change_notes": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "note",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_by",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "created_by",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "created_by",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "document_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "document_change_notes_ibfk_1",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "document_change_notes_ibfk_2",
+          "COLUMN_NAME": "created_by",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        }
+      ]
+    },
+    "document_copy_requests": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "requester_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "reason",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "status",
+          "COLUMN_TYPE": "enum('Pending','Approved','Denied')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'Pending'",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "reviewed_by",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "review_note",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "reviewed_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "document_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "requester_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "requester_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "reviewed_by",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "reviewed_by",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "document_copy_requests_ibfk_1",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        },
+        {
+          "CONSTRAINT_NAME": "document_copy_requests_ibfk_2",
+          "COLUMN_NAME": "requester_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        },
+        {
+          "CONSTRAINT_NAME": "document_copy_requests_ibfk_3",
+          "COLUMN_NAME": "reviewed_by",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        }
+      ]
+    },
+    "document_relationships": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "related_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "relationship_type",
+          "COLUMN_TYPE": "enum('amends','repeals','substitutes','consolidates','related')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_by",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "created_by",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "created_by",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_document",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_related",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "related_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "uniq_rel",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "uniq_rel",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "related_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "uniq_rel",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 3,
+          "COLUMN_NAME": "relationship_type",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "document_relationships_ibfk_1",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "document_relationships_ibfk_2",
+          "COLUMN_NAME": "related_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "document_relationships_ibfk_3",
+          "COLUMN_NAME": "created_by",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        }
+      ]
+    },
+    "integration_receipts": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "source_system",
+          "COLUMN_TYPE": "varchar(100)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "external_reference_id",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "payload_reference",
+          "COLUMN_TYPE": "varchar(255)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "received_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "received_by",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "processing_status",
+          "COLUMN_TYPE": "enum('Pending Validation','Validated','Registered','Returned for Correction','Duplicate','Unauthorized Submission','Error')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'Pending Validation'",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "lrdms_record_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "error_message",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "idx_receipt_status",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "processing_status",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_receipt_status",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "received_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "lrdms_record_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "lrdms_record_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "received_by",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "received_by",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "integration_receipts_ibfk_1",
+          "COLUMN_NAME": "received_by",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        },
+        {
+          "CONSTRAINT_NAME": "integration_receipts_ibfk_2",
+          "COLUMN_NAME": "lrdms_record_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        }
+      ]
+    },
+    "login_otp_codes": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "code",
+          "COLUMN_TYPE": "varchar(10)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "expires_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "used_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "user_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "login_otp_codes_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        }
+      ]
+    },
+    "notifications": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "type",
+          "COLUMN_TYPE": "varchar(40)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "message",
+          "COLUMN_TYPE": "varchar(500)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "is_read",
+          "COLUMN_TYPE": "tinyint(1)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "0",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "document_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_user_unread",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_user_unread",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "is_read",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_user_unread",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 3,
+          "COLUMN_NAME": "created_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "notifications_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "notifications_ibfk_2",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        }
+      ]
+    },
+    "ocr_jobs": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_general_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "requested_by",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "status",
+          "COLUMN_TYPE": "varchar(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'queued'",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "token",
+          "COLUMN_TYPE": "char(32)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "files_json",
+          "COLUMN_TYPE": "longtext",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "original_text_hash",
+          "COLUMN_TYPE": "char(64)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "file_index",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "0",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "file_count",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "0",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "pages_done",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "0",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "pages_total",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "error_message",
+          "COLUMN_TYPE": "varchar(500)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "attempts",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "0",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "heartbeat_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "finished_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "idx_ocr_queue",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "status",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_ocr_queue",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "created_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "fk_ocr_document",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        }
+      ]
+    },
+    "offices": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "name",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "UNI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "is_active",
+          "COLUMN_TYPE": "tinyint(1)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "1",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "name",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "name",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": []
+    },
+    "password_reset_codes": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "code",
+          "COLUMN_TYPE": "varchar(10)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "expires_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "used_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "user_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "password_reset_codes_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        }
+      ]
+    },
+    "password_reset_tokens": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "token",
+          "COLUMN_TYPE": "varchar(255)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "UNI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "expires_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "used_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "token",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "token",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "user_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "password_reset_tokens_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        }
+      ]
+    },
+    "permissions": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "module",
+          "COLUMN_TYPE": "varchar(60)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "action",
+          "COLUMN_TYPE": "varchar(60)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "description",
+          "COLUMN_TYPE": "varchar(255)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "module_action",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "module",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "module_action",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "action",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": []
+    },
+    "positions": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "name",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "UNI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "is_active",
+          "COLUMN_TYPE": "tinyint(1)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "1",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "name",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "name",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": []
+    },
+    "privacy_events": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "purpose",
+          "COLUMN_TYPE": "varchar(40)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "decision",
+          "COLUMN_TYPE": "varchar(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "notice_version",
+          "COLUMN_TYPE": "varchar(30)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "idx_privacy_user",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_privacy_user",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "privacy_events_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        }
+      ]
+    },
+    "privacy_requests": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "request_type",
+          "COLUMN_TYPE": "varchar(30)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "details",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "status",
+          "COLUMN_TYPE": "varchar(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'Open'",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "response",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "reviewed_by",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "updated_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "idx_privacy_request",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "status",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_privacy_request",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "created_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "reviewed_by",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "reviewed_by",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "user_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "privacy_requests_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        },
+        {
+          "CONSTRAINT_NAME": "privacy_requests_ibfk_2",
+          "COLUMN_NAME": "reviewed_by",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        }
+      ]
+    },
+    "recently_viewed_documents": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "viewed_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "on update current_timestamp()",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "document_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_user_viewed",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_user_viewed",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "viewed_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "uniq_user_doc",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "uniq_user_doc",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "recently_viewed_documents_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "recently_viewed_documents_ibfk_2",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        }
+      ]
+    },
+    "record_access_rules": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "role_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "office_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "committee_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "can_view",
+          "COLUMN_TYPE": "tinyint(1)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "1",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "can_download",
+          "COLUMN_TYPE": "tinyint(1)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "0",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "valid_until",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_by",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "committee_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "committee_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "created_by",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "created_by",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "document_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "office_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "office_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "role_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "role_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "user_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "record_access_rules_ibfk_1",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "record_access_rules_ibfk_2",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "record_access_rules_ibfk_3",
+          "COLUMN_NAME": "role_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "roles",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "record_access_rules_ibfk_4",
+          "COLUMN_NAME": "office_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "offices",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "record_access_rules_ibfk_5",
+          "COLUMN_NAME": "committee_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "committees",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "record_access_rules_ibfk_6",
+          "COLUMN_NAME": "created_by",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        }
+      ]
+    },
+    "record_followups": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "recorded_by",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "contact_person",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "contact_method",
+          "COLUMN_TYPE": "varchar(30)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "note",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "next_due_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "idx_followup_document",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_followup_document",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "recorded_by",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "recorded_by",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "record_followups_ibfk_1",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        },
+        {
+          "CONSTRAINT_NAME": "record_followups_ibfk_2",
+          "COLUMN_NAME": "recorded_by",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        }
+      ]
+    },
+    "record_validation_history": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "actor_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "action",
+          "COLUMN_TYPE": "enum('Validated','Returned for Correction','Registered','Duplicate','Unauthorized Submission','Visibility Changed')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "note",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "actor_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "actor_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "document_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "record_validation_history_ibfk_1",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "record_validation_history_ibfk_2",
+          "COLUMN_NAME": "actor_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        }
+      ]
+    },
+    "report_runs": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_general_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "schedule_id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "scheduled_for",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "status",
+          "COLUMN_TYPE": "varchar(16)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'Processing'",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "attempts",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "0",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "generated_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "snapshot_json",
+          "COLUMN_TYPE": "mediumtext",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "pdf_bytes",
+          "COLUMN_TYPE": "mediumblob",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "error_message",
+          "COLUMN_TYPE": "varchar(250)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "report_run_owner",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "report_run_owner",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "created_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "report_slot",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "schedule_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "report_slot",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "scheduled_for",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "report_runs_ibfk_1",
+          "COLUMN_NAME": "schedule_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "report_schedules",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "report_runs_ibfk_2",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        }
+      ]
+    },
+    "report_schedules": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_general_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "title",
+          "COLUMN_TYPE": "varchar(120)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "options_json",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "frequency",
+          "COLUMN_TYPE": "varchar(10)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "run_time",
+          "COLUMN_TYPE": "char(5)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "enabled",
+          "COLUMN_TYPE": "tinyint(4)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "1",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "next_run_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "report_due",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "enabled",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "report_due",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "next_run_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "report_owner",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "report_schedules_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        }
+      ]
+    },
+    "retention_reviews": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "reviewed_by",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "review_date",
+          "COLUMN_TYPE": "date",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "outcome",
+          "COLUMN_TYPE": "enum('Retain','Archive Eligible','Transfer Prepared','TBD')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'TBD'",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "note",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "document_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "reviewed_by",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "reviewed_by",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "retention_reviews_ibfk_1",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "retention_reviews_ibfk_2",
+          "COLUMN_NAME": "reviewed_by",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        }
+      ]
+    },
+    "roles": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "name",
+          "COLUMN_TYPE": "varchar(60)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "UNI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "description",
+          "COLUMN_TYPE": "varchar(255)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "name",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "name",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": []
+    },
+    "role_permissions": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "role_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "permission_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "permission_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "permission_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "role_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "permission_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "role_permissions_ibfk_1",
+          "COLUMN_NAME": "role_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "roles",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "role_permissions_ibfk_2",
+          "COLUMN_NAME": "permission_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "permissions",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        }
+      ]
+    },
+    "saved_searches": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "name",
+          "COLUMN_TYPE": "varchar(150)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "search_criteria",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "updated_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "on update current_timestamp()",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "idx_user",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "saved_searches_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        }
+      ]
+    },
+    "search_log": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "query",
+          "COLUMN_TYPE": "varchar(255)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "search_type",
+          "COLUMN_TYPE": "enum('keyword','semantic')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "'keyword'",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "results_count",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "0",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "idx_search_created",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "created_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_search_created",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "search_type",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_search_user_created",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_search_user_created",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "created_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "search_log_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        }
+      ]
+    },
+    "users": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "full_name",
+          "COLUMN_TYPE": "varchar(150)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "username",
+          "COLUMN_TYPE": "varchar(60)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "UNI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "email",
+          "COLUMN_TYPE": "varchar(150)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "UNI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "password_hash",
+          "COLUMN_TYPE": "varchar(255)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "role_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "committee_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "is_active",
+          "COLUMN_TYPE": "tinyint(1)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "1",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "must_change_password",
+          "COLUMN_TYPE": "tinyint(1)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "0",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "failed_attempts",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "0",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "locked_until",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "last_login_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "totp_secret",
+          "COLUMN_TYPE": "varchar(64)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "totp_enabled",
+          "COLUMN_TYPE": "tinyint(1)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "0",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "office_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "division_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "position_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "committee_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "committee_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "email",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "email",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "fk_v5_division_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "division_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "fk_v5_office_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "office_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "fk_v5_position_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "position_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "role_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "role_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "username",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "username",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "fk_v5_division_id",
+          "COLUMN_NAME": "division_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "divisions",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        },
+        {
+          "CONSTRAINT_NAME": "fk_v5_office_id",
+          "COLUMN_NAME": "office_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "offices",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        },
+        {
+          "CONSTRAINT_NAME": "fk_v5_position_id",
+          "COLUMN_NAME": "position_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "positions",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "SET NULL"
+        },
+        {
+          "CONSTRAINT_NAME": "users_ibfk_1",
+          "COLUMN_NAME": "role_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "roles",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        },
+        {
+          "CONSTRAINT_NAME": "users_ibfk_2",
+          "COLUMN_NAME": "committee_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "committees",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        }
+      ]
+    },
+    "user_committees": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "committee_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "committee_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "committee_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "committee_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "user_committees_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        },
+        {
+          "CONSTRAINT_NAME": "user_committees_ibfk_2",
+          "COLUMN_NAME": "committee_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "committees",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        }
+      ]
+    },
+    "user_profile_photos": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "mime_type",
+          "COLUMN_TYPE": "varchar(30)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "image_data",
+          "COLUMN_TYPE": "mediumblob",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "updated_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "user_profile_photos_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        }
+      ]
+    },
+    "user_sessions": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "session_token",
+          "COLUMN_TYPE": "varchar(64)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "UNI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "ip_address",
+          "COLUMN_TYPE": "varchar(45)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "user_agent",
+          "COLUMN_TYPE": "varchar(255)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "last_seen",
+          "COLUMN_TYPE": "datetime",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "on update current_timestamp()",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "is_active",
+          "COLUMN_TYPE": "tinyint(1)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "1",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "session_token",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "session_token",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "user_id",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "user_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "user_sessions_ibfk_1",
+          "COLUMN_NAME": "user_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "CASCADE"
+        }
+      ]
+    }
+  }
+}
