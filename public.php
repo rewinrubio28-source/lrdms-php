@@ -899,7 +899,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
                     </div>
                     <div class="field-error d-none" id="passwordError"><i class="bi bi-exclamation-circle-fill"></i><span>Password is required.</span></div>
                     <div class="text-end mt-2">
-                      <a href="#" id="showForgotPassword" class="lrdms-link action-link">Forgot password?</a>
+                      <a href="#" id="showForgotPassword" class="lrdms-link">Forgot password?</a>
                     </div>
                   </div>
                   <button type="submit" class="btn btn-login-submit w-100 mt-2">Sign In</button>
@@ -1014,7 +1014,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submitted'])) {
                 </div>
 
                 <div class="text-center mt-3" id="forgotBackLink">
-                  <small class="text-muted">Remember your password? <a href="#" id="showSignIn" class="lrdms-link action-link">Sign in</a></small>
+                  <small class="text-muted">Remember your password? <a href="#" id="showSignIn" class="lrdms-link">Sign in</a></small>
                 </div>
               </div>
               </div>
