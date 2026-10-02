@@ -69,9 +69,6 @@ $__sys = (int)($_GET['sys'] ?? 0);
     <nav aria-label="Main navigation">
     <ul class="nav-list">
       <li><a class="nav-item <?= current_page('dashboard') ?>" href="dashboard.php"><i class="bi bi-grid-1x2" aria-hidden="true"></i><span>Dashboard</span></a></li>
-      <?php if (has_repository_access()): ?>
-      <li><a class="nav-item <?= current_page('reports') ?>" href="reports.php"><i class="bi bi-file-earmark-bar-graph" aria-hidden="true"></i><span>Reports</span></a></li>
-      <?php endif; ?>
       <?php if (has_permission('encoding', 'create')): ?>
         <li class="d-flex align-items-center gap-1">
           <a class="nav-item flex-grow-1 <?= current_page('encoding') || current_page('import_records') ? 'is-active' : '' ?>" href="encoding.php"><i class="bi bi-inbox" aria-hidden="true"></i><span>Document Intake</span></a>

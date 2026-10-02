@@ -60,7 +60,16 @@ include __DIR__.'/includes/layout_top.php';
 </form>
 <?php if ($report): ?>
 <section class="card p-4 mb-4"><h2 class="h5"><?= record_report_escape($options['title']) ?></h2><p><?= $report['count'] ?> matching records · Generated <?= record_report_escape($report['generated_at']) ?> (Asia/Manila)</p>
-<div class="d-flex flex-wrap gap-2 mb-3"><?php foreach (['pdf'=>'PDF','xlsx'=>'Excel','csv'=>'CSV','print'=>'Print view'] as $format=>$label): if (($format==='print' && !$canPrint) || ($format!=='print' && !$canExport)) continue; ?><a class="btn btn-outline-primary" href="api/export_records_report.php?<?= record_report_escape(http_build_query($options+['format'=>$format])) ?>"><?= $label ?></a><?php endforeach; ?></div>
+<?php if ($canExport || $canPrint): ?>
+<div class="dropdown mb-3">
+  <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="report-export-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="report-export-options">Export / Print</button>
+  <ul class="dropdown-menu" id="report-export-options" aria-labelledby="report-export-toggle">
+    <?php foreach (['pdf'=>'PDF','xlsx'=>'Excel','csv'=>'CSV','print'=>'Print view'] as $format=>$label): if (($format==='print' && !$canPrint) || ($format!=='print' && !$canExport)) continue; ?>
+    <li><a class="dropdown-item" href="api/export_records_report.php?<?= record_report_escape(http_build_query($options+['format'=>$format])) ?>"><?= $label ?></a></li>
+    <?php endforeach; ?>
+  </ul>
+</div>
+<?php endif; ?>
 <p class="small text-muted">Exports and print views use these filters with current data at generation time.</p>
 <div class="table-responsive" style="max-height:32rem"><table class="table table-striped"><thead><tr><?php foreach ($report['headers'] as $header): ?><th scope="col"><?= record_report_escape($header) ?></th><?php endforeach; ?></tr></thead><tbody><?php foreach ($report['rows'] as $row): ?><tr><?php foreach ($row as $cell): ?><td><?= record_report_escape($cell) ?></td><?php endforeach; ?></tr><?php endforeach; ?><?php if (!$report['rows']): ?><tr><td colspan="<?= count($report['headers']) ?>">No matching records.</td></tr><?php endif; ?></tbody></table></div>
 <?php if ($canExport && $ready): ?>

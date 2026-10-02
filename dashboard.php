@@ -33,6 +33,9 @@ include __DIR__ . '/includes/layout_top.php';
     </div>
   </div>
   <div class="dash-header__actions">
+    <?php if (has_repository_access()): ?>
+    <a class="btn btn-outline-primary btn-sm" href="reports.php"><i class="bi bi-file-earmark-bar-graph me-1" aria-hidden="true"></i>Reports</a>
+    <?php endif; ?>
   </div>
 </div>
 
