@@ -24,6 +24,7 @@ COPY . .
 # Required by the worker's startup migration; fail the build if omitted.
 RUN test -s /var/www/html/sql/ocr_jobs.sql
 RUN test -s /var/www/html/sql/privacy.sql
+RUN test -s /var/www/html/sql/source_history.sql
 
 # vendor/ is git-ignored (see .gitignore), so it doesn't exist in the
 # checkout HostForge builds from — bring it in from Stage 1 instead.

@@ -12,13 +12,13 @@ Upstream approval, readings and committee decisions are not performed again in L
 
 ## Manual demonstration (no live integration needed)
 
-1. Import `docs/samples/demo-repository-records.json` with the existing dataset importer. These are fictional metadata records, not original signed documents. Import does not run by opening this guide.
+1. Prepare your own fictional metadata records using the existing dataset import template. Clearly label sample titles and document numbers DEMO. No sample dataset is bundled with this guide.
 2. Open the received record in Encoding & Submission. Check the metadata, add an appropriate sample attachment through the existing correction/upload path if needed, and verify the source reference and source status.
 3. Validate and register a private copy. Demonstrate return-for-correction if desired before registration. Registration does not change the originating system's status.
 4. Open the registered document in Repository. Review Source information, Document references, and LRDMS receiving/registration.
 5. Select Tracking & History → Add source event. Choose Simulated demo for fictional events. Use Manual source record only with a supporting document/page reference. Source history is separate from LRDMS processing events.
 6. Demonstrate retrieval and permitted version linking. Do not describe manually imported samples or simulated events as successfully integrated transactions.
 
-The sample source names and document numbers contain DEMO. No existing records are changed automatically; repeated imports are subject to normal duplicate checks. Do not publish fictional records as official public documents.
+No existing records are changed automatically; repeated imports are subject to normal duplicate checks. Do not publish fictional records as official public documents.
 
 The old interview workflow remains historical background in `ordinance-process-workflow.md`, not the current receiving boundary. A complete live integration contract and generic cross-system status filtering are future work; they are not required to demonstrate this manual receiving flow.
