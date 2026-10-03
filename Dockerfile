@@ -11,7 +11,7 @@ FROM php:8.2-apache
 # instead of compiling every extension from source — much faster builds).
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions pdo_mysql mbstring gd curl zip \
-    && a2enmod rewrite
+    && a2enmod rewrite headers
 
 RUN apt-get update && apt-get install -y --no-install-recommends supervisor \
     && rm -rf /var/lib/apt/lists/*
@@ -46,6 +46,10 @@ RUN { \
     echo "post_max_size=30M"; \
     echo "memory_limit=256M"; \
     echo "max_execution_time=120"; \
+    echo "display_errors=Off"; \
+    echo "display_startup_errors=Off"; \
+    echo "log_errors=On"; \
+    echo "expose_php=Off"; \
   } > /usr/local/etc/php/conf.d/uploads.ini
 RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 EXPOSE 80

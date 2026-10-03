@@ -10,6 +10,8 @@
  * (Draft/Submitted/Under Review), which isn't LRDMS's to show.
  */
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/includes/request_security.php';
+security_throttle('public-read',security_client_ip(),120,60);
 
 // Public-facing labels for each stored doc_type (DB values stay unchanged).
 $typeDisplayLabels = [
@@ -24,7 +26,7 @@ $doc = null;
 if ($id > 0) {
     $stmt = get_db()->prepare(
         "SELECT d.* FROM documents d
-         WHERE d.id = ? AND d.is_public = 1
+         WHERE d.id = ? AND d.is_public = 1 AND d.verified_at IS NOT NULL AND d.doc_type <> 'Other'
            AND d.status NOT IN ('Draft','Submitted','Under Review')"
     );
     $stmt->execute([$id]);
@@ -40,7 +42,8 @@ if ($doc) {
     if (!empty($doc['next_version_id'])) {
         $nxt = get_db()->prepare(
             "SELECT id, doc_number, title, status, enactment_date
-             FROM documents WHERE id = ?"
+             FROM documents WHERE id = ? AND is_public=1 AND verified_at IS NOT NULL AND doc_type <> 'Other'
+               AND status NOT IN ('Draft','Submitted','Under Review')"
         );
         $nxt->execute([$doc['next_version_id']]);
         $nextVersion = $nxt->fetch();

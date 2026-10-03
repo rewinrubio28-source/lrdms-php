@@ -1,4 +1,14 @@
 RewriteEngine On
+Options -Indexes
+# Internal source, secrets, migration tools and local evidence are never public routes.
+RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
+RewriteRule ^(?:config|includes|database|sql|bin|vendor|docs|deploy|backups|ocr_service|bert_service)(?:/|$) - [F,L,NC]
+RewriteRule ^(?:dev_test_incoming\.php|Dockerfile|composer\.(?:json|lock)|.*\.(?:sql|ini|log|bak|env))$ - [F,L,NC]
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set X-Frame-Options "SAMEORIGIN"
+</IfModule>
 RewriteCond %{REQUEST_METHOD} =GET
 RewriteCond %{THE_REQUEST} \s/public\.php[\s?] [NC]
 RewriteRule ^public\.php$ / [R=301,L]

@@ -207,6 +207,9 @@ erDiagram
         int user_id FK
     }
     users |o--o{ search_log : user_id
+    security_rate_limits {
+        char bucket PK
+    }
     users {
         int id PK
         int role_id FK

@@ -44,7 +44,7 @@ $typeLabel = $typeHeadingLabels[$typeFilter] ?? $typeFilter . 's';
 $publicDocs = get_db()->query(
     "SELECT d.id, d.doc_number, d.title, d.doc_type, d.sponsor, d.enactment_date
      FROM documents d
-     WHERE d.is_public = 1 AND d.status NOT IN ('Draft','Submitted','Under Review')
+     WHERE d.is_public = 1 AND d.verified_at IS NOT NULL AND d.status NOT IN ('Draft','Submitted','Under Review')
        AND d.doc_type <> 'Other'
      ORDER BY d.enactment_date DESC, d.created_at DESC"
 )->fetchAll();

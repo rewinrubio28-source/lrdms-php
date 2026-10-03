@@ -444,3 +444,6 @@ CREATE TABLE IF NOT EXISTS privacy_requests (
  FOREIGN KEY (user_id) REFERENCES users(id),
  FOREIGN KEY (reviewed_by) REFERENCES users(id)
 ) ENGINE=InnoDB;
+
+-- Shared request throttling; contains hashed buckets, never credentials.
+CREATE TABLE IF NOT EXISTS security_rate_limits (bucket CHAR(64) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY, hits INT UNSIGNED NOT NULL, expires_at BIGINT NOT NULL, INDEX idx_rate_expiry(expires_at)) ENGINE=InnoDB;

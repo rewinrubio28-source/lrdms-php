@@ -1,5 +1,7 @@
 # Section 2: security, privacy and AI governance
 
+2026-10-03 follow-up: request throttling, explicit session expiry, OCR/upload safeguards, public next-version visibility checks and deployment error/file protections are implemented locally. See [security hardening results and rollout limits](security-hardening-review.md). This supplements the earlier results; hosting and complete security verification remain outstanding.
+
 Updated 2026-10-01. Implementation and limited regression/audit evidence, not certification of security or legal compliance. No deployment or Git push was performed for these changes.
 
 ## Implemented

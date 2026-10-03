@@ -38,6 +38,7 @@ function intake_record_values(array $input): array {
     foreach (['body','ocr_text'] as $field) {
         if (isset($input[$field]) && !is_string($input[$field])) throw new InvalidArgumentException('Invalid ' . $field . '.');
         $values[$field] = $input[$field] ?? null;
+        if (strlen($values[$field] ?? '')>2097152) throw new InvalidArgumentException($field . ' must not exceed 2 MB.');
     }
     return $values;
 }

@@ -41,6 +41,16 @@ $pdo->exec("INSERT INTO password_reset_tokens (user_id,token,expires_at) VALUES 
 auth_check(reset_password('test-token','Final-password-123') && !reset_password('test-token','again'),'Reset link succeeds once only');
 $pdo->exec('UPDATE users SET totp_enabled=0');
 auth_check(attempt_login('auth-test','Final-password-123')==='success','New password works');
+$pdo->exec('UPDATE user_sessions SET last_seen=DATE_SUB(NOW(), INTERVAL 31 MINUTE) WHERE is_active=1');
+$GLOBALS['__lrdms_current_user']=false;
+auth_check(current_user()===null,'Inactive session is rejected and revoked');
+attempt_login('auth-test','Final-password-123');
+$pdo->exec('UPDATE user_sessions SET created_at=DATE_SUB(NOW(), INTERVAL 13 HOUR) WHERE is_active=1');
+$GLOBALS['__lrdms_current_user']=false;
+auth_check(current_user()===null,'Absolute session expiry is enforced after recent activity');
+attempt_login('auth-test','Final-password-123');
+$_POST['csrf_token']=['malformed'];
+auth_check(validate_csrf()===false,'Array-shaped CSRF token rejected without exception');
 $token=$_SESSION['session_token'];
 do_logout();
 $stmt=$pdo->prepare('SELECT is_active FROM user_sessions WHERE session_token=?'); $stmt->execute([$token]);

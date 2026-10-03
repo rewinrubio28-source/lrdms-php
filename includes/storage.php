@@ -189,6 +189,8 @@ function storage_put($localPath, $key, $contentType) {
  */
 function storage_store_upload($tmpName, $safeName, &$localReadable = null) {
     if (!is_uploaded_file($tmpName)) return null;
+    require_once __DIR__.'/upload_validation.php';
+    if (document_upload_error($tmpName,$safeName)!==null) return null;
     $safeName = bin2hex(random_bytes(16)) . '_' . preg_replace('/[^A-Za-z0-9._-]/', '_', basename($safeName));
     if (storage_enabled()) {
         $url = storage_put($tmpName, 'uploads/' . $safeName, storage_content_type($safeName, $tmpName));

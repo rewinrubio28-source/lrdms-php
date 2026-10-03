@@ -21,6 +21,7 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/audit.php';
 require_once __DIR__ . '/security_policy.php';
+require_once __DIR__ . '/request_security.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start([
@@ -32,6 +33,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!defined('LOGIN_MAX_ATTEMPTS')) define('LOGIN_MAX_ATTEMPTS', 5);
+security_web_request();
 if (!defined('LOGIN_LOCK_MINUTES'))  define('LOGIN_LOCK_MINUTES', 15);
 
 /* ============================================================
@@ -64,10 +66,14 @@ function is_account_locked($user) {
  *   false     — invalid username/password (or account disabled)
  */
 function attempt_login($username, $password) {
+    if (!is_string($username) || !is_string($password) || strlen($username)>190 || strlen($password)>1024) return false;
+    security_throttle('login-ip',security_client_ip(),60,900);
     $pdo = get_db();
     $user = get_user_by_username($username);
+    security_throttle('login-account',$user ? 'id:'.$user['id'] : mb_strtolower(trim($username)),15,900);
 
     if (!$user || !$user['is_active']) {
+        security_event('login_failed','password');
         return false;
     }
 
@@ -76,14 +82,11 @@ function attempt_login($username, $password) {
     }
 
     if (!password_verify($password, $user['password_hash'])) {
-        $attempts = (int)$user['failed_attempts'] + 1;
-        $lockedUntil = null;
-        if ($attempts >= LOGIN_MAX_ATTEMPTS) {
-            $lockedUntil = date('Y-m-d H:i:s', time() + LOGIN_LOCK_MINUTES * 60);
-            log_action('auth', 'login_locked', $username);
-        }
-        $stmt = $pdo->prepare('UPDATE users SET failed_attempts = ?, locked_until = ? WHERE id = ?');
-        $stmt->execute([$attempts, $lockedUntil, $user['id']]);
+        security_event('login_failed','password');
+        $stmt = $pdo->prepare('UPDATE users SET failed_attempts=CASE WHEN locked_until IS NOT NULL AND locked_until<=NOW() THEN 1 ELSE failed_attempts+1 END, locked_until=CASE WHEN failed_attempts>=? THEN DATE_ADD(NOW(), INTERVAL ' . LOGIN_LOCK_MINUTES . ' MINUTE) ELSE NULL END WHERE id=?');
+        $stmt->execute([LOGIN_MAX_ATTEMPTS,$user['id']]);
+        $lock=$pdo->prepare('SELECT locked_until FROM users WHERE id=?'); $lock->execute([$user['id']]);
+        if ($lock->fetchColumn()) log_action('auth','login_locked',$username);
         return false;
     }
 
@@ -199,6 +202,13 @@ function current_user() {
         return null;
     }
 
+    if (security_session_expired($user)) {
+        $pdo->prepare('UPDATE user_sessions SET is_active=0 WHERE id=?')->execute([$user['session_id']]);
+        unset($_SESSION['user_id'], $_SESSION['session_token'], $_SESSION['mfa_session_token']);
+        security_event('session_expired','session');
+        $__lrdms_current_user = null;
+        return null;
+    }
     // Refresh last_seen once per request.
     if (empty($GLOBALS['__lrdms_seen_touched'])) {
         $GLOBALS['__lrdms_seen_touched'] = true;
@@ -368,6 +378,8 @@ function user_agent_label($userAgent) {
  * caller can email it (this function does not send mail itself).
  */
 function generate_login_otp($user_id) {
+    security_throttle('login-otp-send',(string)$user_id,1,60);
+    security_throttle('login-otp-send-long',(string)$user_id,5,900);
     $pdo = get_db();
 
     $stmt = $pdo->prepare('DELETE FROM login_otp_codes WHERE user_id = ?');
@@ -423,6 +435,8 @@ function verify_login_otp($user_id, $code) {
  * Returns the code data on success, or null if user not found/inactive/no email.
  */
 function generate_password_reset_code($email) {
+    if (!is_string($email) || strlen($email)>254 || !filter_var($email,FILTER_VALIDATE_EMAIL)) return null;
+    security_throttle('reset-send-ip',security_client_ip(),15,900);
     $pdo = get_db();
 
     $stmt = $pdo->prepare(
@@ -430,6 +444,8 @@ function generate_password_reset_code($email) {
     );
     $stmt->execute([$email]);
     $user = $stmt->fetch();
+
+    security_throttle('reset-send-email',$user ? 'id:'.$user['id'] : mb_strtolower(trim($email)),3,900);
 
     if (!$user) {
         return null;
@@ -459,6 +475,11 @@ function generate_password_reset_code($email) {
  * Returns user data if valid, or null if invalid/expired.
  */
 function validate_password_reset_code($email, $code) {
+    if (!is_string($email) || strlen($email)>254) return null;
+    security_throttle('reset-verify-ip',security_client_ip(),60,900);
+    $identity=get_db()->prepare('SELECT id FROM users WHERE email=? AND is_active=1 LIMIT 1');
+    $identity->execute([$email]); $identity=$identity->fetchColumn();
+    security_throttle('reset-verify-email',$identity ? 'id:'.$identity : mb_strtolower(trim($email)),10,900);
     if (!is_string($code) || !preg_match('/^[0-9]{6}$/D', $code)) {
         return null;
     }
@@ -495,6 +516,8 @@ function validate_password_reset_code($email, $code) {
  * invalid/expired/already used.
  */
 function validate_password_reset_token($token) {
+    if (!is_string($token) || strlen($token)>256 || $token==='') return null;
+    security_throttle('reset-token-ip',security_client_ip(),60,900);
     $pdo = get_db();
 
     $stmt = $pdo->prepare(
@@ -594,5 +617,5 @@ function csrf_field() {
 function validate_csrf() {
     ensure_csrf_token();
     $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-    return hash_equals($_SESSION['csrf_token'], $token);
+    return is_string($token) && hash_equals($_SESSION['csrf_token'], $token);
 }

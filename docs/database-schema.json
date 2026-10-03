@@ -4269,6 +4269,58 @@
         }
       ]
     },
+    "security_rate_limits": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "bucket",
+          "COLUMN_TYPE": "char(64)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "hits",
+          "COLUMN_TYPE": "int(10) unsigned",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "expires_at",
+          "COLUMN_TYPE": "bigint(20)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "idx_rate_expiry",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "expires_at",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "bucket",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": []
+    },
     "users": {
       "engine": "InnoDB",
       "collation": "utf8mb4_unicode_ci",

@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 TABLES = {
+    'security_rate_limits':'Expiring hashed request-rate buckets shared by application instances; no raw secrets or account identifiers.',
     'access_request_reviews':'Review events for restricted-document access requests.',
     'access_requests':'Requests for access to a restricted document, including request-letter reference and decision.',
     'application_migrations':'One-time migration markers; not business records.',
@@ -41,6 +42,8 @@ TABLES = {
     'users':'Account identity, authentication state and organizational assignments.',
 }
 FIELDS = {
+    'bucket':'SHA-256 identifier of operation, subject and fixed time window.',
+    'hits':'Atomic request count for this bucket.',
     'id':'Surrogate row identifier.', 'name':'Human-readable name (migration identifier in application_migrations).',
     'title':'Record or report title.', 'description':'Explanatory description.',
     'created_at':'Time this row was created.', 'updated_at':'Most recent update time.',
@@ -147,6 +150,7 @@ def main():
         erd += [f'    {name} {{']
         for column in table['columns']:
             key=column['COLUMN_NAME']; description=FIELDS.get(key)
+            if name=='security_rate_limits' and key=='expires_at': description='Unix epoch seconds when this fixed rate window ends; cleanup may remove expired buckets.'
             if key in fks:
                 fk=fks[key]; ref=f"{fk['REFERENCED_TABLE_NAME']}.{fk['REFERENCED_COLUMN_NAME']}"
                 description=(description+' ' if description else '')+f"Foreign key to {ref}; DELETE {fk['DELETE_RULE']}, UPDATE {fk['UPDATE_RULE']}."

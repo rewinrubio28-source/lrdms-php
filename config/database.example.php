@@ -40,8 +40,9 @@ function get_db() {
                 ]
             );
         } catch (PDOException $e) {
-            http_response_code(500);
-            die('Database connection failed. Check your DB_* environment variables and confirm the database is reachable. (' . htmlspecialchars($e->getMessage()) . ')');
+            error_log('Database connection unavailable. Check deployment database configuration.');
+            http_response_code(503);
+            die('Service temporarily unavailable. Please try again later.');
         }
     }
     return $pdo;

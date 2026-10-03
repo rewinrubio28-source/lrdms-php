@@ -2,7 +2,7 @@
 
 Generated from the local migrated schema; schema metadata only, no account or document rows. Regenerate after migrations. This snapshot does not certify that production has the same schema.
 
-Server: `10.4.32-MariaDB`. Tables: **38**. Columns: **290**.
+Server: `10.4.32-MariaDB`. Tables: **39**. Columns: **293**.
 
 Field descriptions are application interpretations. Foreign-key targets and column definitions come directly from the database; external/provenance labels are not inferred to be enforced relationships.
 
@@ -777,6 +777,23 @@ Indexes:
 - `idx_search_created`: created_at, search_type; BTREE.
 - `idx_search_user_created`: user_id, created_at; BTREE.
 - `PRIMARY`: id; BTREE; unique.
+
+## security_rate_limits
+
+Expiring hashed request-rate buckets shared by application instances; no raw secrets or account identifiers.
+
+Engine: InnoDB; collation: utf8mb4_unicode_ci.
+
+| Column | Type | Nullable | Default | Key / extra | Description |
+|---|---|---|---|---|---|
+| bucket | char(64) | NO | NULL / none | PRI | SHA-256 identifier of operation, subject and fixed time window. |
+| hits | int(10) unsigned | NO | NULL / none |  | Atomic request count for this bucket. |
+| expires_at | bigint(20) | NO | NULL / none | MUL | Unix epoch seconds when this fixed rate window ends; cleanup may remove expired buckets. |
+
+Indexes:
+
+- `idx_rate_expiry`: expires_at; BTREE.
+- `PRIMARY`: bucket; BTREE; unique.
 
 ## users
 
