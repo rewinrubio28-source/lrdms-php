@@ -69,9 +69,9 @@ function security_web_request(): void {
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') security_throttle('post:'.$route,$ip,60,60);
 }
 
-function security_session_expired(array $user, ?int $now = null): bool {
-    $now ??= time();
-    $created = strtotime($user['session_created_at'] ?? '') ?: 0;
-    $seen = strtotime($user['session_last_seen'] ?? '') ?: $created;
-    return $created <= $now-43200 || $seen <= $now-1800;
+function security_session_expired(array $user): bool {
+    // Compute ages in the database, which also writes these timestamps.
+    // Parsing timezone-less SQL dates in PHP can immediately expire fresh sessions.
+    if (!isset($user['session_age_seconds'], $user['session_idle_seconds'])) return true;
+    return (int)$user['session_age_seconds'] >= 43200 || (int)$user['session_idle_seconds'] >= 1800;
 }

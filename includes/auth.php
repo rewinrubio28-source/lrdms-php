@@ -186,7 +186,9 @@ function current_user() {
                 u.committee_id, u.is_active, u.must_change_password, u.totp_enabled, u.totp_secret,
                 u.last_login_at, us.id AS session_id, us.session_token,
                 us.ip_address AS session_ip, us.created_at AS session_created_at,
-                us.last_seen AS session_last_seen
+                us.last_seen AS session_last_seen,
+                TIMESTAMPDIFF(SECOND, us.created_at, NOW()) AS session_age_seconds,
+                TIMESTAMPDIFF(SECOND, COALESCE(us.last_seen, us.created_at), NOW()) AS session_idle_seconds
          FROM user_sessions us
          JOIN users u ON u.id = us.user_id
          JOIN roles r ON r.id = u.role_id

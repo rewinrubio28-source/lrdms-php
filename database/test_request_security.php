@@ -14,10 +14,10 @@ check_security(security_rate_take($pdo,'login','other',2,60,122)===0,'Independen
 check_security(security_rate_take($pdo,'reset','test',2,60,122)===0,'Independent operation unaffected');
 check_security(security_rate_take($pdo,'login','test',2,60,180)===0,'New window permits retry');
 check_security($pdo->query('SELECT MIN(LENGTH(bucket)) FROM security_rate_limits')->fetchColumn()==64,'Only hashed bucket identifiers stored');
-$now=time();
-check_security(!security_session_expired(['session_created_at'=>date('Y-m-d H:i:s',$now-600),'session_last_seen'=>date('Y-m-d H:i:s',$now-60)],$now),'Recent session remains valid');
-check_security(security_session_expired(['session_created_at'=>date('Y-m-d H:i:s',$now-3600),'session_last_seen'=>date('Y-m-d H:i:s',$now-1800)],$now),'Inactive session expires at 30 minutes');
-check_security(security_session_expired(['session_created_at'=>date('Y-m-d H:i:s',$now-43200),'session_last_seen'=>date('Y-m-d H:i:s',$now)],$now),'Absolute 12-hour expiry survives polling');
+check_security(!security_session_expired(['session_age_seconds'=>600,'session_idle_seconds'=>60]),'Recent session remains valid');
+check_security(security_session_expired(['session_age_seconds'=>3600,'session_idle_seconds'=>1800]),'Inactive session expires at 30 minutes');
+check_security(security_session_expired(['session_age_seconds'=>43200,'session_idle_seconds'=>0]),'Absolute 12-hour expiry survives polling');
+check_security(security_session_expired([]),'Missing session ages fail closed');
 $_SERVER['REMOTE_ADDR']='192.0.2.20'; $_SERVER['HTTP_X_FORWARDED_FOR']='198.51.100.99';
 check_security(security_client_ip()==='192.0.2.20','Untrusted forwarded IP cannot bypass limits');
 $file=tempnam(sys_get_temp_dir(),'lrdms-safe-');

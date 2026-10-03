@@ -28,6 +28,13 @@ auth_check(attempt_login('auth-test','Test-password-123')==='locked','Lockout bl
 $pdo->exec('UPDATE users SET locked_until=DATE_SUB(NOW(), INTERVAL 1 MINUTE)');
 auth_check(attempt_login('auth-test','Test-password-123')==='success','Login succeeds after lockout expires');
 auth_check(current_user()['id']==1,'Issued session resolves user');
+$originalDbZone=$pdo->query('SELECT @@session.time_zone')->fetchColumn();
+$pdo->exec("SET SESSION time_zone = '+00:00'");
+// Fresh timestamps from a UTC database must survive PHP's Asia/Manila timezone.
+$pdo->exec('UPDATE user_sessions SET created_at=NOW(), last_seen=NOW()');
+$GLOBALS['__lrdms_current_user']=false;
+auth_check((current_user()['id'] ?? null)==1,'Fresh UTC database session stays valid with Philippine PHP timezone');
+$pdo->exec('SET SESSION time_zone = '.$pdo->quote($originalDbZone));
 $pdo->exec('UPDATE user_sessions SET is_active=0');
 $GLOBALS['__lrdms_current_user']=false;
 auth_check(current_user()===null,'Revoked session rejected');
