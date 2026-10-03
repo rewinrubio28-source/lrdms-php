@@ -277,6 +277,14 @@ include __DIR__ . '/includes/layout_top.php';
   .result-card__facts span { display: inline-flex; align-items: center; gap: 5px; }
   .result-card__actions { display: flex; gap: 8px; }
   .result-card__actions .btn { padding: 5px 14px; font-size: 12.5px; }
+  .compact-search { position: relative; }
+  .compact-search .search-more-filters { margin-top: 12px; }
+  .compact-search .search-more-filters summary { width: fit-content; padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .compact-search .search-more-filters summary:focus-visible { outline: 3px solid #5385c4; outline-offset: 3px; }
+  .compact-search .search-more-filters[open] { padding-bottom: 38px; }
+  .compact-search .search-utility-actions { display: flex; justify-content: flex-end; margin-top: -30px; pointer-events: none; }
+  .compact-search .search-utility-actions a { pointer-events: auto; }
+  @media (max-width: 575px) { .compact-search .search-utility-actions { margin-top: 10px; justify-content: flex-start; } .compact-search .search-more-filters[open] { padding-bottom: 0; } }
 </style>
 
 <div class="topbar" data-banner-date="<?= date('M j, Y') ?>">
@@ -294,32 +302,35 @@ include __DIR__ . '/includes/layout_top.php';
 <?php if ($savedSearchSuccess): ?><div class="alert alert-success"><?= htmlspecialchars($savedSearchSuccess) ?></div><?php endif; ?>
 <?php if ($savedSearchErrors): ?><div class="alert alert-danger"><?php foreach ($savedSearchErrors as $e) echo htmlspecialchars($e) . '<br>'; ?></div><?php endif; ?>
 
-<div class="card filters-card">
-  <div class="d-flex justify-content-end mb-3"><a href="copy_requests.php?return=<?= $documentSearchReturn ?>" class="btn btn-outline-primary btn-sm">Document Copy Requests</a></div>
+<div class="card filters-card compact-search">
   <form method="get" id="advanced-search-form">
     <div class="row g-3 align-items-end">
-      <div class="col-md-9">
-        <label class="field-label">Global Keyword Search</label>
+      <div class="col-md-7">
+        <label class="field-label" for="record-search-query">Global Keyword Search</label>
         <div class="search-input-wrap">
           <i class="bi bi-search"></i>
-          <input type="text" name="q" value="<?= htmlspecialchars($query) ?>" class="form-control" placeholder="Search by Title, Subject, Author, or Keyword…">
+          <input id="record-search-query" type="text" name="q" value="<?= htmlspecialchars($query) ?>" class="form-control" placeholder="Search by Title, Subject, Author, or Keyword…">
         </div>
       </div>
       <div class="col-md-3">
-        <label class="field-label">Document Type</label>
-        <select name="doc_type" class="form-select">
+        <label class="field-label" for="record-search-type">Document Type</label>
+        <select id="record-search-type" name="doc_type" class="form-select">
           <option value="">All Records</option>
           <?php foreach (['Ordinance','Resolution','Committee Report','Minutes'] as $t): ?>
             <option value="<?= $t ?>" <?= $typeFilter === $t ? 'selected' : '' ?>><?= $t ?></option>
           <?php endforeach; ?>
         </select>
       </div>
+      <div class="col-md-2"><button type="submit" class="btn btn-apply-filters w-100">Search</button></div>
     </div>
 
+    <?php $extraFilterCount=count(array_filter([$yearFilter, $committeeFilter, $officeFilter, $classificationFilter, $dateFrom, $dateTo, $statusFilter, $mode==='semantic', $sortBy!=='relevance'])); ?>
+    <details class="search-more-filters">
+    <summary>More filters<?= $extraFilterCount ? ' (' . $extraFilterCount . ' active)' : '' ?></summary>
     <?php include __DIR__ . '/includes/search_extra_filters.php'; ?>
     <label class="semantic-toggle">
       <input class="form-check-input" type="checkbox" name="mode" value="semantic" id="semanticToggle" <?= $mode === 'semantic' ? 'checked' : '' ?>>
-      Use semantic search (matches by meaning, via the BERT service — falls back to keyword automatically)
+      Match by meaning (uses keyword search when unavailable)
     </label>
 
     <div class="filters-row">
@@ -353,6 +364,8 @@ include __DIR__ . '/includes/layout_top.php';
         <button class="btn btn-apply-filters">Apply Filters</button>
       </div>
     </div>
+    </details>
+    <div class="search-utility-actions"><a href="copy_requests.php?return=<?= $documentSearchReturn ?>" class="btn btn-outline-primary btn-sm">Document Copy Requests</a></div>
 
     <?php if ($hasCriteria): ?>
     <div class="mt-3">
