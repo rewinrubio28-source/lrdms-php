@@ -26,3 +26,26 @@ html.dark .repo-workspace .doc-card__header{background:linear-gradient(110deg,#2
 @media(max-width:850px){.repo-workspace .doc-card__body{grid-template-columns:1fr}.repo-workspace .doc-card__row:first-child{grid-column:auto}}
 @media(max-width:576px){.repo-workspace #repo-filter-form{padding:14px}.repo-workspace .doc-card__header,.repo-workspace .doc-card__body,.repo-workspace .doc-card__actions{padding:14px}.repo-results-heading{align-items:flex-start}.repo-results-heading>span{font-size:10px}.repo-workspace .doc-card__value--title a{font-size:14px}.repo-workspace .doc-card__label{width:94px;flex-basis:94px}}
 @media(prefers-reduced-motion:reduce){.repo-workspace *{transition:none!important}}
+/* Match the audit workspace's filter-and-results panel structure. */
+.repo-panel-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:15px;align-items:start;--repo-border:#e2ebf1;--repo-ink:#163750;--repo-muted:#526b80}
+.repo-panel-layout #repo-filter-form{display:flex;flex-direction:column;gap:12px!important;margin:0!important;padding:17px 13px;border-radius:7px;box-shadow:0 2px 5px #16375003}
+.repo-panel-layout #repo-filter-form>[class*="col-"]{width:100%;padding:0;margin:0}
+.repo-panel-title{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:650;color:var(--repo-ink);margin:0 0 8px;padding:0}
+.repo-panel-title i{color:#07558e;font-size:17px}
+.repo-panel-layout #repo-filter-form :is(.form-control,.form-select){min-height:35px;border-radius:4px;font-size:12px;padding:7px 9px}
+.repo-panel-layout #repo-filter-form .btn{min-height:35px;border-radius:4px;font-size:12px}
+.repo-panel-layout #repo-filter-form>div:has(#repo-reset){order:3}
+.repo-panel-layout #repo-filter-form>div:has(#repo-filter-btn){order:2}
+.repo-panel-layout #repo-filter-form>div:has(#repo-filter-btn) label{display:none}
+.repo-panel-layout #repo-results{min-width:0;padding:17px 14px;background:var(--card-bg,#fff);border:1px solid var(--repo-border);border-radius:7px;box-shadow:0 2px 5px #16375003}
+.repo-panel-layout .repo-results-heading{padding-bottom:14px;border-bottom:1px solid var(--repo-border)}
+.repo-panel-layout .doc-card{border-radius:7px;box-shadow:none;margin-bottom:14px}
+.repo-panel-layout .doc-card__header{padding:12px 14px;background:#f4f9fc;border-color:var(--repo-border)}
+.repo-panel-layout .doc-card__body{padding:16px 14px;gap:10px 18px}
+.repo-panel-layout .doc-card__actions{padding:12px 14px;border-color:var(--repo-border)}
+.repo-panel-layout .doc-card__actions .btn{border-radius:4px}
+.repo-panel-layout #repo-empty-msg{border-radius:7px;margin:0}
+html.dark .repo-panel-layout .doc-card__header{background:#203453}
+@media(max-width:1100px){.repo-panel-layout .doc-card__body{grid-template-columns:1fr}.repo-panel-layout .doc-card__row:first-child{grid-column:auto}}
+@media(max-width:760px){.repo-panel-layout{grid-template-columns:1fr}.repo-panel-layout #repo-filter-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.repo-panel-layout .repo-panel-title{grid-column:1/-1}}
+@media(max-width:420px){.repo-panel-layout #repo-filter-form{grid-template-columns:1fr}}

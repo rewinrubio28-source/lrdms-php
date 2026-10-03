@@ -222,16 +222,17 @@ if ($isAjax) {
       <i class="bi bi-list"></i>
     </button>
     <div>
+      <span class="module-banner-eyebrow">DOCUMENT REPOSITORY</span>
       <h1 class="topbar__title"><?= htmlspecialchars($repositoryTitle) ?></h1>
       <p class="module-banner-description">Browse and manage the legislative records collection.</p>
-      <p class="repo-page-subtitle">Browse legislative records, view attachments, and trace document history.</p>
     </div>
   </div>
 </div>
 
-<link rel="stylesheet" href="assets/css/repository-workspace.css?v=1">
-<div class="repo-workspace">
+<link rel="stylesheet" href="assets/css/repository-workspace.css?v=2">
+<div class="repo-workspace repo-panel-layout">
   <form method="get" class="row g-2 mb-3" id="repo-filter-form">
+    <h2 class="repo-panel-title"><i class="bi bi-funnel" aria-hidden="true"></i> Filter records</h2>
     <?php if ($repositorySection !== ''): ?><input type="hidden" name="section" id="repo-section" value="<?= htmlspecialchars($repositorySection) ?>"><?php endif; ?>
     <div class="col-md-3">
       <label class="form-label small text-muted mb-0" for="repo-q">Search</label>
