@@ -59,31 +59,33 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 $preview=$_SESSION['dataset_preview']??null;
 include __DIR__.'/includes/layout_top.php';
 ?>
-<div class="topbar"><div class="d-flex align-items-center gap-2"><button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Open menu"><i class="bi bi-list"></i></button><div><h1 class="topbar__title">Import records</h1><p class="module-banner-description">Receive a dataset from an existing source system.</p></div></div></div>
-<div class="container-fluid py-3">
-<a href="encoding.php" class="btn btn-outline-secondary mb-3">Back to Incoming records</a>
+<link rel="stylesheet" href="assets/css/import-records.css?v=1">
+<div class="topbar" data-banner-date="<?= date('M j, Y') ?>"><div class="d-flex align-items-center gap-2"><button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Open menu"><i class="bi bi-list"></i></button><div><span class="module-banner-eyebrow">DOCUMENT ENCODING &amp; SUBMISSION</span><h1 class="topbar__title">Import records</h1><p class="module-banner-description">Upload a dataset, check its details, and send records for validation.</p></div></div></div>
+<div class="import-workspace">
+<div class="import-toolbar"><ol class="import-steps" aria-label="Import progress"><li <?= !$preview?'aria-current="step"':'' ?>><span>1</span> Upload</li><li <?= $preview?'aria-current="step"':'' ?>><span>2</span> Review &amp; import</li><li><span>3</span> Validate records</li></ol><a href="encoding.php" class="btn btn-outline-secondary btn-sm">Back</a></div>
 <?php if ($error): ?><div class="alert alert-danger" role="alert"><?= import_escape($error) ?></div><?php endif; ?>
-<div class="card p-4 mb-3">
-<h2 class="h5">Prepare your dataset</h2>
-<p>Import up to 1,000 records in a file up to 5 MB. Use UTF-8 CSV, a JSON array, or an Excel (.xlsx) workbook with one worksheet. Download a template and replace the sample record.</p>
-<p>Required fields: <strong>doc_number, title, source_system</strong>. Keep document numbers and dates as text in Excel; dates use YYYY-MM-DD. Use literal values without formulas. Old .xls files are not supported.</p>
-<p>Records enter the private <strong>Pending Validation</strong> queue. Attachments, version links, ownership and registration cannot be set by the dataset. Any error cancels the whole import; existing records are never overwritten.</p>
-<div class="d-flex flex-wrap gap-2"><a class="btn btn-outline-primary" href="?template=csv">CSV template</a><a class="btn btn-outline-primary" href="?template=xlsx">Excel template</a><a class="btn btn-outline-primary" href="?template=json">JSON template</a></div>
-</div>
+<div class="import-layout <?= $preview?'has-preview':'' ?>">
+<aside class="import-guide card">
+<h2>Start with a template</h2><p class="import-muted">Download your preferred format and replace the sample row.</p>
+<div class="import-templates"><a class="btn btn-outline-primary btn-sm" href="?template=csv">CSV</a><a class="btn btn-outline-primary btn-sm" href="?template=xlsx">Excel</a><a class="btn btn-outline-primary btn-sm" href="?template=json">JSON</a></div>
+<details class="import-format-guide" <?= !$preview?'open':'' ?>><summary>File requirements</summary><ul><li>Up to <strong>1,000 records</strong> and <strong>5 MB</strong>.</li><li>UTF-8 CSV, JSON array, or one-sheet XLSX.</li><li>Required columns: <code>doc_number</code>, <code>title</code>, <code>source_system</code>.</li><li>Keep document numbers and dates as text in Excel. Dates: YYYY-MM-DD.</li><li>Use values, not formulas. Old .xls files are unsupported.</li></ul></details>
+<div class="import-info"><h3>After import</h3><p>Records go to <strong>Pending Validation</strong> as private copies. Review and register them in Incoming records.</p><p>Attachments must be added separately. Version links, ownership and registration are not imported.</p></div>
+</aside>
+<div class="import-main">
 <?php if ($preview): ?>
-<div class="card p-4">
-<h2 class="h5">Review <?= count($preview['rows']) ?> records</h2>
-<p>Check the preview before importing. It expires after 15 minutes. Duplicate document numbers are checked again when you confirm.</p>
-<div class="table-responsive" style="max-height:32rem"><table class="table table-striped"><caption>All records in this import</caption><thead><tr><th scope="col">Record</th><th scope="col">Document number</th><th scope="col">Title</th><th scope="col">Type</th><th scope="col">Source</th><th scope="col">Source status</th></tr></thead><tbody>
+<section class="card import-preview">
+<div class="import-panel-heading"><div><h2>Review your records</h2><p class="import-muted">Check the details before saving this batch.</p></div><span class="import-count"><?= count($preview['rows']) ?> records</span></div>
+<p class="import-preview-note">Preview expires at <?= import_escape(date('g:i A', $preview['expires'])) ?> (<?= import_escape(date_default_timezone_get()) ?>). Document numbers are checked again on import.</p>
+<div class="table-responsive import-table-wrap" tabindex="0" role="region" aria-label="Scrollable import preview"><table class="table"><caption class="visually-hidden">All records in this import</caption><thead><tr><th scope="col">#</th><th scope="col">Document number</th><th scope="col">Title</th><th scope="col">Type</th><th scope="col">Source</th><th scope="col">Source status</th></tr></thead><tbody>
 <?php foreach ($preview['rows'] as $i=>$row): ?><tr><td><?= $i+1 ?></td><?php foreach (['doc_number','title','doc_type','source_system','source_status'] as $key): ?><td><?= import_escape($row[$key]) ?></td><?php endforeach; ?></tr><?php endforeach; ?>
 </tbody></table></div>
-<form method="post" class="mt-3" data-import-form><?php csrf_field(); ?><input type="hidden" name="preview_token" value="<?= import_escape($preview['token']) ?>"><button class="btn btn-primary" name="action" value="confirm">Import <?= count($preview['rows']) ?> records</button> <button class="btn btn-outline-secondary" name="action" value="cancel">Cancel preview</button></form>
-</div>
+<div class="import-confirm"><p class="import-muted">Existing records are never overwritten. If any record fails, the entire batch is cancelled.</p><form method="post" class="d-flex flex-wrap gap-2" data-import-form><?php csrf_field(); ?><input type="hidden" name="preview_token" value="<?= import_escape($preview['token']) ?>"><button class="btn btn-primary" name="action" value="confirm">Import <?= count($preview['rows']) ?> records</button><button class="btn btn-outline-secondary" name="action" value="cancel">Cancel preview</button></form></div>
+</section>
 <?php else: ?>
-<form method="post" enctype="multipart/form-data" class="card p-4" data-import-form><?php csrf_field(); ?><input type="hidden" name="action" value="preview"><label for="dataset" class="form-label">Dataset file</label><input id="dataset" class="form-control mb-3" type="file" name="dataset" accept=".csv,.json,.xlsx" required aria-describedby="file-note"><p id="file-note" class="text-muted">Your file is validated before any records are saved.</p><div><button class="btn btn-primary" type="submit">Validate and preview</button></div></form>
+<form method="post" enctype="multipart/form-data" class="card import-upload" data-import-form><?php csrf_field(); ?><input type="hidden" name="action" value="preview"><h2>Upload your dataset</h2><p class="import-muted">Choose the file containing the records you want to receive.</p><div class="import-file-box"><i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i><label for="dataset" class="form-label">Select a dataset file</label><input id="dataset" class="form-control" type="file" name="dataset" accept=".csv,.json,.xlsx" required aria-describedby="file-note"><p id="file-note" class="import-muted">CSV, Excel (.xlsx), or JSON &middot; Maximum 5 MB</p></div><p class="import-muted mt-3">Nothing is saved until you review and confirm the import.</p><div><button class="btn btn-primary" type="submit">Validate and preview</button></div></form>
 <?php endif; ?>
 <p id="import-progress" role="status" aria-live="polite" class="mt-3"></p>
-</div>
+</div></div></div>
 <script>
 window.addEventListener('pageshow', function() {
   document.querySelectorAll('[data-import-form]').forEach(function(form) { delete form.dataset.busy; form.removeAttribute('aria-busy'); });
