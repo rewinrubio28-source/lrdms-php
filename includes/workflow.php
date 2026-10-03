@@ -1,26 +1,9 @@
 <?php
 /**
- * Document status workflow — enforces valid transitions.
- *
- * Simplified lifecycle: LRDMS is the system of record for FINALIZED
- * documents only (see README's integration boundary). Every document that
- * enters this system — via the API push in api/upload_document.php, or the
- * (removed) old manual filing form — starts life already Enacted. The full
- * drafting-to-first-reading workflow (Draft → Submitted → Under Review) is
- * owned by System 1 upstream, not by LRDMS, so there is no in-app path left
- * that can ever create or move a document through those states.
- *
- * Transition rules (who can do what):
- *   Enacted     - no manual status transitions
- *   Amended     - set only by version control
- *
- * 'Draft', 'Submitted', and 'Under Review' remain valid ENUM values in the
- * database (so any pre-existing/legacy or manually-inserted row in one of
- * those states doesn't break), but they are intentionally absent from the
- * transition map below — a document already in one of those states has no
- * outgoing transition here, since there's no LRDMS-owned workflow to move
- * it forward. That's correct, not a bug: those statuses aren't LRDMS's to
- * progress.
+ * LRDMS receives records from source systems; it does not run their approval workflows.
+ * Source status is descriptive metadata. records_status tracks local validation/registration.
+ * This transition map intentionally exposes no manual legislative transitions.
+ * Version links and registration are handled separately by record_processing.php.
  */
 
 /**

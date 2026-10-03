@@ -2,7 +2,7 @@
 
 Generated from the local migrated schema; schema metadata only, no account or document rows. Regenerate after migrations. This snapshot does not certify that production has the same schema.
 
-Server: `10.4.32-MariaDB`. Tables: **39**. Columns: **293**.
+Server: `10.4.32-MariaDB`. Tables: **40**. Columns: **305**.
 
 Field descriptions are application interpretations. Foreign-key targets and column definitions come directly from the database; external/provenance labels are not inferred to be enforced relationships.
 
@@ -303,6 +303,33 @@ Indexes:
 - `PRIMARY`: id; BTREE; unique.
 - `uniq_rel`: document_id, related_id, relationship_type; BTREE; unique.
 
+## document_source_history
+
+Append-only manually recorded source events, with explicit demo/source basis and LRDMS recorder attribution.
+
+Engine: InnoDB; collation: utf8mb4_general_ci.
+
+| Column | Type | Nullable | Default | Key / extra | Description |
+|---|---|---|---|---|---|
+| id | int(11) | NO | NULL / none | PRI auto_increment | Surrogate row identifier. |
+| document_id | int(11) | NO | NULL / none | MUL | Foreign key to documents.id; DELETE RESTRICT, UPDATE RESTRICT. |
+| event_date | date | NO | NULL / none |  | Source event date supplied by the recorder, distinct from the LRDMS entry timestamp. |
+| event_title | varchar(180) | NO | NULL / none |  | Description of the reported source event. |
+| source_office | varchar(180) | NO | NULL / none |  | Office or system reported as the origin of the event. |
+| destination_office | varchar(180) | YES | NULL |  | Reported receiving office, if supplied. |
+| actor_name | varchar(180) | YES | NULL |  | Reported source actor or role; not an authenticated LRDMS identity. |
+| reference | varchar(180) | YES | NULL |  | Supporting document/page reference supplied as text. |
+| remarks | text | NO | NULL / none |  | Recorder-supplied event description or clarification. |
+| evidence_type | enum('Manual source record','Simulated demo') | NO | NULL / none |  | Manual source record or explicitly simulated demo entry. |
+| recorded_by | int(11) | NO | NULL / none | MUL | Authenticated LRDMS user who entered the source event. Foreign key to users.id; DELETE RESTRICT, UPDATE RESTRICT. |
+| created_at | timestamp | NO | current_timestamp() |  | Time this row was created. |
+
+Indexes:
+
+- `idx_source_history_document`: document_id, event_date, id; BTREE.
+- `PRIMARY`: id; BTREE; unique.
+- `recorded_by`: recorded_by; BTREE.
+
 ## integration_receipts
 
 Receipt and processing history for externally submitted records.
@@ -598,7 +625,7 @@ Engine: InnoDB; collation: utf8mb4_unicode_ci.
 |---|---|---|---|---|---|
 | id | bigint(20) | NO | NULL / none | PRI auto_increment | Surrogate row identifier. |
 | document_id | int(11) | NO | NULL / none | MUL | Foreign key to documents.id; DELETE RESTRICT, UPDATE RESTRICT. |
-| recorded_by | int(11) | NO | NULL / none | MUL | Foreign key to users.id; DELETE RESTRICT, UPDATE RESTRICT. |
+| recorded_by | int(11) | NO | NULL / none | MUL | Authenticated LRDMS user who entered the source event. Foreign key to users.id; DELETE RESTRICT, UPDATE RESTRICT. |
 | contact_person | varchar(180) | NO | NULL / none |  | Person contacted during follow-up. |
 | contact_method | varchar(30) | NO | NULL / none |  | Follow-up communication channel. |
 | note | text | NO | NULL / none |  | Operator-entered explanatory note. |

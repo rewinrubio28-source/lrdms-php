@@ -9,6 +9,7 @@ $trackingDates = [
 ?>
 <div class="record-tracking-layout">
   <div class="record-tracking-main">
+    <?php include __DIR__ . '/source_history_view.php'; ?>
     <section class="card record-monitor" aria-labelledby="record-monitor-heading">
       <div class="record-monitor-heading">
         <h3 id="record-monitor-heading">Document monitor</h3>
@@ -41,7 +42,7 @@ $trackingDates = [
     </section>
     <?php if ($trackingEvents): $latestTrackingEvent = $trackingEvents[0]; ?>
     <section class="card record-monitor" aria-labelledby="latest-record-activity">
-      <div class="record-monitor-heading"><h3 id="latest-record-activity">Latest activity</h3></div>
+      <div class="record-monitor-heading"><h3 id="latest-record-activity">Latest LRDMS processing activity</h3></div>
       <div class="p-3">
         <b><?= htmlspecialchars($latestTrackingEvent['action']) ?></b>
         <p class="small text-muted mt-1 mb-0"><?= htmlspecialchars(date('M j, Y, g:i A', strtotime($latestTrackingEvent['created_at']))) ?> &middot; <?= htmlspecialchars($latestTrackingEvent['full_name'] ?: 'System') ?></p>
@@ -60,7 +61,7 @@ $trackingDates = [
     <p class="text-break"><?= htmlspecialchars($doc['title']) ?></p>
   </div>
   <div class="verification-metadata">
-    <h3>Records timeline</h3>
+    <h3>LRDMS receiving timeline</h3>
     <ol class="list-unstyled mt-3 mb-0">
       <?php foreach ($trackingDates as $label => $date): ?>
       <li class="vtimeline__item record-tracking-step">
@@ -71,7 +72,7 @@ $trackingDates = [
     </ol>
   </div>
   <details class="document-supporting-details mt-3">
-    <summary><i class="bi bi-clock-history me-2" aria-hidden="true"></i>View processing history (<?= count($trackingEvents) ?>)</summary>
+    <summary><i class="bi bi-clock-history me-2" aria-hidden="true"></i>View LRDMS processing history (<?= count($trackingEvents) ?>)</summary>
     <div class="pt-3">
       <?php if (!$trackingEvents): ?>
         <p class="small text-muted mb-0">No processing events have been recorded for this document.</p>

@@ -79,6 +79,13 @@ erDiagram
     documents ||--o{ document_relationships : document_id
     documents ||--o{ document_relationships : related_id
     users ||--o{ document_relationships : created_by
+    document_source_history {
+        int id PK
+        int document_id FK
+        int recorded_by FK
+    }
+    documents ||--o{ document_source_history : document_id
+    users ||--o{ document_source_history : recorded_by
     integration_receipts {
         bigint id PK
         int received_by FK

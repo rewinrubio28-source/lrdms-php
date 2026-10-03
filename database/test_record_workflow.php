@@ -22,6 +22,10 @@ function fixture(PDO $pdo, string $number, string $state='Pending Validation', ?
     return (int)$pdo->lastInsertId();
 }
 $normalized = intake_record_values(['title'=>'Sample','doc_number'=>'TEST','source_status'=>'Under Review','originating_office'=>'Records','classification'=>'RESTRICTED']);
+foreach (['Final minutes','Approved report','Withdrawn'] as $sourceStatus) {
+    $sourceRecord=intake_record_values(['title'=>'Demo source record','doc_number'=>'DEMO-SOURCE','source_system'=>'Demo source','source_status'=>$sourceStatus]);
+    check($sourceRecord['source_status']===$sourceStatus && $sourceRecord['status']==='Submitted','Preserve source vocabulary without manufacturing enactment');
+}
 check($normalized['status']==='Under Review' && $normalized['originating_office']==='Records','Intake normalization');
 $payload = $normalized + ['owner_id'=>1,'records_status'=>'Pending Validation','is_public'=>0,'received_at'=>date('Y-m-d H:i:s')];
 $insert = $pdo->prepare('INSERT INTO documents (`' . implode('`,`',array_keys($payload)) . '`) VALUES (' . implode(',',array_fill(0,count($payload),'?')) . ')');

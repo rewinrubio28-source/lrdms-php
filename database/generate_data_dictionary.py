@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 TABLES = {
+    'document_source_history':'Append-only manually recorded source events, with explicit demo/source basis and LRDMS recorder attribution.',
     'security_rate_limits':'Expiring hashed request-rate buckets shared by application instances; no raw secrets or account identifiers.',
     'access_request_reviews':'Review events for restricted-document access requests.',
     'access_requests':'Requests for access to a restricted document, including request-letter reference and decision.',
@@ -42,6 +43,15 @@ TABLES = {
     'users':'Account identity, authentication state and organizational assignments.',
 }
 FIELDS = {
+    'event_date':'Source event date supplied by the recorder, distinct from the LRDMS entry timestamp.',
+    'event_title':'Description of the reported source event.',
+    'source_office':'Office or system reported as the origin of the event.',
+    'destination_office':'Reported receiving office, if supplied.',
+    'actor_name':'Reported source actor or role; not an authenticated LRDMS identity.',
+    'reference':'Supporting document/page reference supplied as text.',
+    'remarks':'Recorder-supplied event description or clarification.',
+    'evidence_type':'Manual source record or explicitly simulated demo entry.',
+    'recorded_by':'Authenticated LRDMS user who entered the source event.',
     'bucket':'SHA-256 identifier of operation, subject and fixed time window.',
     'hits':'Atomic request count for this bucket.',
     'id':'Surrogate row identifier.', 'name':'Human-readable name (migration identifier in application_migrations).',

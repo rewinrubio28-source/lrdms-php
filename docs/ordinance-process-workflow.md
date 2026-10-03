@@ -1,5 +1,7 @@
 # Ordinance Process Workflow
 
+> Historical interview notes. For the current re-defense scope, see [Repository demo and current scope](demo-repository-workflow.md). System 6 receives records/data from other systems; it does not repeat upstream approvals. System 8 owns retention management. These notes do not establish that every incoming record must be Enacted.
+
 *Gathered from interview — for reference in the LRDMS (Legislative Records & Document Management System) project.*
 
 ## 1. Main Document Process Flow

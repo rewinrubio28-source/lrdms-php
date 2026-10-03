@@ -8,7 +8,7 @@ $incomingMetadataEditing = false;
 $previousQuery = $pdo->prepare('SELECT d.id,d.doc_number,d.title FROM documents d WHERE d.verified_at IS NOT NULL AND d.next_version_id IS NULL AND d.doc_type=? AND (' . $incomingScope . ') ORDER BY d.created_at DESC');
 $previousQuery->execute(array_merge([$doc['doc_type']], $incomingParams));
 $incomingPreviousOptions = $previousQuery->fetchAll();
-$incomingFields = ['title','doc_number','doc_type','sponsor','classification','originating_office','originating_division','submitter_position','responsible_custodian','related_legislative_item','previous_version_id'];
+$incomingFields = ['title','doc_number','doc_type','sponsor','classification','originating_office','originating_division','submitter_position','responsible_custodian','related_legislative_item','previous_version_id','source_record_id','source_status'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_incoming_metadata') {
     if (!$canEditIncomingMetadata) {
         $incomingMetadataErrors[] = 'Your role cannot edit this record metadata.';
@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
         foreach ($incomingFields as $field) {
             $incomingMetadataValues[$field] = is_string($_POST[$field] ?? null) ? trim($_POST[$field]) : '';
         }
-        foreach (['title'=>500,'doc_number'=>60,'sponsor'=>150,'originating_office'=>180,'originating_division'=>180,'submitter_position'=>180,'responsible_custodian'=>180,'related_legislative_item'=>180] as $field=>$limit) {
+        foreach (['title'=>500,'doc_number'=>60,'sponsor'=>150,'originating_office'=>180,'originating_division'=>180,'submitter_position'=>180,'responsible_custodian'=>180,'related_legislative_item'=>180,'source_record_id'=>180,'source_status'=>100] as $field=>$limit) {
             if (mb_strlen($incomingMetadataValues[$field]) > $limit || (in_array($field, ['title','doc_number'], true) && $incomingMetadataValues[$field] === '')) {
                 $incomingMetadataErrors[] = ucwords(str_replace('_', ' ', $field)) . ' is required where applicable and must not exceed ' . $limit . ' characters.';
             }

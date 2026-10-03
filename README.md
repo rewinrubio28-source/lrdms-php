@@ -1,10 +1,10 @@
 # LRDMS — Legislative Records & Document Management System
 
-This is the **Legislative Records & Document Management System** subsystem of the larger Legislative Services platform — the system of record for finalized ordinances, resolutions, committee reports, and session minutes. It encodes documents, versions them, makes them searchable, and exposes read/write API endpoints so the other subsystems (Ordinance Lifecycle, Session Management, Research & Policy Analysis, Citizen Engagement) can integrate with it.
+This is the **Legislative Records & Document Management System** subsystem of the larger Legislative Services platform — the central repository receiving documents and data from other legislative systems. It encodes documents, versions them, makes them searchable, and exposes read/write API endpoints so the other subsystems (Ordinance Lifecycle, Session Management, Research & Policy Analysis, Citizen Engagement) can integrate with it.
 
 Built with **native PHP, MySQL, and Bootstrap 5** — no framework, per the project's chosen stack.
 
-> **Where this system's responsibility starts and stops:** see [`docs/ordinance-process-workflow.md`](docs/ordinance-process-workflow.md) — it walks through the client's actual drafting-to-first-reading process flow and confirms LRDMS picks up only once a document is formally Enacted, not before.
+> **Current scope and manual demo:** see [Repository demo and current scope](docs/demo-repository-workflow.md). System 6 receives and registers records; source systems own their approval workflows and System 8 owns retention management.
 
 ## Tech stack
 
@@ -118,7 +118,7 @@ Both functions encode the same rules — one as a SQL `WHERE` fragment (for list
 | Legislative Staff | Draft/submit their own documents; view their own drafts plus enacted public documents. |
 | Committee Secretary | Review/endorse documents in `Submitted` / `Under Review` status for their committee; create committee documents. |
 
-Document lifecycle: `Draft → Submitted → Under Review → Enacted → Amended`. New records accept `Draft`, `Submitted`, `Under Review`, `Enacted`, `Amended`, and `Rejected`. `Superseded` and `Withdrawn` are retired; their database values remain for historical records. `is_public` is a separate flag — a document can be `Enacted` and still not public if you want a staging period before it's citizen-visible.
+Source status describes the submitted document; records_status tracks LRDMS validation and registration. The legacy legislative status field remains for filters and visibility rules, not an LRDMS approval workflow. See [status definitions and demo steps](docs/demo-repository-workflow.md).
 
 ## Implementation and verification
 

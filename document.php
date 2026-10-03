@@ -152,7 +152,7 @@ if ($needsReview) {
       <section class="verification-panel card">
         <div class="verification-panel__heading"><h2>Encoding &amp; Submission</h2><p>Review document details and complete the record metadata.</p></div>
         <?php if ($reviewSuccess): ?><div class="alert alert-success py-2 small"><?= htmlspecialchars($reviewSuccess) ?></div><?php endif; ?><?php if ($reviewFlashError): ?><div class="alert alert-warning py-2 small"><?= htmlspecialchars($reviewFlashError) ?></div><?php endif; ?><?php if ($reviewErrors): ?><div class="alert alert-danger py-2 small"><?php foreach ($reviewErrors as $error): ?><div><?= htmlspecialchars($error) ?></div><?php endforeach; ?></div><?php endif; ?>
-        <div class="verification-metadata"><h3>Metadata validation</h3><div class="verification-metadata__grid"><div><span>Incoming legislative status</span><strong><?= htmlspecialchars($doc['source_status'] ?: $doc['status']) ?></strong></div><div><span>Source subsystem</span><strong><?= htmlspecialchars($doc['source_system']) ?></strong></div><div><span>Source record ID</span><strong><?= htmlspecialchars($doc['source_record_id'] ?: 'Not provided') ?></strong></div><div><span>Records status</span><strong><?= htmlspecialchars($doc['records_status']) ?></strong></div></div><?php if (!empty($doc['validation_note'])): ?><p class="verification-note"><b>Previous return note:</b> <?= nl2br(htmlspecialchars($doc['validation_note'])) ?></p><?php endif; ?></div>
+        <div class="verification-metadata"><h3>Metadata validation</h3><div class="verification-metadata__grid"><div><span>Status reported by source</span><strong><?= htmlspecialchars($doc['source_status'] ?: $doc['status']) ?></strong></div><div><span>Source subsystem</span><strong><?= htmlspecialchars($doc['source_system']) ?></strong></div><div><span>Source record ID</span><strong><?= htmlspecialchars($doc['source_record_id'] ?: 'Not provided') ?></strong></div><div><span>Records status</span><strong><?= htmlspecialchars($doc['records_status']) ?></strong></div></div><?php if (!empty($doc['validation_note'])): ?><p class="verification-note"><b>Previous return note:</b> <?= nl2br(htmlspecialchars($doc['validation_note'])) ?></p><?php endif; ?></div>
         <?php include __DIR__ . '/includes/incoming_metadata_form.php'; ?>
         <?php include __DIR__ . '/includes/document_council_term_form.php'; ?>
         <?php if (has_permission('repository','edit_metadata') && !in_array($doc['records_status'], ['Duplicate','Unauthorized Submission'], true)): ?>
@@ -429,14 +429,14 @@ if ($flashSuccess) {
 <?php if ($errors): ?><div class="alert alert-danger"><?php foreach ($errors as $e) echo htmlspecialchars($e) . '<br>'; ?></div><?php endif; ?>
 
 <div class="nav nav-pills gap-2 mb-4" role="tablist" aria-label="Document sections">
-  <button class="nav-link active" id="document-details-tab" data-bs-toggle="pill" data-bs-target="#document-details-panel" type="button" role="tab" aria-controls="document-details-panel" aria-selected="true">Document Details</button>
-  <button class="nav-link" id="document-history-tab" data-bs-toggle="pill" data-bs-target="#document-history-panel" type="button" role="tab" aria-controls="document-history-panel" aria-selected="false">Tracking &amp; History</button>
+  <button class="nav-link <?= isset($_GET['source_history_saved'])?'':'active' ?>" id="document-details-tab" data-bs-toggle="pill" data-bs-target="#document-details-panel" type="button" role="tab" aria-controls="document-details-panel" aria-selected="<?= isset($_GET['source_history_saved'])?'false':'true' ?>">Document Details</button>
+  <button class="nav-link <?= isset($_GET['source_history_saved'])?'active':'' ?>" id="document-history-tab" data-bs-toggle="pill" data-bs-target="#document-history-panel" type="button" role="tab" aria-controls="document-history-panel" aria-selected="<?= isset($_GET['source_history_saved'])?'true':'false' ?>">Tracking &amp; History</button>
 </div>
 <div class="tab-content">
-  <div class="tab-pane fade show active" id="document-details-panel" role="tabpanel" aria-labelledby="document-details-tab" tabindex="0">
+  <div class="tab-pane fade <?= isset($_GET['source_history_saved'])?'':'show active' ?>" id="document-details-panel" role="tabpanel" aria-labelledby="document-details-tab" tabindex="0">
     <?php include __DIR__ . '/includes/document_workspace.php'; ?>
   </div>
-  <div class="tab-pane fade" id="document-history-panel" role="tabpanel" aria-labelledby="document-history-tab" tabindex="0">
+  <div class="tab-pane fade <?= isset($_GET['source_history_saved'])?'show active':'' ?>" id="document-history-panel" role="tabpanel" aria-labelledby="document-history-tab" tabindex="0">
     <?php
       $trackingStmt = $pdo->prepare('SELECT h.action, h.note, h.created_at, u.full_name FROM record_validation_history h LEFT JOIN users u ON u.id=h.actor_id WHERE h.document_id=? ORDER BY h.created_at DESC, h.id DESC');
       $trackingStmt->execute([(int)$doc['id']]);

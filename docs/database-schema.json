@@ -1769,6 +1769,184 @@
         }
       ]
     },
+    "document_source_history": {
+      "engine": "InnoDB",
+      "collation": "utf8mb4_general_ci",
+      "columns": [
+        {
+          "COLUMN_NAME": "id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "PRI",
+          "EXTRA": "auto_increment",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "document_id",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "event_date",
+          "COLUMN_TYPE": "date",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "event_title",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "source_office",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "destination_office",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "actor_name",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "reference",
+          "COLUMN_TYPE": "varchar(180)",
+          "IS_NULLABLE": "YES",
+          "COLUMN_DEFAULT": "NULL",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "remarks",
+          "COLUMN_TYPE": "text",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "evidence_type",
+          "COLUMN_TYPE": "enum('Manual source record','Simulated demo')",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "recorded_by",
+          "COLUMN_TYPE": "int(11)",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": null,
+          "COLUMN_KEY": "MUL",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        },
+        {
+          "COLUMN_NAME": "created_at",
+          "COLUMN_TYPE": "timestamp",
+          "IS_NULLABLE": "NO",
+          "COLUMN_DEFAULT": "current_timestamp()",
+          "COLUMN_KEY": "",
+          "EXTRA": "",
+          "COLUMN_COMMENT": ""
+        }
+      ],
+      "indexes": [
+        {
+          "INDEX_NAME": "idx_source_history_document",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "document_id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_source_history_document",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 2,
+          "COLUMN_NAME": "event_date",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "idx_source_history_document",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 3,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "PRIMARY",
+          "NON_UNIQUE": 0,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "id",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        },
+        {
+          "INDEX_NAME": "recorded_by",
+          "NON_UNIQUE": 1,
+          "SEQ_IN_INDEX": 1,
+          "COLUMN_NAME": "recorded_by",
+          "SUB_PART": null,
+          "INDEX_TYPE": "BTREE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "CONSTRAINT_NAME": "document_source_history_ibfk_1",
+          "COLUMN_NAME": "document_id",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "documents",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        },
+        {
+          "CONSTRAINT_NAME": "document_source_history_ibfk_2",
+          "COLUMN_NAME": "recorded_by",
+          "REFERENCED_TABLE_SCHEMA": "(same database)",
+          "REFERENCED_TABLE_NAME": "users",
+          "REFERENCED_COLUMN_NAME": "id",
+          "ORDINAL_POSITION": 1,
+          "UPDATE_RULE": "RESTRICT",
+          "DELETE_RULE": "RESTRICT"
+        }
+      ]
+    },
     "integration_receipts": {
       "engine": "InnoDB",
       "collation": "utf8mb4_unicode_ci",

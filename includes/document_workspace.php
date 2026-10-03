@@ -63,7 +63,7 @@ $canPreviewOriginal = can_download_record(current_user(), $doc);
         <h3>Record metadata</h3>
       </div>
       <div class="verification-metadata__grid">
-        <div><span>Legislative status</span><strong><?= htmlspecialchars($doc['source_status'] ?: $doc['status']) ?></strong></div>
+        <div><span>Status reported by source</span><strong><?= htmlspecialchars($doc['source_status'] ?: $doc['status']) ?></strong></div>
         <div><span>Source subsystem</span><strong><?= htmlspecialchars($doc['source_system']) ?></strong></div>
         <div><span>Received by</span><strong><?= htmlspecialchars($doc['owner_name']) ?></strong></div>
         <div><span>Received date</span><strong><?= htmlspecialchars(date('M j, Y', strtotime($doc['received_at'] ?? $doc['created_at']))) ?></strong></div>
@@ -95,42 +95,7 @@ $canPreviewOriginal = can_download_record(current_user(), $doc);
     </div>
   </section>
   <section class="verification-panel card registered-document-details">
-    <div class="verification-metadata" aria-labelledby="record-details-heading">
-      <h3 id="record-details-heading">Record details</h3>
-      <div class="verification-metadata__grid">
-        <?php foreach ([
-            'records_status' => 'Records status',
-            'classification' => 'Classification',
-            'originating_office' => 'Originating office',
-            'originating_division' => 'Originating division',
-            'submitter_position' => 'Submitted by',
-            'responsible_custodian' => 'Responsible custodian',
-            'related_legislative_item' => 'Related legislative item',
-            'source_system' => 'Source system',
-            'source_record_id' => 'Source record ID',
-            'source_status' => 'Source status',
-            'received_at' => 'Received at',
-            'registered_at' => 'Registered at',
-        ] as $field => $label): ?>
-          <?php
-            $value = trim((string)($doc[$field] ?? ''));
-            if ($value === '') continue;
-            if (in_array($field, ['received_at', 'registered_at'], true)) {
-                $timestamp = strtotime($value);
-                if ($timestamp !== false) $value = date('M j, Y, g:i A', $timestamp);
-            }
-          ?>
-          <div><span><?= htmlspecialchars($label) ?></span>
-          <strong>
-            <?php if ($field === 'classification'): ?>
-              <b class="classification-tag classification-tag--<?= htmlspecialchars(strtolower($value), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($value, ENT_QUOTES, 'UTF-8') ?></b>
-            <?php else: ?>
-              <?= htmlspecialchars($value, ENT_QUOTES, 'UTF-8') ?>
-            <?php endif; ?>
-          </strong></div>
-        <?php endforeach; ?>
-      </div>
-    </div>
+    <?php include __DIR__ . '/record_detail_groups.php'; ?>
     <?php if (has_permission('repository','manage_visibility')): ?>
     <form method="post" class="verification-metadata">
       <?php csrf_field(); ?><input type="hidden" name="action" value="update_visibility">
@@ -149,7 +114,7 @@ $canPreviewOriginal = can_download_record(current_user(), $doc);
   <h1>LRDMS Record Details</h1>
   <h2><?= htmlspecialchars($doc['title']) ?></h2>
   <dl>
-    <?php foreach (['Document number' => $doc['doc_number'], 'Document type' => $doc['doc_type'], 'Sponsor' => $doc['sponsor'], 'Source subsystem' => $doc['source_system'], 'Legislative status' => $doc['source_status'] ?: $doc['status'], 'Records status' => $doc['records_status'], 'Received by' => $doc['owner_name']] as $label => $value): ?>
+    <?php foreach (['Document number' => $doc['doc_number'], 'Document type' => $doc['doc_type'], 'Sponsor' => $doc['sponsor'], 'Source subsystem' => $doc['source_system'], 'Status reported by source' => $doc['source_status'] ?: $doc['status'], 'Records status' => $doc['records_status'], 'Received by' => $doc['owner_name']] as $label => $value): ?>
     <dt><?= htmlspecialchars($label) ?></dt><dd><?= htmlspecialchars($value ?: 'Not provided') ?></dd>
     <?php endforeach; ?>
   </dl>

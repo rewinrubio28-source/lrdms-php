@@ -38,7 +38,7 @@ Content type must be `application/json` or `multipart/form-data`. JSON must cont
 
 Additional fields: `sponsor`, `committee_id`, `previous_version_id`, `council_term`, `source_status_date` (`Y-m-d H:i:s`), `originating_office`, `originating_division`, `submitter_position`, `responsible_custodian`, `related_legislative_item`, `body`, `ocr_text`.
 
-Document types: Ordinance, Resolution, Committee Report, Minutes, Other. Statuses: Draft, Submitted, Under Review, Enacted, Amended, Rejected. Recognized `source_status` and `status` must agree. Classification: PUBLIC, INTERNAL, RESTRICTED, CONFIDENTIAL. Intake always sets private visibility and Pending Validation, even if the caller requests public visibility. Authorized staff must review/register it.
+Document types: Ordinance, Resolution, Committee Report, Minutes, Other. Legacy `status` values: Draft, Submitted, Under Review, Enacted, Amended, Rejected. `source_status` can preserve source-specific descriptions such as Final minutes or Approved report. If it matches a legacy status, the two must agree; otherwise an omitted legacy status defaults to Submitted, not Enacted. Classification: PUBLIC, INTERNAL, RESTRICTED, CONFIDENTIAL. Intake always sets private visibility and Pending Validation, even if the caller requests public visibility. Authorized staff must validate/register it; this is not upstream legislative approval. Source-history events currently use the manual UI, not this API.
 
 Multipart requests use the same fields plus `attachment[]`. Accepted extensions: pdf, png, jpg, jpeg, gif, webp, doc, docx, txt. Multiple attachments belong to one record; this is not a bulk-record importer. OCR is not automatically run by this endpoint.
 
@@ -74,4 +74,4 @@ php database/test_search_recovery.php
 php database/test_record_workflow.php
 ```
 
-The first checks request rejection; the second executes successful searches against temporary fixtures, including AI outage fallback; the third checks intake normalization and registration transactions. A successful HTTP multipart intake through the deployed web server still needs a staging/demo test, including storage failure cleanup. No general API rate limiter is currently implemented.
+The first checks request rejection; the second executes successful searches against temporary fixtures, including AI outage fallback; the third checks intake normalization and registration transactions. A successful HTTP multipart intake through the deployed web server still needs a staging/demo test, including storage failure cleanup. Shared request throttling is described in `security-hardening-review.md`.
