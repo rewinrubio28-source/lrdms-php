@@ -54,6 +54,7 @@ echo json_encode([
     'mode' => $mode,
     'effective_mode' => $searchExecution['effective_mode'],
     'strategy' => $searchExecution['strategy'] ?? 'keyword',
+    'language_assisted' => $searchExecution['language_assisted'] ?? false,
     'fallback' => $searchExecution['fallback'],
     'query' => $query,
     'results' => array_map(function ($d) {

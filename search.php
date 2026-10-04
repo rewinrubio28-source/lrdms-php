@@ -464,6 +464,9 @@ include __DIR__ . '/includes/layout_top.php';
     <div class="alert alert-warning" role="status">Semantic search is temporarily unavailable. Showing keyword matches instead.</div>
   <?php elseif (($searchExecution['strategy'] ?? '') === 'hybrid'): ?>
     <p class="text-muted small">Results combine meaning and keyword matches. Exact document numbers appear first when sorted by relevance.</p>
+    <?php if (!empty($searchExecution['language_assisted'])): ?>
+      <p class="text-muted small">Recognized Filipino terms were matched using English equivalents. Keyword matches use your original search.</p>
+    <?php endif; ?>
   <?php endif; ?>
   <?php if (!$hasCriteria): ?>
     <p class="text-muted mb-0">Enter a keyword or choose filters to find a registered record.</p>

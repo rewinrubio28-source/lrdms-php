@@ -29,11 +29,23 @@ Environment variables (all optional, defaults suit local XAMPP):
 import hashlib
 import os
 import threading
+import time
+
+# Bound CPU parallelism on small containers before numerical libraries initialize.
+CPU_THREADS = max(1, int(os.environ.get('BERT_CPU_THREADS', '1')))
+os.environ.setdefault('OMP_NUM_THREADS', str(CPU_THREADS))
+os.environ.setdefault('MKL_NUM_THREADS', str(CPU_THREADS))
+os.environ.setdefault('TOKENIZERS_PARALLELISM', 'false')
 
 import numpy as np
+import torch
 import pymysql
 from flask import Flask, request, jsonify
 from sentence_transformers import SentenceTransformer
+from query_cache import QueryEmbeddingCache
+from document_chunks import split_document, rank_documents
+
+torch.set_num_threads(CPU_THREADS)
 
 app = Flask(__name__)
 
@@ -47,18 +59,27 @@ BERT_API_KEY = os.environ.get("BERT_API_KEY", "")
 
 # A genuine BERT-base (110M params) Sentence-BERT model.
 MODEL_NAME = os.environ.get("BERT_MODEL", "sentence-transformers/bert-base-nli-mean-tokens")
-MAX_SEQ_LENGTH = min(int(os.environ.get("BERT_MAX_SEQ_LENGTH", "256")), 512)
+MAX_SEQ_LENGTH = max(16, min(int(os.environ.get("BERT_MAX_SEQ_LENGTH", "256")), 512))
 SIMILARITY_THRESHOLD = float(os.environ.get("SIMILARITY_THRESHOLD", "0.30"))
 TOP_N = 25
 
 print(f"Loading BERT model '{MODEL_NAME}'... (first run downloads it, please wait)")
 model = SentenceTransformer(MODEL_NAME)
+MAX_SEQ_LENGTH = min(MAX_SEQ_LENGTH, model.max_seq_length)
 model.max_seq_length = MAX_SEQ_LENGTH
 print("Model loaded.")
 
-# doc_id -> (text hash, embedding). Re-embed a document only if its text changed.
+# doc_id -> (text hash, chunk embeddings). Refresh only changed documents.
 _cache = {}
 _lock = threading.Lock()
+_inference_lock = threading.Lock()
+_query_cache = QueryEmbeddingCache(max(0, min(1024, int(os.environ.get('BERT_QUERY_CACHE_SIZE', '128')))))
+
+
+def encode_text(text, **kwargs):
+    # Avoid competing model inference during warm-up and simultaneous requests.
+    with _inference_lock:
+        return model.encode(text, **kwargs)
 
 
 def get_db_connection():
@@ -103,17 +124,18 @@ def get_doc_matrix(rows):
             i for i, (doc_id, h) in enumerate(zip(ids, hashes))
             if doc_id not in _cache or _cache[doc_id][0] != h
         ]
-        if missing:
-            embeddings = model.encode([texts[i] for i in missing], batch_size=16)
-            for i, emb in zip(missing, embeddings):
-                _cache[ids[i]] = (hashes[i], emb)
+        for i in missing:
+            chunks = split_document(texts[i], model.tokenizer, MAX_SEQ_LENGTH)
+            embeddings = encode_text(chunks, batch_size=8)
+            _cache[ids[i]] = (hashes[i], embeddings)
 
         live = set(ids)
         for stale in [k for k in _cache if k not in live]:
             del _cache[stale]
 
-        matrix = np.array([_cache[doc_id][1] for doc_id in ids])
-    return ids, matrix
+        chunk_ids = [doc_id for doc_id in ids for _ in _cache[doc_id][1]]
+        matrix = np.concatenate([_cache[doc_id][1] for doc_id in ids], axis=0)
+    return chunk_ids, matrix
 
 
 def cosine_similarity(query_vec, doc_matrix):
@@ -143,6 +165,7 @@ def health():
 
 @app.route("/search", methods=["POST"])
 def search():
+    started = time.perf_counter()
     if BERT_API_KEY and request.headers.get("X-API-Key", "") != BERT_API_KEY:
         return jsonify({"error": "Unauthorized."}), 401
 
@@ -159,15 +182,25 @@ def search():
     if not rows:
         return jsonify({"document_ids": []})
 
+    fetched = time.perf_counter()
     ids, doc_matrix = get_doc_matrix(rows)
+    indexed = time.perf_counter()
 
     # No stemming: BERT's WordPiece tokenizer already handles word forms,
     # and chopped-off stems ("ordinanc") actually hurt its accuracy.
-    query_embedding = model.encode(query)
+    query_embedding, cache_hit = _query_cache.get_or_encode(query, encode_text)
+    encoded = time.perf_counter()
     scores = cosine_similarity(query_embedding, doc_matrix)
 
-    ranked = sorted(zip(ids, scores), key=lambda p: p[1], reverse=True)
-    matched_ids = [d for d, s in ranked if s >= SIMILARITY_THRESHOLD][:TOP_N]
+    matched_ids = rank_documents(ids, scores, SIMILARITY_THRESHOLD, TOP_N)
+
+    finished = time.perf_counter()
+    # No query text, document text, credentials, or IDs in timing logs.
+    app.logger.warning(
+        'search_timing db_ms=%.1f documents_ms=%.1f query_ms=%.1f rank_ms=%.1f total_ms=%.1f query_cache_hit=%s documents=%d chunks=%d cpu_threads=%d',
+        (fetched-started)*1000, (indexed-fetched)*1000, (encoded-indexed)*1000,
+        (finished-encoded)*1000, (finished-started)*1000, cache_hit, len(rows), len(ids), CPU_THREADS,
+    )
 
     return jsonify({"document_ids": matched_ids})
 

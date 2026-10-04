@@ -17,12 +17,103 @@ same queries, user account, relevance sort, and filters. In particular, verify t
 exact references appear first and private/unregistered records remain excluded.
 No improvement percentage is claimed until this comparison is run.
 
+### Filipino vocabulary assistance
+
+When meaning-and-keyword search is enabled, PHP maps recognized Filipino words
+and phrases to curated English equivalents before sending the single semantic
+request. The vocabulary is in `includes/search_language.php`. For example,
+`buwanang ayuda para sa matatanda` becomes
+`monthly financial assistance para sa senior citizens`.
+
+This is partial domain vocabulary substitution, not a translation model or a claim
+of full Tagalog support. Unknown words and proper names are retained. Longest
+phrases take precedence, and word boundaries protect embedded terms and document
+references. The original query remains in keyword matching, search logs, and exact
+reference ranking. Keyword-only mode and outage fallback use the original query.
+No additional model, migration, or second semantic request is introduced.
+
+The website indicates when vocabulary assistance was used; API responses include
+`language_assisted`. The Python service-only baseline bypasses this PHP feature.
+For live verification, repeat all eight Tagalog queries from
+`bert_service/evaluation_queries.json` in the website with meaning-and-keyword
+search enabled and relevance sorting. Record the expected document's rank, misses,
+and response time with the same user and filters. Compare against the original
+3/8 Tagalog Hit@5 cautiously: both hybrid ranking and vocabulary assistance have
+changed since that baseline, so this does not isolate either feature's effect.
+Also check English and exact-reference queries for regressions.
+
+Local checks (no model or database required):
+
+```sh
+php tests_search_language.php
+php tests_hybrid_search.php
+```
+
 This runner measures the currently deployed service before changing the model or
 ranking. It sends 24 sequential queries: 12 English, 8 Tagalog, and 4 exact document
 references. Expected matches are proposed manually from the Manila demo metadata;
 review these labels before presenting results as evaluation evidence.
 
 ## Run on HostForge
+
+### Long document passages
+
+The BERT service splits the full combined title, notes, reference, body, and OCR
+text into overlapping token windows using the deployed model's tokenizer. Each
+window reserves space for special tokens and fits the configured sequence length
+(also bounded by the model's supported length). Default overlap is 32 tokens,
+reduced for smaller windows. Short documents keep their original text.
+
+All windows are indexed, including the end of a document. The best matching
+passage supplies the document score; the response still contains each document
+ID at most once. The similarity threshold applies to that best passage. Existing
+PHP visibility checks and hybrid merging remain in place. Changed documents
+replace their cached passages, and deleted documents are evicted on the next
+nonempty-corpus search. No extra model or database migration is required.
+
+More passages increase initial indexing time and embedding-cache RAM. Encoding
+uses batches of 8; the whole corpus embedding cache is still in memory and is not
+a fixed-size index. Monitor `chunks`, `documents_ms`, and container memory before
+claiming the 1 GB deployment can handle a larger corpus. Very large documents or
+corpora may need a persisted index or additional resources. First-time indexing
+can still exceed request timeouts.
+
+Verify on a test record containing meaningful searchable text near the end, past
+the first 256 tokens, then search for that topic. Confirm one result per document,
+and recheck after editing or removing the relevant passage. Existing demo metadata
+alone does not establish long-document retrieval accuracy. Re-run the baseline to
+check relevance changes: max-passage scoring can also introduce false positives.
+Local tests check token coverage, overlap, budget, deduplication, and cache refresh
+using a synthetic tokenizer/encoder; live MiniLM quality still needs evaluation.
+
+### Performance diagnostics and bounded query cache
+
+The service keeps up to 128 query embeddings in process memory using LRU eviction.
+It caches embeddings only, never document IDs or search results. Each search still
+reads current documents, refreshes changed document embeddings, and applies the
+same cosine ranking and threshold. PHP still applies current access restrictions.
+Query text and embeddings remain in memory until eviction or process restart.
+Set `BERT_QUERY_CACHE_SIZE=0` to disable; allowed configured capacity is clamped to
+0–1024. No query cache is persisted to disk.
+
+`BERT_CPU_THREADS` defaults to 1 for the small CPU container and controls PyTorch
+intra-operation threads. Model encoding is serialized to avoid simultaneous
+warm-up/request inference competing for resources. This is a tuning starting
+point, not a measured optimum; compare 1 versus 2 only if runtime measurements
+warrant it. It may affect throughput under concurrent load.
+
+Successful nonempty-corpus searches emit `search_timing` logs with database,
+document preparation (including cache lock waits), query encoding/cache lookup,
+ranking, and total milliseconds. Logs also show query-cache hits, document count,
+and thread count without query contents or document IDs. Query timing includes
+any wait for the inference/cache locks.
+
+After deploying the BERT service, run the baseline twice with different report
+filenames. Distinguish the first run from the repeated-query cache-warm run, and
+compare ranks as well as latency. To isolate CPU tuning from query caching, set
+cache capacity to 0 for both compared deployments. Model weights, sequence length,
+threshold, and records should stay constant. Timing improvements have not yet
+been measured on HostForge. Local unit tests use fake encoders, not the ML model.
 
 Deploy these files to the **BERT service**, then open that service's terminal (not
 the PHP application terminal). The service must already be running and configured

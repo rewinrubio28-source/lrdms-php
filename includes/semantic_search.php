@@ -20,6 +20,7 @@
  */
 
 require_once __DIR__ . '/../config/env.php';
+require_once __DIR__ . '/search_language.php';
 load_env_file();
 
 // In production set BERT_SERVICE_URL (HostForge -> Environment Variables) to the
@@ -43,9 +44,11 @@ function semantic_search($pdo, $query, $whereClause, $whereParams, $fallbackLimi
         return keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
     };
     if (!function_exists('curl_init')) return $fallback();
+    $semanticQuery = search_semantic_query($query);
+    $execution['language_assisted'] = $semanticQuery !== $query;
     $ch = curl_init(BERT_SERVICE_URL);
     curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['query' => $query]));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['query' => $semanticQuery]));
     $headers = ['Content-Type: application/json'];
     if (BERT_API_KEY !== '') {
         $headers[] = 'X-API-Key: ' . BERT_API_KEY;
