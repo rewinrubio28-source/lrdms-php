@@ -1,5 +1,22 @@
 # Semantic search baseline
 
+## Website hybrid search
+
+The website's "Match by meaning and keywords" option combines service results
+with the existing SQL keyword search. Both lists use the caller's visibility and
+registration restrictions before merging. Exact document-number matches rank
+first; other candidates use reciprocal rank fusion (constant 60, equal weights).
+Duplicates are removed, with document ID as the deterministic tie-breaker. Other
+selected sort orders override relevance. Service failures retain keyword fallback.
+The existing search-log `semantic` category now includes hybrid searches; API
+responses additionally expose `strategy: hybrid` when the service succeeds.
+
+The Python runner below still evaluates the semantic service only. Its scores do
+not measure the PHP hybrid ranking. Compare website results separately using the
+same queries, user account, relevance sort, and filters. In particular, verify that
+exact references appear first and private/unregistered records remain excluded.
+No improvement percentage is claimed until this comparison is run.
+
 This runner measures the currently deployed service before changing the model or
 ranking. It sends 24 sequential queries: 12 English, 8 Tagalog, and 4 exact document
 references. Expected matches are proposed manually from the Manila demo metadata;

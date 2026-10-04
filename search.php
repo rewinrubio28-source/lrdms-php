@@ -330,7 +330,7 @@ include __DIR__ . '/includes/layout_top.php';
     <?php include __DIR__ . '/includes/search_extra_filters.php'; ?>
     <label class="semantic-toggle">
       <input class="form-check-input" type="checkbox" name="mode" value="semantic" id="semanticToggle" <?= $mode === 'semantic' ? 'checked' : '' ?>>
-      Match by meaning (uses keyword search when unavailable)
+      Match by meaning and keywords
     </label>
 
     <div class="filters-row">
@@ -462,6 +462,8 @@ include __DIR__ . '/includes/layout_top.php';
 <div class="card">
   <?php if (!empty($searchExecution['fallback'])): ?>
     <div class="alert alert-warning" role="status">Semantic search is temporarily unavailable. Showing keyword matches instead.</div>
+  <?php elseif (($searchExecution['strategy'] ?? '') === 'hybrid'): ?>
+    <p class="text-muted small">Results combine meaning and keyword matches. Exact document numbers appear first when sorted by relevance.</p>
   <?php endif; ?>
   <?php if (!$hasCriteria): ?>
     <p class="text-muted mb-0">Enter a keyword or choose filters to find a registered record.</p>

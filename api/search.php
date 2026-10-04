@@ -53,6 +53,7 @@ log_action('search', 'api_query', 'external requested=' . $mode . ' effective=' 
 echo json_encode([
     'mode' => $mode,
     'effective_mode' => $searchExecution['effective_mode'],
+    'strategy' => $searchExecution['strategy'] ?? 'keyword',
     'fallback' => $searchExecution['fallback'],
     'query' => $query,
     'results' => array_map(function ($d) {

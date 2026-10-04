@@ -36,9 +36,10 @@ unset($__bertUrl);
 define('BERT_API_KEY', (string) env_optional('BERT_API_KEY', ''));
 
 function semantic_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit = 25, &$execution = null) {
-    $execution = ['effective_mode' => 'semantic', 'fallback' => false];
+    // Keep the legacy search_log enum; strategy identifies the combined ranking.
+    $execution = ['effective_mode' => 'semantic', 'strategy' => 'hybrid', 'fallback' => false];
     $fallback = function () use ($pdo, $query, $whereClause, $whereParams, $fallbackLimit, &$execution) {
-        $execution = ['effective_mode' => 'keyword', 'fallback' => true];
+        $execution = ['effective_mode' => 'keyword', 'strategy' => 'keyword', 'fallback' => true];
         return keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
     };
     if (!function_exists('curl_init')) return $fallback();
@@ -75,7 +76,7 @@ function semantic_search($pdo, $query, $whereClause, $whereParams, $fallbackLimi
     $matchedIds = array_values(array_unique($matchedIds));
 
     if (!$matchedIds) {
-        return [];
+        return keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
     }
 
     // The BERT service only ranks by meaning — RBAC visibility is
@@ -93,7 +94,34 @@ function semantic_search($pdo, $query, $whereClause, $whereParams, $fallbackLimi
         return ($rank[$a['id']] ?? PHP_INT_MAX) <=> ($rank[$b['id']] ?? PHP_INT_MAX);
     });
 
-    return $rows;
+    $keywords = keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
+    return hybrid_rank_results($rows, $keywords, $query, $fallbackLimit);
+}
+
+/** Merge only already-authorized rows; prioritize exact references, then RRF. */
+function hybrid_rank_results(array $semantic, array $keywords, string $query, $limit = 25): array {
+    $rows = [];
+    $scores = [];
+    foreach ([$semantic, $keywords] as $list) {
+        $seen = [];
+        foreach (array_values($list) as $rank => $row) {
+            $id = (int)$row['id'];
+            if (isset($seen[$id])) continue;
+            $seen[$id] = true;
+            $rows[$id] = $row;
+            $scores[$id] = ($scores[$id] ?? 0) + 1 / (60 + $rank + 1);
+        }
+    }
+    $exact = [];
+    foreach ($rows as $id => $row) {
+        $exact[$id] = trim($query) !== '' && strcasecmp(trim((string)($row['doc_number'] ?? '')), trim($query)) === 0;
+    }
+    $ids = array_keys($rows);
+    usort($ids, static function ($a, $b) use ($exact, $scores) {
+        return ($exact[$b] <=> $exact[$a]) ?: ($scores[$b] <=> $scores[$a]) ?: ($a <=> $b);
+    });
+    if ($limit !== null) $ids = array_slice($ids, 0, max(1, (int)$limit));
+    return array_map(static fn($id) => $rows[$id], $ids);
 }
 
 function keyword_search($pdo, $query, $whereClause, $whereParams, $limit = 25) {
