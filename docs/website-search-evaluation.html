@@ -14,7 +14,7 @@ body{font:15px system-ui,sans-serif;color:#16314b;background:#eff4f9;margin:0;pa
 <label>Website URL<input id="site" type="url" value="https://records.manilalegislativeservices.com"></label>
 <label>Account role / test notes (no passwords)<input id="notes" placeholder="Records Officer; deployment commit; test date"></label>
 </div>
-<p>Sign in to the website first. Open each test, keep <strong>Meaning + keywords</strong> and <strong>Relevance</strong>, and record the expected document's rank in the first five results. The links clear optional filters. Choose <strong>Skipped</strong> only after confirming that the expected record is unregistered, missing, or inaccessible. A timeout or failed page is an <strong>Error</strong>, not a skip.</p>
+<p>Sign in to the website first. Hybrid search runs automatically. Open each test, keep <strong>Relevance</strong> sorting, and record the expected document's rank in the first five results. The links clear optional filters. Choose <strong>Skipped</strong> only after confirming that the expected record is unregistered, missing, or inaccessible. A timeout or failed page is an <strong>Error</strong>, not a skip.</p>
 <p>Record whether the page used hybrid search or showed the keyword-fallback notice. Suggestions are not matches until you click them; evaluate the original query first. Keep documents and account permissions unchanged across comparison runs.</p>
 <button id="export" type="button">Download results JSON</button>
 <p id="message" role="status">Entries stay in this page until you close or reload it. Export to save your report.</p>
@@ -87,7 +87,7 @@ states.forEach((row,i)=>{
       const base=new URL(document.getElementById('site').value);
       if(!['https:','http:'].includes(base.protocol)||base.username||base.password)throw new Error('Invalid URL');
       const url=new URL('search.php',base.href.replace(/\/?$/,'/'));
-      url.search=new URLSearchParams({q:row.query,mode:'semantic',sort:'relevance'}).toString();link.href=url.href;
+      url.search=new URLSearchParams({q:row.query,sort:'relevance'}).toString();link.href=url.href;
     }catch(error){event.preventDefault();document.getElementById('message').textContent='Enter a valid HTTP(S) website URL without credentials.';}
   });action.append(link);
   const outcome=document.createElement('td');outcome.append(select([['pending','Not tested'],['1','Rank 1'],['2','Rank 2'],['3','Rank 3'],['4','Rank 4'],['5','Rank 5'],['miss','Not in Top 5'],['error','Error'],['skipped','Skipped']],`Result for test ${i+1}`,v=>row.outcome=v));

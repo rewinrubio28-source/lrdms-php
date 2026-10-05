@@ -14,7 +14,8 @@ $documentSearchReturn = rawurlencode('search.php' . ($_GET ? '?' . http_build_qu
 list($visClause, $visParams) = document_visibility_clause($user);
 
 $query = trim($_GET['q'] ?? '');
-$mode = ($_GET['mode'] ?? 'keyword') === 'semantic' ? 'semantic' : 'keyword';
+// Website searches always use hybrid retrieval, including legacy saved links.
+$mode = 'semantic';
 $typeFilter = $_GET['doc_type'] ?? '';
 $statusFilter = $_GET['status'] ?? '';
 $dateFrom = $_GET['date_from'] ?? '';
@@ -300,21 +301,14 @@ include __DIR__ . '/includes/layout_top.php';
 <div class="card filters-card compact-search">
   <form method="get" id="advanced-search-form">
     <div class="row g-3 align-items-end">
-      <div class="col-md-12 col-xl-5">
+      <div class="col-md-7">
         <label class="field-label" for="record-search-query">Search Records</label>
         <div class="search-input-wrap">
           <i class="bi bi-search"></i>
           <input id="record-search-query" type="text" name="q" value="<?= htmlspecialchars($query) ?>" class="form-control" placeholder="Search by Title, Subject, Author, or Keyword…">
         </div>
       </div>
-      <div class="col-md-5 col-xl-3">
-        <label class="field-label" for="record-search-mode">Search Mode</label>
-        <select id="record-search-mode" name="mode" class="form-select">
-          <option value="keyword" <?= $mode === 'keyword' ? 'selected' : '' ?>>Keywords only</option>
-          <option value="semantic" <?= $mode === 'semantic' ? 'selected' : '' ?>>Meaning + keywords</option>
-        </select>
-      </div>
-      <div class="col-md-4 col-xl-2">
+      <div class="col-md-3">
         <label class="field-label" for="record-search-type">Document Type</label>
         <select id="record-search-type" name="doc_type" class="form-select">
           <option value="">All Records</option>
@@ -323,7 +317,7 @@ include __DIR__ . '/includes/layout_top.php';
           <?php endforeach; ?>
         </select>
       </div>
-      <div class="col-md-3 col-xl-2"><button type="submit" class="btn btn-apply-filters w-100">Search</button></div>
+      <div class="col-md-2"><button type="submit" class="btn btn-apply-filters w-100">Search</button></div>
     </div>
 
     <?php $extraFilterCount=count(array_filter([$yearFilter, $committeeFilter, $officeFilter, $classificationFilter, $dateFrom, $dateTo, $statusFilter, $sortBy!=='relevance'])); ?>
@@ -389,7 +383,6 @@ include __DIR__ . '/includes/layout_top.php';
             </a>
             <div class="text-muted small mt-1">
               "<?= htmlspecialchars($s['criteria']['q'] ?? '') ?>"
-              <?= ($s['criteria']['mode'] ?? 'keyword') === 'semantic' ? '· Semantic' : '· Keyword' ?>
               <?php if (!empty($s['criteria']['doc_type'])): ?>· <?= htmlspecialchars($s['criteria']['doc_type']) ?><?php endif; ?>
               <?php if (!empty($s['criteria']['status'])): ?>· <?= htmlspecialchars($s['criteria']['status']) ?><?php endif; ?>
             </div>
@@ -478,9 +471,6 @@ include __DIR__ . '/includes/layout_top.php';
     <div class="d-flex flex-wrap gap-2">
       <?php if ($suggestion !== null): ?>
         <a class="btn btn-outline-primary btn-sm" href="search.php?<?= htmlspecialchars(http_build_query(array_merge($retryCriteria, ['q'=>$suggestion]))) ?>">Try “<?= htmlspecialchars($suggestion) ?>”</a>
-      <?php endif; ?>
-      <?php if ($mode === 'keyword' && $query !== ''): ?>
-        <a class="btn btn-outline-primary btn-sm" href="search.php?<?= htmlspecialchars(http_build_query(array_merge($retryCriteria, ['mode'=>'semantic']))) ?>">Try meaning + keywords</a>
       <?php endif; ?>
       <?php if ($typeFilter !== '' || $statusFilter !== '' || $dateFrom !== '' || $dateTo !== '' || $yearFilter !== '' || $committeeFilter || $officeFilter !== '' || $classificationFilter !== ''): ?>
         <a class="btn btn-outline-secondary btn-sm" href="search.php?<?= htmlspecialchars(http_build_query(['q'=>$query, 'mode'=>$mode, 'sort'=>'relevance'])) ?>">Clear filters, keep search</a>

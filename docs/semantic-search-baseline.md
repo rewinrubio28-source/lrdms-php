@@ -2,9 +2,10 @@
 
 ## Website controls, previews, and recovery
 
-Search Mode is always visible beside the query: **Keywords only** or
-**Meaning + keywords**. Existing `mode=keyword|semantic` links and saved searches
-remain compatible; choosing a mode does not submit the form automatically.
+Website searches automatically combine semantic and keyword retrieval. There is
+no mode selector. Legacy links and saved searches also use hybrid retrieval even
+if they contain `mode=keyword`. Blank-query filtering does not call the model.
+The external API retains its existing explicit mode contract.
 
 The service can return winning passage positions and a text hash, never the raw
 document passage. PHP first loads authorized registered rows, verifies the hash
@@ -23,8 +24,8 @@ pages and require a click; original queries are never silently corrected.
 Document reference tokens are excluded from correction. Suggestions do not imply
 that a matching accessible document exists.
 
-No-result actions can preserve the query while clearing optional filters, switch
-to meaning + keywords, try a spelling suggestion, or start a new search. Clearing
+No-result actions can preserve the query while clearing optional filters,
+try a spelling suggestion, or start a new search. Clearing
 filters never clears permission or registration restrictions.
 
 ### Evaluate the actual website
@@ -46,7 +47,7 @@ is needed. Tests: `php tests_search_display.php`, `php tests_search_language.php
 
 ## Website hybrid search
 
-The website's "Match by meaning and keywords" option combines service results
+The website automatically combines semantic service results
 with the existing SQL keyword search. Both lists use the caller's visibility and
 registration restrictions before merging. Exact document-number matches rank
 first; other candidates use reciprocal rank fusion (constant 60, equal weights).
@@ -63,7 +64,7 @@ No improvement percentage is claimed until this comparison is run.
 
 ### Filipino vocabulary assistance
 
-When meaning-and-keyword search is enabled, PHP maps recognized Filipino words
+For nonempty website queries, PHP maps recognized Filipino words
 and phrases to curated English equivalents before sending the single semantic
 request. The vocabulary is in `includes/search_language.php`. For example,
 `buwanang ayuda para sa matatanda` becomes
@@ -77,15 +78,15 @@ reference ranking. Hybrid keyword matching and its outage fallback search both
 the original phrase and its curated equivalent, using the same visibility clause
 and parameters for each. Thus `matanda` and `matatanda` can retrieve literal
 `senior citizens` matches even below the semantic threshold. Duplicates are merged.
-Standalone keyword-only mode still uses the original query. This remains phrase
+Explicit API keyword-only mode still uses the original query. This remains phrase
 matching, not arbitrary synonym coverage or general translation.
 No additional model, migration, or second semantic request is introduced.
 
 The website indicates when vocabulary assistance was used; API responses include
 `language_assisted`. The Python service-only baseline bypasses this PHP feature.
 For live verification, repeat all eight Tagalog queries from
-`bert_service/evaluation_queries.json` in the website with meaning-and-keyword
-search enabled and relevance sorting. Record the expected document's rank, misses,
+`bert_service/evaluation_queries.json` in the website with relevance sorting.
+Record the expected document's rank, misses,
 and response time with the same user and filters. Compare against the original
 3/8 Tagalog Hit@5 cautiously: both hybrid ranking and vocabulary assistance have
 changed since that baseline, so this does not isolate either feature's effect.
