@@ -90,6 +90,12 @@ function semantic_search($pdo, $query, $whereClause, $whereParams, $fallbackLimi
     $stmt = $pdo->prepare($sql);
     $stmt->execute(array_merge($matchedIds, $whereParams));
     $rows = $stmt->fetchAll();
+    // Only attach passage coordinates after visibility/registration filtering.
+    $passages = is_array($decoded['passages'] ?? null) ? $decoded['passages'] : [];
+    foreach ($rows as &$row) {
+        if (is_array($passages[$row['id']] ?? null)) $row['_search_passage'] = $passages[$row['id']];
+    }
+    unset($row);
 
     // Preserve the BERT service's relevance ranking (SQL's IN() does
     // not guarantee result order matches the ids list).
@@ -112,7 +118,7 @@ function hybrid_rank_results(array $semantic, array $keywords, string $query, $l
             $id = (int)$row['id'];
             if (isset($seen[$id])) continue;
             $seen[$id] = true;
-            $rows[$id] = $row;
+            $rows[$id] = $rows[$id] ?? $row;
             $scores[$id] = ($scores[$id] ?? 0) + 1 / (60 + $rank + 1);
         }
     }

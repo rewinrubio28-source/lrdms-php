@@ -1,5 +1,49 @@
 # Semantic search baseline
 
+## Website controls, previews, and recovery
+
+Search Mode is always visible beside the query: **Keywords only** or
+**Meaning + keywords**. Existing `mode=keyword|semantic` links and saved searches
+remain compatible; choosing a mode does not submit the form automatically.
+
+The service can return winning passage positions and a text hash, never the raw
+document passage. PHP first loads authorized registered rows, verifies the hash
+against the current source text, and then extracts a preview. New content or
+invalid offsets cause a fallback to a keyword-centered excerpt. Old service
+versions without passage metadata also use this fallback. Slow tokenizers that
+cannot supply offsets omit long-passage coordinates rather than inventing them.
+Previews are labeled **Matching passage**, **Document text match**, **OCR text
+match**, or a plain preview as appropriate. Highlighted text is HTML-escaped.
+
+Filipino variants now include `matandang`, `nakatatanda`, `nakakatanda`, financial
+assistance phrases, and public-hearing terms. These remain curated domain mappings,
+not full translation. Typo suggestions use a fixed public vocabulary and require
+a unique one-edit match, e.g. `ordinace` → `ordinance`. They appear on no-result
+pages and require a click; original queries are never silently corrected.
+Document reference tokens are excluded from correction. Suggestions do not imply
+that a matching accessible document exists.
+
+No-result actions can preserve the query while clearing optional filters, switch
+to meaning + keywords, try a spelling suggestion, or start a new search. Clearing
+filters never clears permission or registration restrictions.
+
+### Evaluate the actual website
+
+Open [website-search-evaluation.html](website-search-evaluation.html) locally in
+your browser, sign in to LRDMS, then use its 24 test links. Record actual Top-5 ranks,
+misses, errors, skips, and whether the website used hybrid or keyword fallback.
+The worksheet calculates overall/per-group Hit@1, Hit@5, and MRR@5 and exports JSON.
+Pending entries are unmeasured; errors count as misses; justified skips are
+excluded. Export before closing/reloading: entries are not persisted automatically.
+No credentials, document contents, or authenticated requests are collected by the
+worksheet. It does not measure latency or RAM. Live results still require a human
+to run and record the searches; fixture tests do not establish model accuracy.
+
+Deploy both PHP and the BERT service for matching-passage previews. No migration
+is needed. Tests: `php tests_search_display.php`, `php tests_search_language.php`,
+`php tests_assisted_keywords.php`, `php tests_hybrid_search.php`, and
+`python -m unittest discover -s bert_service -p 'test_*.py' -v`.
+
 ## Website hybrid search
 
 The website's "Match by meaning and keywords" option combines service results

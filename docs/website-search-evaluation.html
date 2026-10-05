@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LRDMS website search evaluation</title>
+<style>
+body{font:15px system-ui,sans-serif;color:#16314b;background:#eff4f9;margin:0;padding:24px}main{max-width:1150px;margin:auto}h1{font-size:25px;margin:0 0 12px}p{line-height:1.6}section{background:white;border:1px solid #cbd8e4;border-radius:12px;padding:20px;margin:16px 0}.controls{display:flex;flex-wrap:wrap;gap:14px}.controls label{flex:1 1 240px}input,select,button,a.run{font:inherit;padding:9px;border-radius:6px;border:1px solid #a3b6c9;background:white;color:#16314b}input{box-sizing:border-box;width:100%;margin-top:6px}button,a.run{cursor:pointer;display:inline-block;text-decoration:none}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #2667ae;outline-offset:2px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%}th,td{text-align:left;border-bottom:1px solid #dbe4ed;padding:12px;vertical-align:top}td small{display:block;color:#526a80;margin-top:6px}.status{min-width:155px}#message{color:#934000}#summary{white-space:pre-wrap;overflow-wrap:anywhere}a.run{white-space:nowrap}@media(max-width:600px){body{padding:12px}section{padding:14px}}
+</style>
+<main>
+<h1>Website search evaluation</h1>
+<p>Manual evaluation of the real website, including hybrid ranking, Filipino assistance, and your account's access rules. No results are assumed or fetched automatically.</p>
+<section>
+<div class="controls">
+<label>Website URL<input id="site" type="url" value="https://records.manilalegislativeservices.com"></label>
+<label>Account role / test notes (no passwords)<input id="notes" placeholder="Records Officer; deployment commit; test date"></label>
+</div>
+<p>Sign in to the website first. Open each test, keep <strong>Meaning + keywords</strong> and <strong>Relevance</strong>, and record the expected document's rank in the first five results. The links clear optional filters. Choose <strong>Skipped</strong> only after confirming that the expected record is unregistered, missing, or inaccessible. A timeout or failed page is an <strong>Error</strong>, not a skip.</p>
+<p>Record whether the page used hybrid search or showed the keyword-fallback notice. Suggestions are not matches until you click them; evaluate the original query first. Keep documents and account permissions unchanged across comparison runs.</p>
+<button id="export" type="button">Download results JSON</button>
+<p id="message" role="status">Entries stay in this page until you close or reload it. Export to save your report.</p>
+</section>
+<section><h2>Results</h2><div id="summary" aria-live="polite">No completed tests.</div></section>
+<section class="scroll"><table><thead><tr><th>Test / expected document</th><th>Search</th><th>Observed result</th><th>Observed mode</th></tr></thead><tbody id="tests"></tbody></table></section>
+<section><h2>Additional checks</h2><p>Separately check <strong>matanda / matatanda / nakatatanda</strong>, a typo such as <strong>ordinace</strong>, restrictive filters with no results, and a topic near the end of a long document. Confirm that previews use the correct document and restricted/unregistered records remain hidden. These checks are outside the original 24-query score.</p><p>Latency and RAM must be measured separately; time spent reading this worksheet is not search response time. A completed worksheet is a manual observation record, not an automated test report.</p></section>
+</main>
+<script id="cases" type="application/json">[
+ {"group":"English","query":"car free Sunday walking and cycling on Roxas Boulevard","expected":["ORD-9047"]},
+ {"group":"English","query":"hospital disease surveillance unit","expected":["ORD-9056"]},
+ {"group":"English","query":"monthly cash allowance for elderly Manila residents","expected":["ORD-9081"]},
+ {"group":"English","query":"nutrition scholar in every barangay","expected":["ORD-9026"]},
+ {"group":"English","query":"Pantawid Pamilya conditional cash transfer program","expected":["ORD-9027"]},
+ {"group":"English","query":"health assistance for adolescents","expected":["ORD-9054"]},
+ {"group":"English","query":"reorganization of the Manila Health Department","expected":["ORD-9035"]},
+ {"group":"English","query":"senior high school work immersion with Interface Computer College","expected":["RES-433-S2024"]},
+ {"group":"English","query":"recognition of outstanding barangay officials","expected":["RES-460-S2024"]},
+ {"group":"English","query":"Miss Manila winner Aliya Rohilla","expected":["RES-462-S2024"]},
+ {"group":"English","query":"winners of the Manila Film Festival awards","expected":["RES-456-S2024"]},
+ {"group":"English","query":"benefits for people aged eighty and ninety","expected":["RES-108-S2024"]},
+ {"group":"Tagalog","query":"pagsasara ng Roxas Boulevard tuwing Linggo para sa paglalakad at pagbibisikleta","expected":["ORD-9047"]},
+ {"group":"Tagalog","query":"pagbabantay sa mga sakit sa mga ospital","expected":["ORD-9056"]},
+ {"group":"Tagalog","query":"buwanang ayuda para sa matatanda sa Maynila","expected":["ORD-9081"]},
+ {"group":"Tagalog","query":"iskolar sa nutrisyon sa bawat barangay","expected":["ORD-9026"]},
+ {"group":"Tagalog","query":"programang pantawid para sa mahihirap na pamilya","expected":["ORD-9027"]},
+ {"group":"Tagalog","query":"tulong pangkalusugan para sa mga kabataan","expected":["ORD-9054"]},
+ {"group":"Tagalog","query":"pagkilala sa natatanging mga opisyal ng barangay","expected":["RES-460-S2024"]},
+ {"group":"Tagalog","query":"mga nanalo sa parangal ng pista ng pelikula ng Maynila","expected":["RES-456-S2024"]},
+ {"group":"Exact reference","query":"ORD-9047","expected":["ORD-9047"]},
+ {"group":"Exact reference","query":"ORD-9081","expected":["ORD-9081"]},
+ {"group":"Exact reference","query":"RES-433-S2024","expected":["RES-433-S2024"]},
+ {"group":"Exact reference","query":"RES-108-S2024","expected":["RES-108-S2024"]}
+]
+</script>
+<script>
+'use strict';
+const cases = JSON.parse(document.getElementById('cases').textContent);
+const states = cases.map(c => ({...c, outcome:'pending', observed_mode:'unrecorded'}));
+function summarize(rows) {
+  const eligible = rows.filter(r => !['pending','skipped'].includes(r.outcome));
+  const ranks = eligible.map(r => /^[1-5]$/.test(r.outcome) ? Number(r.outcome) : 0);
+  return {eligible:eligible.length, pending:rows.filter(r=>r.outcome==='pending').length,
+    skipped:rows.filter(r=>r.outcome==='skipped').length, errors:eligible.filter(r=>r.outcome==='error').length,
+    hit_at_1:eligible.length ? ranks.filter(r=>r===1).length/eligible.length : null,
+    hit_at_5:eligible.length ? ranks.filter(r=>r>0).length/eligible.length : null,
+    mrr_at_5:eligible.length ? ranks.reduce((n,r)=>n+(r?1/r:0),0)/eligible.length : null};
+}
+function report() {
+  return {evaluated_at:new Date().toISOString(), source:'Manual website observations; no automatic timing',
+    website:document.getElementById('site').value, notes:document.getElementById('notes').value,
+    summary:summarize(states), groups:Object.fromEntries([...new Set(states.map(r=>r.group))].map(g=>[g,summarize(states.filter(r=>r.group===g))])), results:states};
+}
+function updateSummary() {
+  const r=report();
+  document.getElementById('summary').textContent=JSON.stringify({overall:r.summary,groups:r.groups},null,2);
+}
+function select(options, label, onChange) {
+  const s=document.createElement('select');s.className='status';s.setAttribute('aria-label',label);
+  options.forEach(([value,text])=>{const o=document.createElement('option');o.value=value;o.textContent=text;s.append(o);});
+  s.addEventListener('change',()=>{onChange(s.value);updateSummary();});return s;
+}
+states.forEach((row,i)=>{
+  const tr=document.createElement('tr');
+  const description=document.createElement('td');description.textContent=`${i+1}. ${row.query}`;
+  const small=document.createElement('small');small.textContent=`${row.group} · Expected: ${row.expected.join(', ')}`;description.append(small);
+  const action=document.createElement('td');const link=document.createElement('a');link.className='run';link.textContent='Open test';link.target='_blank';link.rel='noopener noreferrer';link.href='#';
+  link.addEventListener('click',event=>{
+    try {
+      const base=new URL(document.getElementById('site').value);
+      if(!['https:','http:'].includes(base.protocol)||base.username||base.password)throw new Error('Invalid URL');
+      const url=new URL('search.php',base.href.replace(/\/?$/,'/'));
+      url.search=new URLSearchParams({q:row.query,mode:'semantic',sort:'relevance'}).toString();link.href=url.href;
+    }catch(error){event.preventDefault();document.getElementById('message').textContent='Enter a valid HTTP(S) website URL without credentials.';}
+  });action.append(link);
+  const outcome=document.createElement('td');outcome.append(select([['pending','Not tested'],['1','Rank 1'],['2','Rank 2'],['3','Rank 3'],['4','Rank 4'],['5','Rank 5'],['miss','Not in Top 5'],['error','Error'],['skipped','Skipped']],`Result for test ${i+1}`,v=>row.outcome=v));
+  const mode=document.createElement('td');mode.append(select([['unrecorded','Not recorded'],['hybrid','Hybrid'],['keyword_fallback','Keyword fallback']],`Mode for test ${i+1}`,v=>row.observed_mode=v));
+  tr.append(description,action,outcome,mode);document.getElementById('tests').append(tr);
+});
+document.getElementById('export').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(report(),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='lrdms-website-search-evaluation.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  document.getElementById('message').textContent='Report exported. Pending entries are not scored; errors count as misses.';
+});
+updateSummary();
+</script>
+</html>

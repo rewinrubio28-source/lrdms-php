@@ -113,7 +113,7 @@ def build_text(row):
     ).strip()
 
 
-def get_doc_matrix(rows):
+def get_doc_matrix(rows, with_passages=False):
     """Return (ids, embedding matrix), embedding only new/changed documents."""
     ids = [r["id"] for r in rows]
     texts = [build_text(r) for r in rows]
@@ -125,9 +125,9 @@ def get_doc_matrix(rows):
             if doc_id not in _cache or _cache[doc_id][0] != h
         ]
         for i in missing:
-            chunks = split_document(texts[i], model.tokenizer, MAX_SEQ_LENGTH)
+            chunks, spans = split_document(texts[i], model.tokenizer, MAX_SEQ_LENGTH, with_spans=True)
             embeddings = encode_text(chunks, batch_size=8)
-            _cache[ids[i]] = (hashes[i], embeddings)
+            _cache[ids[i]] = (hashes[i], embeddings, spans)
 
         live = set(ids)
         for stale in [k for k in _cache if k not in live]:
@@ -135,6 +135,10 @@ def get_doc_matrix(rows):
 
         chunk_ids = [doc_id for doc_id in ids for _ in _cache[doc_id][1]]
         matrix = np.concatenate([_cache[doc_id][1] for doc_id in ids], axis=0)
+        if with_passages:
+            passages = [dict(start=span[0], end=span[1], text_hash=_cache[doc_id][0]) if span else None
+                        for doc_id in ids for span in _cache[doc_id][2]]
+            return chunk_ids, matrix, passages
     return chunk_ids, matrix
 
 
@@ -183,7 +187,7 @@ def search():
         return jsonify({"document_ids": []})
 
     fetched = time.perf_counter()
-    ids, doc_matrix = get_doc_matrix(rows)
+    ids, doc_matrix, passages = get_doc_matrix(rows, with_passages=True)
     indexed = time.perf_counter()
 
     # No stemming: BERT's WordPiece tokenizer already handles word forms,
@@ -193,6 +197,15 @@ def search():
     scores = cosine_similarity(query_embedding, doc_matrix)
 
     matched_ids = rank_documents(ids, scores, SIMILARITY_THRESHOLD, TOP_N)
+    # Return positions only, never private document text. PHP resolves these
+    # against its authorized, current document rows and validates the text hash.
+    best_passages = {}
+    best_scores = {}
+    for doc_id, score, passage in zip(ids, scores, passages):
+        if doc_id in matched_ids and float(score) > best_scores.get(doc_id, float('-inf')):
+            best_scores[doc_id] = float(score)
+            if passage is not None:
+                best_passages[str(doc_id)] = passage
 
     finished = time.perf_counter()
     # No query text, document text, credentials, or IDs in timing logs.
@@ -202,7 +215,7 @@ def search():
         (finished-encoded)*1000, (finished-started)*1000, cache_hit, len(rows), len(ids), CPU_THREADS,
     )
 
-    return jsonify({"document_ids": matched_ids})
+    return jsonify({"document_ids": matched_ids, "passages": best_passages})
 
 
 if __name__ == "__main__":

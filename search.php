@@ -3,6 +3,7 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/rbac.php';
 require_once __DIR__ . '/includes/audit.php';
 require_once __DIR__ . '/includes/semantic_search.php';
+require_once __DIR__ . '/includes/search_display.php';
 require_once __DIR__ . '/includes/saved_searches.php';
 require_once __DIR__ . '/config/database.php';
 
@@ -162,10 +163,7 @@ if ($hasCriteria) {
  * Highlights search terms in text using <mark> tags.
  */
 function highlight_terms($text, $query) {
-    if ($query === '' || $text === '') return htmlspecialchars($text);
-    $escaped = preg_quote($query, '/');
-    $safe = htmlspecialchars($text);
-    return preg_replace("/($escaped)/i", '<mark style="background:#fef08a;padding:1px 2px;border-radius:2px;">$1</mark>', $safe);
+    return search_highlight((string)$text, $query === '' ? [] : [$query]);
 }
 
 // How many attachments each result has — one grouped query for every
@@ -227,9 +225,6 @@ include __DIR__ . '/includes/layout_top.php';
   .filters-row .filter-group--years { flex: 1 1 200px; }
   .filters-row .filter-group--years .years-inputs { display: flex; align-items: center; gap: 6px; }
   .filters-row .filter-group--submit { flex: 0 0 auto; align-self: flex-end; }
-  .filters-card .semantic-toggle {
-    display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12.5px; color: var(--text-muted);
-  }
   .btn-apply-filters {
     background: var(--primary); border: 1px solid var(--primary); color: #fff;
     font-weight: 600; padding: 8px 22px; border-radius: 8px; white-space: nowrap;
@@ -305,14 +300,21 @@ include __DIR__ . '/includes/layout_top.php';
 <div class="card filters-card compact-search">
   <form method="get" id="advanced-search-form">
     <div class="row g-3 align-items-end">
-      <div class="col-md-7">
-        <label class="field-label" for="record-search-query">Global Keyword Search</label>
+      <div class="col-md-12 col-xl-5">
+        <label class="field-label" for="record-search-query">Search Records</label>
         <div class="search-input-wrap">
           <i class="bi bi-search"></i>
           <input id="record-search-query" type="text" name="q" value="<?= htmlspecialchars($query) ?>" class="form-control" placeholder="Search by Title, Subject, Author, or Keyword…">
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-5 col-xl-3">
+        <label class="field-label" for="record-search-mode">Search Mode</label>
+        <select id="record-search-mode" name="mode" class="form-select">
+          <option value="keyword" <?= $mode === 'keyword' ? 'selected' : '' ?>>Keywords only</option>
+          <option value="semantic" <?= $mode === 'semantic' ? 'selected' : '' ?>>Meaning + keywords</option>
+        </select>
+      </div>
+      <div class="col-md-4 col-xl-2">
         <label class="field-label" for="record-search-type">Document Type</label>
         <select id="record-search-type" name="doc_type" class="form-select">
           <option value="">All Records</option>
@@ -321,17 +323,13 @@ include __DIR__ . '/includes/layout_top.php';
           <?php endforeach; ?>
         </select>
       </div>
-      <div class="col-md-2"><button type="submit" class="btn btn-apply-filters w-100">Search</button></div>
+      <div class="col-md-3 col-xl-2"><button type="submit" class="btn btn-apply-filters w-100">Search</button></div>
     </div>
 
-    <?php $extraFilterCount=count(array_filter([$yearFilter, $committeeFilter, $officeFilter, $classificationFilter, $dateFrom, $dateTo, $statusFilter, $mode==='semantic', $sortBy!=='relevance'])); ?>
+    <?php $extraFilterCount=count(array_filter([$yearFilter, $committeeFilter, $officeFilter, $classificationFilter, $dateFrom, $dateTo, $statusFilter, $sortBy!=='relevance'])); ?>
     <details class="search-more-filters">
     <summary>More filters<?= $extraFilterCount ? ' (' . $extraFilterCount . ' active)' : '' ?></summary>
     <?php include __DIR__ . '/includes/search_extra_filters.php'; ?>
-    <label class="semantic-toggle">
-      <input class="form-check-input" type="checkbox" name="mode" value="semantic" id="semanticToggle" <?= $mode === 'semantic' ? 'checked' : '' ?>>
-      Match by meaning and keywords
-    </label>
 
     <div class="filters-row">
       <div class="filter-group filter-group--years">
@@ -471,7 +469,24 @@ include __DIR__ . '/includes/layout_top.php';
   <?php if (!$hasCriteria): ?>
     <p class="text-muted mb-0">Enter a keyword or choose filters to find a registered record.</p>
   <?php elseif (!$results): ?>
-    <p class="text-muted mb-0">No matching documents (within what your role can see).</p>
+    <?php
+      $suggestion = search_spelling_suggestion($query);
+      parse_str($currentQs, $retryCriteria);
+    ?>
+    <p class="mb-2"><strong>No matching records found.</strong></p>
+    <p class="text-muted small">Try a document number, fewer words, or a related term. Results include only registered records you can access.</p>
+    <div class="d-flex flex-wrap gap-2">
+      <?php if ($suggestion !== null): ?>
+        <a class="btn btn-outline-primary btn-sm" href="search.php?<?= htmlspecialchars(http_build_query(array_merge($retryCriteria, ['q'=>$suggestion]))) ?>">Try “<?= htmlspecialchars($suggestion) ?>”</a>
+      <?php endif; ?>
+      <?php if ($mode === 'keyword' && $query !== ''): ?>
+        <a class="btn btn-outline-primary btn-sm" href="search.php?<?= htmlspecialchars(http_build_query(array_merge($retryCriteria, ['mode'=>'semantic']))) ?>">Try meaning + keywords</a>
+      <?php endif; ?>
+      <?php if ($typeFilter !== '' || $statusFilter !== '' || $dateFrom !== '' || $dateTo !== '' || $yearFilter !== '' || $committeeFilter || $officeFilter !== '' || $classificationFilter !== ''): ?>
+        <a class="btn btn-outline-secondary btn-sm" href="search.php?<?= htmlspecialchars(http_build_query(['q'=>$query, 'mode'=>$mode, 'sort'=>'relevance'])) ?>">Clear filters, keep search</a>
+      <?php endif; ?>
+      <a class="btn btn-outline-secondary btn-sm" href="search.php">Start a new search</a>
+    </div>
   <?php else: ?>
     <div class="results-toolbar">
       <p class="results-toolbar__count mb-0"><strong><?= $searchTotal ?></strong> matching records · Page <?= $searchPage ?> of <?= $searchPages ?></p>
@@ -483,6 +498,8 @@ include __DIR__ . '/includes/layout_top.php';
 
     <div class="results-wrap <?= $view === 'grid' ? 'is-grid' : '' ?>">
       <?php foreach ($results as $d):
+        $previewTerms = search_display_terms($query, $mode === 'semantic');
+        $preview = search_result_preview($d, $previewTerms);
         $typeClass = strtolower(str_replace(' ', '-', $d['doc_type']));
         $icon = $docTypeIcons[$d['doc_type']] ?? 'bi-file-earmark-text';
         $attCount = $attachmentCounts[$d['id']] ?? 0;
@@ -506,7 +523,7 @@ include __DIR__ . '/includes/layout_top.php';
               <?= highlight_terms($d['doc_number'], $query) ?>
               <?php if ($d['enactment_date']): ?> · <?= strtoupper($d['status']) ?>: <?= strtoupper(date('M j, Y', strtotime($d['enactment_date']))) ?><?php endif; ?>
             </div>
-            <p class="result-card__snippet"><?= highlight_terms(mb_substr(strip_tags((string)$d['ocr_text']), 0, 200), $query) ?>…</p>
+            <p class="result-card__snippet"><span class="d-block small fw-semibold mb-1"><?= htmlspecialchars($preview['label']) ?></span><?= search_highlight($preview['text'], $previewTerms) ?></p>
             <div class="result-card__footer">
               <div class="result-card__facts">
                 <?php if ($attCount): ?><span><i class="bi bi-paperclip"></i> <?= $attCount ?> Attachment<?= $attCount !== 1 ? 's' : '' ?></span><?php endif; ?>

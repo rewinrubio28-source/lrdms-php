@@ -1,6 +1,7 @@
 import unittest
 import ast
 import hashlib
+import re
 from pathlib import Path
 import threading
 from types import SimpleNamespace
@@ -10,6 +11,10 @@ from document_chunks import split_document, rank_documents
 
 
 class Tokenizer:
+    is_fast = True
+
+    def __call__(self, text, **kwargs):
+        return {'offset_mapping': [match.span() for match in re.finditer(r'\S+', text)]}
     def num_special_tokens_to_add(self, pair=False):
         return 2
 
@@ -46,6 +51,13 @@ class ChunkTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             split_document('text', Tokenizer(), 2)
 
+    def test_passage_offsets_recover_original_unicode_text(self):
+        text = ' '.join(['ordinance']*40) + '  tulong sa mamamayang Pilipino ñ'
+        chunks, spans = split_document(text, Tokenizer(), 16, with_spans=True)
+        self.assertEqual(len(chunks), len(spans))
+        self.assertEqual(text[spans[-1][0]:spans[-1][1]].split(), chunks[-1].split())
+        self.assertEqual(spans[-1][1], len(text))
+
     def test_service_cache_refresh_and_deletion(self):
         # Execute the real service helpers without importing app.py, which would
         # start a model and database warm-up. The encoder is deterministic here.
@@ -74,6 +86,9 @@ class ChunkTests(unittest.TestCase):
         self.assertEqual(len(calls), 3)
         self.assertEqual(ids, [1])
         self.assertEqual(set(scope['_cache']), {1}, 'deleted records must be evicted')
+        ids, matrix, passages = scope['get_doc_matrix']([row], with_passages=True)
+        self.assertEqual(len(passages), len(ids))
+        self.assertEqual(passages[0]['text_hash'], hashlib.md5(scope['build_text'](row).encode('utf-8')).hexdigest())
 
 
 if __name__ == '__main__':

@@ -1,15 +1,20 @@
 """Token-budgeted document windows and document-level score aggregation."""
 
 
-def split_document(text, tokenizer, max_length, overlap=32):
+def split_document(text, tokenizer, max_length, overlap=32, with_spans=False):
     budget = max_length - tokenizer.num_special_tokens_to_add(pair=False)
     if budget < 2:
         raise ValueError('Sequence length leaves insufficient room for document text')
     tokens = tokenizer.encode(text, add_special_tokens=False, truncation=False)
+    offsets = None
+    if with_spans and getattr(tokenizer, 'is_fast', False):
+        offsets = tokenizer(text, add_special_tokens=False, truncation=False,
+                            return_offsets_mapping=True)['offset_mapping']
     if len(tokens) <= budget:
-        return [text]
+        return ([text], [(0, len(text))]) if with_spans else [text]
     overlap = min(max(0, overlap), budget // 4)
     chunks = []
+    spans = []
     start = 0
     while start < len(tokens):
         end = min(start + budget, len(tokens))
@@ -22,10 +27,11 @@ def split_document(text, tokenizer, max_length, overlap=32):
                 raise ValueError('Unable to fit document token into a chunk')
             chunk = tokenizer.decode(tokens[start:end], skip_special_tokens=True)
         chunks.append(chunk)
+        spans.append((offsets[start][0], offsets[end-1][1]) if offsets else None)
         if end == len(tokens):
             break
         start = max(start + 1, end - overlap)
-    return chunks
+    return (chunks, spans) if with_spans else chunks
 
 
 def rank_documents(chunk_ids, scores, threshold, limit):
