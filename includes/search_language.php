@@ -16,6 +16,7 @@ function search_semantic_query(string $query): string {
         'pagbabantay' => 'monitoring',
         'pangkalusugan' => 'health',
         'matatanda' => 'senior citizens',
+        'matanda' => 'senior citizens',
         'kabataan' => 'youth',
         'ospital' => 'hospital',
         'sakit' => 'disease',

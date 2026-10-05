@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/includes/search_language.php';
 $cases = [
+    ['matanda', 'senior citizens'],
+    ['MATANDA', 'senior citizens'],
+    ['ayuda para sa matanda', 'financial assistance para sa senior citizens'],
+    ['matandang ORD-MATANDA-2024', 'matandang ORD-MATANDA-2024'],
     ['buwanang ayuda para sa matatanda sa Maynila', 'monthly financial assistance para sa senior citizens sa Maynila'],
     ['tulong pangkalusugan para sa kabataan', 'health assistance para sa youth'],
     ['pagkilala sa natatanging opisyal ng barangay', 'recognition sa outstanding barangay officials'],

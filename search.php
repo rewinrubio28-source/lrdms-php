@@ -465,7 +465,7 @@ include __DIR__ . '/includes/layout_top.php';
   <?php elseif (($searchExecution['strategy'] ?? '') === 'hybrid'): ?>
     <p class="text-muted small">Results combine meaning and keyword matches. Exact document numbers appear first when sorted by relevance.</p>
     <?php if (!empty($searchExecution['language_assisted'])): ?>
-      <p class="text-muted small">Recognized Filipino terms were matched using English equivalents. Keyword matches use your original search.</p>
+      <p class="text-muted small">Recognized Filipino terms were matched using English equivalents. Keyword matches include your original search and its equivalent.</p>
     <?php endif; ?>
   <?php endif; ?>
   <?php if (!$hasCriteria): ?>

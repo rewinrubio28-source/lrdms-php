@@ -40,8 +40,9 @@ function semantic_search($pdo, $query, $whereClause, $whereParams, $fallbackLimi
     // Keep the legacy search_log enum; strategy identifies the combined ranking.
     $execution = ['effective_mode' => 'semantic', 'strategy' => 'hybrid', 'fallback' => false];
     $fallback = function () use ($pdo, $query, $whereClause, $whereParams, $fallbackLimit, &$execution) {
-        $execution = ['effective_mode' => 'keyword', 'strategy' => 'keyword', 'fallback' => true];
-        return keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
+        $execution = ['effective_mode' => 'keyword', 'strategy' => 'keyword', 'fallback' => true,
+            'language_assisted' => search_semantic_query($query) !== $query];
+        return assisted_keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
     };
     if (!function_exists('curl_init')) return $fallback();
     $semanticQuery = search_semantic_query($query);
@@ -79,7 +80,7 @@ function semantic_search($pdo, $query, $whereClause, $whereParams, $fallbackLimi
     $matchedIds = array_values(array_unique($matchedIds));
 
     if (!$matchedIds) {
-        return keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
+        return assisted_keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
     }
 
     // The BERT service only ranks by meaning — RBAC visibility is
@@ -97,7 +98,7 @@ function semantic_search($pdo, $query, $whereClause, $whereParams, $fallbackLimi
         return ($rank[$a['id']] ?? PHP_INT_MAX) <=> ($rank[$b['id']] ?? PHP_INT_MAX);
     });
 
-    $keywords = keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
+    $keywords = assisted_keyword_search($pdo, $query, $whereClause, $whereParams, $fallbackLimit);
     return hybrid_rank_results($rows, $keywords, $query, $fallbackLimit);
 }
 
@@ -125,6 +126,15 @@ function hybrid_rank_results(array $semantic, array $keywords, string $query, $l
     });
     if ($limit !== null) $ids = array_slice($ids, 0, max(1, (int)$limit));
     return array_map(static fn($id) => $rows[$id], $ids);
+}
+
+/** Search both original text and its curated equivalent with identical visibility. */
+function assisted_keyword_search($pdo, $query, $whereClause, $whereParams, $limit = 25) {
+    $original = keyword_search($pdo, $query, $whereClause, $whereParams, $limit);
+    $equivalent = search_semantic_query($query);
+    if ($equivalent === $query) return $original;
+    $translated = keyword_search($pdo, $equivalent, $whereClause, $whereParams, $limit);
+    return hybrid_rank_results($original, $translated, $query, $limit);
 }
 
 function keyword_search($pdo, $query, $whereClause, $whereParams, $limit = 25) {

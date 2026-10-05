@@ -29,7 +29,12 @@ This is partial domain vocabulary substitution, not a translation model or a cla
 of full Tagalog support. Unknown words and proper names are retained. Longest
 phrases take precedence, and word boundaries protect embedded terms and document
 references. The original query remains in keyword matching, search logs, and exact
-reference ranking. Keyword-only mode and outage fallback use the original query.
+reference ranking. Hybrid keyword matching and its outage fallback search both
+the original phrase and its curated equivalent, using the same visibility clause
+and parameters for each. Thus `matanda` and `matatanda` can retrieve literal
+`senior citizens` matches even below the semantic threshold. Duplicates are merged.
+Standalone keyword-only mode still uses the original query. This remains phrase
+matching, not arbitrary synonym coverage or general translation.
 No additional model, migration, or second semantic request is introduced.
 
 The website indicates when vocabulary assistance was used; API responses include
