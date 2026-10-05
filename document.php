@@ -131,6 +131,7 @@ if ($needsReview) {
       <p class="module-banner-description">Review document details, attachments, and record activity.</p></div>
       </div>
     </div>
+    <?php include __DIR__ . '/includes/session_tracking_view.php'; ?>
     <div class="verification-workspace registered-workspace intake-review-workspace">
       <div class="intake-file-column">
       <section class="verification-preview card">
@@ -155,6 +156,7 @@ if ($needsReview) {
         <div class="verification-metadata"><h3>Metadata validation</h3><div class="verification-metadata__grid"><div><span>Status reported by source</span><strong><?= htmlspecialchars($doc['source_status'] ?: $doc['status']) ?></strong></div><div><span>Source subsystem</span><strong><?= htmlspecialchars($doc['source_system']) ?></strong></div><div><span>Source record ID</span><strong><?= htmlspecialchars($doc['source_record_id'] ?: 'Not provided') ?></strong></div><div><span>Records status</span><strong><?= htmlspecialchars($doc['records_status']) ?></strong></div></div><?php if (!empty($doc['validation_note'])): ?><p class="verification-note"><b>Previous return note:</b> <?= nl2br(htmlspecialchars($doc['validation_note'])) ?></p><?php endif; ?></div>
         <?php include __DIR__ . '/includes/incoming_metadata_form.php'; ?>
         <?php include __DIR__ . '/includes/document_council_term_form.php'; ?>
+
         <?php if (has_permission('repository','edit_metadata') && !in_array($doc['records_status'], ['Duplicate','Unauthorized Submission'], true)): ?>
         <form method="post" enctype="multipart/form-data" class="verification-metadata">
           <?php csrf_field(); ?><input type="hidden" name="review_action" value="attach_correction">
@@ -165,7 +167,9 @@ if ($needsReview) {
         <?php endif; ?>
 
 
-        <?php if ($canValidateRecord && has_permission('encoding', 'register_record')): ?>
+        <?php if (in_array($sessionStage ?? '', ['agenda_pending','agenda_sent'], true)): ?>
+          <p class="alert alert-info mt-3">This record is in the Agenda handoff. Use Session Tracking to record delivery and receive the returned session documents before registration.</p>
+        <?php elseif ($canValidateRecord && has_permission('encoding', 'register_record')): ?>
           <?php if (!in_array($doc['records_status'], ['Duplicate', 'Unauthorized Submission'], true)): ?>
           <form method="post" class="verification-metadata">
             <?php csrf_field(); ?>
@@ -429,14 +433,14 @@ if ($flashSuccess) {
 <?php if ($errors): ?><div class="alert alert-danger"><?php foreach ($errors as $e) echo htmlspecialchars($e) . '<br>'; ?></div><?php endif; ?>
 
 <div class="nav nav-pills gap-2 mb-4" role="tablist" aria-label="Document sections">
-  <button class="nav-link <?= isset($_GET['source_history_saved'])?'':'active' ?>" id="document-details-tab" data-bs-toggle="pill" data-bs-target="#document-details-panel" type="button" role="tab" aria-controls="document-details-panel" aria-selected="<?= isset($_GET['source_history_saved'])?'false':'true' ?>">Document Details</button>
-  <button class="nav-link <?= isset($_GET['source_history_saved'])?'active':'' ?>" id="document-history-tab" data-bs-toggle="pill" data-bs-target="#document-history-panel" type="button" role="tab" aria-controls="document-history-panel" aria-selected="<?= isset($_GET['source_history_saved'])?'true':'false' ?>">Tracking &amp; History</button>
+  <button class="nav-link <?= (isset($_GET['source_history_saved']) || ($_GET['tab'] ?? '') === 'tracking')?'':'active' ?>" id="document-details-tab" data-bs-toggle="pill" data-bs-target="#document-details-panel" type="button" role="tab" aria-controls="document-details-panel" aria-selected="<?= (isset($_GET['source_history_saved']) || ($_GET['tab'] ?? '') === 'tracking')?'false':'true' ?>">Document Details</button>
+  <button class="nav-link <?= (isset($_GET['source_history_saved']) || ($_GET['tab'] ?? '') === 'tracking')?'active':'' ?>" id="document-history-tab" data-bs-toggle="pill" data-bs-target="#document-history-panel" type="button" role="tab" aria-controls="document-history-panel" aria-selected="<?= (isset($_GET['source_history_saved']) || ($_GET['tab'] ?? '') === 'tracking')?'true':'false' ?>">Tracking &amp; History</button>
 </div>
 <div class="tab-content">
-  <div class="tab-pane fade <?= isset($_GET['source_history_saved'])?'':'show active' ?>" id="document-details-panel" role="tabpanel" aria-labelledby="document-details-tab" tabindex="0">
+  <div class="tab-pane fade <?= (isset($_GET['source_history_saved']) || ($_GET['tab'] ?? '') === 'tracking')?'':'show active' ?>" id="document-details-panel" role="tabpanel" aria-labelledby="document-details-tab" tabindex="0">
     <?php include __DIR__ . '/includes/document_workspace.php'; ?>
   </div>
-  <div class="tab-pane fade <?= isset($_GET['source_history_saved'])?'show active':'' ?>" id="document-history-panel" role="tabpanel" aria-labelledby="document-history-tab" tabindex="0">
+  <div class="tab-pane fade <?= (isset($_GET['source_history_saved']) || ($_GET['tab'] ?? '') === 'tracking')?'show active':'' ?>" id="document-history-panel" role="tabpanel" aria-labelledby="document-history-tab" tabindex="0">
     <?php
       $trackingStmt = $pdo->prepare('SELECT h.action, h.note, h.created_at, u.full_name FROM record_validation_history h LEFT JOIN users u ON u.id=h.actor_id WHERE h.document_id=? ORDER BY h.created_at DESC, h.id DESC');
       $trackingStmt->execute([(int)$doc['id']]);

@@ -15,7 +15,7 @@ if ($__user && profile_photos_available(get_db())) {
     $__headerPhotoQuery->execute([$__user['id']]);
     $__hasHeaderPhoto = (bool)$__headerPhotoQuery->fetchColumn();
 }
-$__repoOpen = current_page('repository') === 'is-active' || current_page('integrations') === 'is-active';
+$__repoOpen = current_page('repository') === 'is-active' || current_page('repository_tracking') === 'is-active' || current_page('integrations') === 'is-active';
 $__sys = (int)($_GET['sys'] ?? 0);
 ?>
 <!DOCTYPE html>
@@ -88,6 +88,7 @@ $__sys = (int)($_GET['sys'] ?? 0);
             <svg class="nav-group__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
           </summary>
           <div class="nav-group__sub">
+            <a class="nav-item nav-item--sub <?= current_page('repository_tracking') ?>" href="repository_tracking.php"><i class="bi bi-signpost-split" aria-hidden="true"></i><span>Session Tracking</span></a>
             <a class="nav-item nav-item--sub <?= current_page('repository') && ($_GET['section'] ?? '') === 'ordinances' ? 'is-active' : '' ?>" href="repository.php?section=ordinances"><i class="bi bi-file-earmark-text" aria-hidden="true"></i><span>Ordinances</span></a>
             <a class="nav-item nav-item--sub <?= current_page('repository') && ($_GET['section'] ?? '') === 'resolutions' ? 'is-active' : '' ?>" href="repository.php?section=resolutions"><i class="bi bi-file-earmark-check" aria-hidden="true"></i><span>Resolutions</span></a>
           </div>

@@ -1,5 +1,7 @@
 # Repository demo and current scope
 
+Update: [Session tracking and mayor signature copies](session-tracking.md) extends this earlier receiving scope with manual Agenda handoffs, three session stages, committee amendment reminders, and final/signed PDF custody. The source-status and public-release boundaries below still apply; session tracking records reported progress without enacting or publishing documents.
+
 LRDMS (System 6) receives, validates, registers, stores, searches and controls access to documents/data supplied by other legislative systems. Retention-policy ownership belongs to System 8. Operational backups in LRDMS remain recovery safeguards, not a retention-management workflow.
 
 Upstream approval, readings and committee decisions are not performed again in LRDMS. Registration checks the received record; it is not legislative approval. A received document is not necessarily enacted. The currently accepted integration stage must be agreed with each source when live integration is implemented.

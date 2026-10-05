@@ -145,6 +145,7 @@
         var icon = TYPE_ICON[n.type] || 'bi-bell';
         var unreadCls = n.is_read ? '' : ' notif-bell__item--unread';
         var href = n.document_id ? ((n.type === 'incoming_document' ? reviewUrl : docUrl) + '?id=' + n.document_id) : '#';
+        if (n.document_id && (n.type === 'amendment_day1' || n.type === 'amendment_overdue')) href += '&tab=tracking';
         return (
           '<a href="' + href + '" class="notif-bell__item' + unreadCls + '" data-id="' + n.id + '">' +
             '<i class="bi ' + icon + '"></i>' +

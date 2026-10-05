@@ -7,6 +7,7 @@ $trackingDates = [
     'Verified' => $doc['verified_at'] ?? null,
 ];
 ?>
+<?php include __DIR__ . '/session_tracking_view.php'; ?>
 <div class="record-tracking-layout">
   <div class="record-tracking-main">
     <?php include __DIR__ . '/source_history_view.php'; ?>

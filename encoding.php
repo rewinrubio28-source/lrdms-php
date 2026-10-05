@@ -68,6 +68,11 @@ $awaitingVerification = $pdo->query(
 $awaitingVerification = array_values(array_filter($awaitingVerification, static function ($record) use ($user) { return can_view_document($user, $record); }));
 
 $intakeTotal = count($awaitingVerification);
+require_once __DIR__ . '/includes/session_workflow.php';
+$intakeSessionStates = [];
+if (session_tracking_available($pdo)) {
+    foreach ($pdo->query("SELECT s.document_id,s.stage FROM document_sessions s JOIN documents d ON d.id=s.document_id WHERE d.verified_at IS NULL")->fetchAll() as $state) $intakeSessionStates[$state['document_id']] = session_stage_labels()[$state['stage']] ?? $state['stage'];
+}
 include __DIR__ . '/includes/layout_top.php';
 ?>
 <link rel="stylesheet" href="assets/css/encoding-workspace.css?v=2">
@@ -124,7 +129,7 @@ include __DIR__ . '/includes/layout_top.php';
           <?php foreach ($awaitingVerification as $doc): ?>
           <tr>
             <td class="intake-document"><span class="intake-reference"><?= htmlspecialchars($doc['doc_number']) ?></span><a href="document.php?id=<?= (int)$doc['id'] ?>"><?= htmlspecialchars($doc['title']) ?></a><small><?= htmlspecialchars($doc['doc_type']) ?></small></td>
-            <td><span class="intake-status <?= $doc['records_status'] === 'Validated' ? 'is-ready' : (in_array($doc['records_status'], ['Returned for Correction', 'Duplicate', 'Unauthorized Submission'], true) ? 'is-attention' : '') ?>"><?= htmlspecialchars($doc['records_status'] ?: 'Not specified') ?></span></td>
+            <td><span class="intake-status <?= $doc['records_status'] === 'Validated' ? 'is-ready' : (in_array($doc['records_status'], ['Returned for Correction', 'Duplicate', 'Unauthorized Submission'], true) ? 'is-attention' : '') ?>"><?= htmlspecialchars($intakeSessionStates[$doc['id']] ?? ($doc['records_status'] ?: 'Under Review')) ?></span></td>
             <td><?= htmlspecialchars($doc['source_system']) ?></td>
             <td class="text-nowrap text-muted small"><?= htmlspecialchars(date('M j, Y g:i A', strtotime($doc['created_at']))) ?></td>
             <td class="text-end">

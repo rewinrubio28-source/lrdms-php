@@ -8,11 +8,15 @@ function process_record(PDO $pdo, array $user, int $id, string $action, string $
     if (!$register && !in_array($action, ['Validated', 'Returned for Correction', 'Duplicate', 'Unauthorized Submission'], true)) throw new RuntimeException('Invalid review action.');
     if ($action === 'register_public' && !_role_has_permission($user['role_id'], 'repository', 'manage_visibility')) throw new RuntimeException('Public release permission is required.');
     if (!$register && (trim($note) === '' || mb_strlen($note) > 4000)) throw new RuntimeException('Enter a review note of up to 4,000 characters.');
-    $pdo->beginTransaction();
+    $ownsTransaction = !$pdo->inTransaction();
+    if ($ownsTransaction) $pdo->beginTransaction();
     try {
         $stmt = $pdo->prepare('SELECT * FROM documents WHERE id=? FOR UPDATE');
         $stmt->execute([$id]); $doc = $stmt->fetch();
         if (!$doc || !can_view_document($user, $doc)) throw new RuntimeException('Record unavailable or access denied.');
+        require_once __DIR__ . '/session_workflow.php';
+        $sessionState = session_tracking_available($pdo) ? session_state($pdo, $id) : null;
+        if ($sessionState && in_array($sessionState['stage'], ['agenda_pending','agenda_sent'], true)) throw new RuntimeException('Receive the session documents through Session Tracking before registration or another review decision.');
         if ($doc['verified_at'] !== null || $doc['registered_at'] !== null || $doc['records_status'] === 'Registered') throw new RuntimeException('This record is already registered.');
         if (in_array($doc['records_status'], ['Duplicate', 'Unauthorized Submission'], true)) throw new RuntimeException('This submission is closed and cannot be registered.');
         if ($register && !in_array($doc['records_status'], ['Submitted', 'Pending Validation', 'Validated'], true)) throw new RuntimeException('Complete the correction review and validate this record before registration.');
@@ -38,6 +42,6 @@ function process_record(PDO $pdo, array $user, int $id, string $action, string $
         $history->execute([$id, $user['id'], $state, $note ?: null]);
         $pdo->prepare('UPDATE integration_receipts SET processing_status=?,error_message=? WHERE lrdms_record_id=?')->execute([$state, $register ? null : $note, $id]);
         log_action('encoding', 'record_reviewed', $doc['doc_number'] . ': ' . $state);
-        $pdo->commit();
-    } catch (Throwable $e) { if ($pdo->inTransaction()) $pdo->rollBack(); throw $e; }
+        if ($ownsTransaction) $pdo->commit();
+    } catch (Throwable $e) { if ($ownsTransaction && $pdo->inTransaction()) $pdo->rollBack(); throw $e; }
 }

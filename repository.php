@@ -224,6 +224,7 @@ if ($isAjax) {
     <div>
       <span class="module-banner-eyebrow">DOCUMENT REPOSITORY</span>
       <h1 class="topbar__title"><?= htmlspecialchars($repositoryTitle) ?></h1>
+      <a class="btn btn-outline-primary btn-sm mt-2" href="repository_tracking.php">Session Tracking</a>
       <p class="module-banner-description">Browse and manage the legislative records collection.</p>
     </div>
   </div>

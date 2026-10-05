@@ -6,7 +6,10 @@ require_once __DIR__ . '/../includes/record_processing.php';
 require_once __DIR__ . '/../includes/intake_record.php';
 $pdo = get_db();
 if (!in_array(DB_HOST, ['localhost','127.0.0.1','::1'], true)) throw new RuntimeException('Local test only.');
-foreach (['documents','record_validation_history','integration_receipts','audit_log'] as $table) {
+$testTables = ['documents','record_validation_history','integration_receipts','audit_log'];
+require_once __DIR__ . '/../includes/session_workflow.php';
+if (session_tracking_available($pdo)) $testTables[] = 'document_sessions';
+foreach ($testTables as $table) {
     $ddl = $pdo->query("SHOW CREATE TABLE $table")->fetch(PDO::FETCH_NUM)[1];
     $ddl = implode("\n", array_filter(explode("\n", $ddl), static function ($line) { return !str_starts_with(trim($line), 'CONSTRAINT') && !str_starts_with(trim($line), 'FULLTEXT'); }));
     $ddl = preg_replace('/,\n\)/', "\n)", $ddl);
