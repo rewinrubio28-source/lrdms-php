@@ -128,9 +128,9 @@ if (!in_array($statusFilter, ['all', 'active', 'disabled'], true)) $statusFilter
 $where = [user_directory_clause()];
 $params = [];
 if ($q !== '') {
-    $where[] = '(u.full_name LIKE ? OR u.username LIKE ? OR u.email LIKE ?)';
+    $where[] = '(u.full_name LIKE ? OR u.username LIKE ? OR u.email LIKE ? OR p.name LIKE ? OR d.name LIKE ? OR r.name LIKE ?)';
     $like = '%' . $q . '%';
-    array_push($params, $like, $like, $like);
+    array_push($params, $like, $like, $like, $like, $like, $like);
 }
 if ($roleFilter) {
     $where[] = 'u.role_id = ?';
@@ -151,9 +151,11 @@ $whereSql = $where ? ' WHERE ' . implode(' AND ', $where) : '';
 require_once __DIR__ . '/includes/profile_photos.php';
 $photoExpression = profile_photos_available($pdo) ? 'EXISTS(SELECT 1 FROM user_profile_photos photo WHERE photo.user_id = u.id)' : '0';
 $allUsers = $pdo->prepare(
-    'SELECT u.*, r.name AS role_name, ' . $photoExpression . ' AS has_profile_photo
+    'SELECT u.*, r.name AS role_name, p.name AS position_name, d.name AS section_name, ' . $photoExpression . ' AS has_profile_photo
      FROM users u
-     JOIN roles r ON r.id = u.role_id'
+     JOIN roles r ON r.id = u.role_id
+     LEFT JOIN positions p ON p.id = u.position_id
+     LEFT JOIN divisions d ON d.id = u.division_id'
     . $whereSql . ' ORDER BY u.created_at DESC'
 );
 $allUsers->execute($params);
@@ -216,7 +218,7 @@ include __DIR__ . '/includes/layout_top.php';
               <div class="form-text" id="create-password-help">Use a passphrase of at least 15 characters (maximum 72 bytes).</div>
             </div>
             <div class="col-md-6">
-              <label class="form-label small">System role</label>
+              <label class="form-label small">Access Role</label>
               <select name="role_id" class="form-select" required>
                 <option value="">— Select —</option>
                 <?php foreach ($assignableRoles as $r): ?><option value="<?= $r['id'] ?>" <?= (isset($oldInput['roleId']) && (int)$oldInput['roleId'] === (int)$r['id']) ? 'selected' : '' ?>><?= htmlspecialchars($r['name']) ?></option><?php endforeach; ?>

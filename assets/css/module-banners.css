@@ -70,7 +70,7 @@
 .main [data-banner-date] :is(.notif-bell__toggle,.account-menu__toggle):hover { background: #20597e; }
 .account-menu__photo { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .main [data-banner-date] .sidebar-toggle { color: #fff; }
-.main [data-banner-date] a.small { color: #d5eafb !important; }
+.main [data-banner-date] a.small:not(.action-link) { color: #d5eafb !important; }
 .main [data-banner-date] .btn-outline-primary { color: #fff; border-color: #a5c8e3; }
 /* The audit page has its own banner; remove its now-empty desktop toolbar. */
 .main #audit-workspace .audit-hero {

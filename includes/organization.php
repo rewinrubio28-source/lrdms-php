@@ -1,5 +1,26 @@
 <?php
 // Organization assignments describe staff identity; permission checks stay in RBAC.
+// Unique position titles from the supplied Information and Communication Division draft.
+function organization_chart_positions(): array {
+    return [
+        'Chief Administrative Officer' => ['Leadership', null],
+        'Supervising Administrative Officer' => ['Leadership', null],
+        'Administrative Officer V' => ['RMPS ITTS', 18],
+        'Senior Administrative Assistant IV' => ['RMPS ITTS', 16],
+        'Administrative Officer III' => ['RMPS', 14],
+        'Administrative Assistant II' => ['RMPS', 8],
+        'Administrative Aide VI' => ['RMPS', 6],
+        'Administrative Aide IV' => ['RMPS ITTS', 4],
+        'Administrative Aide II' => ['RMPS ITTS', 2],
+        'Senior Administrative Assistant II (Computer Operator II)' => ['ITTS', 14],
+        'Administrative Assistant IV (Videographer/Photographer III)' => ['ITTS', 10],
+        'Administrative Assistant I (Videographer/Photographer II)' => ['ITTS', 7],
+        'Administrative Assistant I (Audio-Visual Equipment Operator III)' => ['ITTS', 7],
+        'Administrative Assistant IV (Communication Equipment Operator III)' => ['ITTS', 10],
+        'Administrative Assistant I (Computer Operator I)' => ['ITTS', 7],
+    ];
+}
+
 function organization_schema_available(PDO $pdo): bool {
     static $available = null;
     if ($available === null) {

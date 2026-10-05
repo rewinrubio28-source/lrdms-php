@@ -30,11 +30,14 @@
     </div>
     <div class="table-responsive">
       <table class="users-members-table">
-        <thead><tr><th>User details</th><th>Email address</th><th>Status</th><th>Last login</th><th>Actions</th></tr></thead>
+        <thead><tr><th>User details</th><th>Position</th><th>Section</th><th>Access Role</th><th>Email address</th><th>Status</th><th>Last login</th><th>Actions</th></tr></thead>
         <tbody>
         <?php foreach ($allUsers as $u): ?>
           <tr style="--avatar-hue:<?= ((int)$u['id'] * 47 + 190) % 360 ?>;">
             <td><div class="users-person"><?php if (!empty($u['has_profile_photo'])): ?><img class="users-avatar" src="profile_photo.php?id=<?= (int)$u['id'] ?>" alt="" width="34" height="34" loading="lazy" style="object-fit:cover;"><?php else: ?><span class="users-avatar" aria-hidden="true"><?= htmlspecialchars(mb_strtoupper(mb_substr($u['full_name'], 0, 1))) ?></span><?php endif; ?><div><strong><?= htmlspecialchars($u['full_name']) ?></strong><small><?= htmlspecialchars($u['username']) ?> · Created <?= !empty($u['created_at']) ? date('M j, Y', strtotime($u['created_at'])) : '—' ?></small><?php if ($u['totp_enabled']): ?><small>2FA enabled</small><?php endif; ?></div></div></td>
+            <td><?= htmlspecialchars($u['position_name'] ?: 'Not assigned') ?></td>
+            <td><?= htmlspecialchars($u['section_name'] ?: 'Not assigned') ?></td>
+            <td><?= htmlspecialchars($u['role_name']) ?></td>
             <td><?= htmlspecialchars($u['email'] ?: 'Not provided') ?></td>
             <td><span class="users-status <?= $u['is_active'] ? 'is-active' : 'is-disabled' ?>"><?= $u['is_active'] ? 'Active' : 'Disabled' ?></span></td>
             <td><?= $u['last_login_at'] ? date('M j, Y · g:i A', strtotime($u['last_login_at'])) : 'Never' ?></td>
@@ -48,7 +51,7 @@
             </div></td>
           </tr>
         <?php endforeach; ?>
-        <?php if (!$allUsers): ?><tr><td colspan="5" class="users-empty"><i class="bi bi-person-search" aria-hidden="true"></i><strong>No users found</strong><p>Try another role or adjust your search and filters.</p></td></tr><?php endif; ?>
+        <?php if (!$allUsers): ?><tr><td colspan="8" class="users-empty"><i class="bi bi-person-search" aria-hidden="true"></i><strong>No users found</strong><p>Try another role or adjust your search and filters.</p></td></tr><?php endif; ?>
         </tbody>
       </table>
     </div>

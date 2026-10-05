@@ -46,7 +46,7 @@ $__sys = (int)($_GET['sys'] ?? 0);
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= isset($__inSubfolder) ? '../' : '' ?>assets/css/style.css">
 <link rel="stylesheet" href="<?= isset($__inSubfolder) ? '../' : '' ?>assets/css/orbit.css?v=15">
-<link rel="stylesheet" href="<?= isset($__inSubfolder) ? '../' : '' ?>assets/css/module-banners.css?v=9">
+<link rel="stylesheet" href="<?= isset($__inSubfolder) ? '../' : '' ?>assets/css/module-banners.css?v=10">
 </head>
 <body>
 <a class="skip-link" href="#main-content">Skip to main content</a>

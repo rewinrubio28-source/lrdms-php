@@ -231,7 +231,8 @@ include __DIR__ . '/includes/layout_top.php';
           <?php if ($isMe): ?><span class="badge text-bg-info">This is you</span><?php endif; ?>
         <?php endif; ?>
       </h1>
-      <p class="module-banner-description">Review account information, access, and activity.</p>
+      <?php $targetOrganization = $target ? organization_user($pdo, (int)$target['id']) : []; ?>
+      <p class="module-banner-description"><?= htmlspecialchars($targetOrganization['position_name'] ?? 'Position not assigned') ?> &middot; <?= htmlspecialchars($targetOrganization['division_name'] ?? $targetOrganization['office_name'] ?? 'Section not assigned') ?></p>
     </div>
   </div>
 </div>
@@ -257,7 +258,7 @@ include __DIR__ . '/includes/layout_top.php';
         <div class="mb-2"><label class="form-label small">Username</label><input type="text" name="username" class="form-control form-control-sm" value="<?= htmlspecialchars($target['username']) ?>" required></div>
         <div class="mb-2"><label class="form-label small">Email</label><input type="email" name="email" class="form-control form-control-sm" value="<?= htmlspecialchars($target['email'] ?? '') ?>"></div>
         <div class="mb-2">
-          <label class="form-label small">System role</label>
+          <label class="form-label small">Access Role</label>
           <select name="role_id" class="form-select form-select-sm" required <?= $isMe ? 'disabled title="You cannot change your own role"' : '' ?>>
             <?php foreach ($roles as $r): ?>
               <?php
