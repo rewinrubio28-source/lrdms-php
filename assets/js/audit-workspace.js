@@ -22,6 +22,9 @@
       // Preserve the sidebar button's listener attached by the shared layout.
       const toggle = current.querySelector('#sidebar-toggle');
       if (toggle) replacement.querySelector('#sidebar-toggle').replaceWith(toggle);
+      // Keep the shared menus and their listeners across workspace refreshes.
+      const headerActions = current.querySelector('.header-actions-group');
+      if (headerActions) replacement.querySelector('.topbar__actions').appendChild(headerActions);
       const rowFocused = !!current.querySelector('.audit-event-row:focus');
       current.replaceWith(replacement);
       if (rowFocused) {

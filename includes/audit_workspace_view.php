@@ -1,9 +1,12 @@
-<link rel="stylesheet" href="assets/css/audit-workspace.css?v=6">
+<link rel="stylesheet" href="assets/css/audit-workspace.css?v=7">
 <div id="audit-workspace" class="audit-page">
- <header class="audit-topbar">
-  <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu"><i class="bi bi-list"></i></button>
- </header>
- <section class="audit-hero"><div><span>AUDIT TRAIL</span><h1>Track. Verify. Ensure Accountability.</h1><p>View and monitor system activities, record changes, access events, and user actions.</p></div><time><i class="bi bi-calendar3"></i> <?= date('M j, Y') ?></time></section>
+ <section class="audit-hero topbar" data-banner-date="<?= date('M j, Y') ?>">
+  <div class="d-flex align-items-center gap-2">
+   <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu"><i class="bi bi-list"></i></button>
+   <div><span class="topbar__eyebrow">AUDIT TRAIL</span><h1>Track. Verify. Ensure Accountability.</h1><p>View and monitor system activities, record changes, access events, and user actions.</p></div>
+  </div>
+  <div class="topbar__actions"></div>
+ </section>
  <div class="audit-metrics">
  <?php foreach ([['total','Total Audit Events','bi-file-earmark-text'],['users','User Activities','bi-person-badge'],['records','Record Events','bi-folder2'],['security','Security Alerts','bi-shield-exclamation']] as [$key,$label,$icon]): ?>
   <section class="audit-metric"><span class="audit-metric-icon"><i class="bi <?= $icon ?>"></i></span><div><h2><?= $label ?></h2><strong><?= number_format((int)$stats[$key]) ?></strong><small>Last 30 days</small></div></section>
@@ -54,4 +57,4 @@
   </aside>
  </div>
 </div>
-<script src="assets/js/audit-workspace.js?v=3" defer></script>
+<script src="assets/js/audit-workspace.js?v=4" defer></script>
