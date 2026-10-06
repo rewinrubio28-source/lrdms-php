@@ -12,7 +12,7 @@ require_once __DIR__.'/../includes/retrieval.php';
 $pdo=get_db();
 if (!in_array(DB_HOST,['localhost','127.0.0.1','::1'],true)) throw new RuntimeException('Local database only.');
 if ($httpTest && storage_enabled()) throw new RuntimeException('Upload tests require local storage.');
-foreach (['documents','document_sessions','document_session_events','document_attachments','record_validation_history','integration_receipts','audit_log','notifications','users','user_committees','committees','document_copy_requests'] as $table) {
+foreach (['documents','document_sessions','document_session_events','document_attachments','record_validation_history','integration_receipts','audit_log','notifications','users','user_committees','committees','offices','document_copy_requests'] as $table) {
     $ddl=$pdo->query("SHOW CREATE TABLE $table")->fetch(PDO::FETCH_NUM)[1];
     $ddl=implode("\n",array_filter(explode("\n",$ddl),static fn($line)=>!str_starts_with(trim($line),'CONSTRAINT') && !str_starts_with(trim($line),'FULLTEXT')));
     $ddl=preg_replace('/,\n\)/',"\n)",$ddl);
@@ -22,9 +22,9 @@ function test_check(bool $ok,string $message): void { if (!$ok) throw new Runtim
 function test_reject(callable $fn): void { try { $fn(); } catch (RuntimeException|InvalidArgumentException $e) { return; } throw new RuntimeException('Expected rejected action.'); }
 $roles=$pdo->query('SELECT name,id FROM roles')->fetchAll(PDO::FETCH_KEY_PAIR);
 foreach (['Records Officer','Committee Secretary','Records Assistant'] as $role) test_check(isset($roles[$role]),'Missing test role '.$role);
-$pdo->exec("INSERT INTO committees (id,name) VALUES (1,'Test Committee'),(2,'Unrelated Committee')");
-$insert=$pdo->prepare('INSERT INTO users (id,username,full_name,password_hash,role_id,committee_id) VALUES (?,?,?,?,?,?)');
-foreach ([[1,'officer','Records Officer',null],[2,'secretary','Committee Secretary',1],[3,'other-secretary','Committee Secretary',2],[4,'viewer','Records Assistant',null]] as [$id,$name,$role,$committee]) $insert->execute([$id,$name,$name,'unused-test-hash',$roles[$role],$committee]);
+$pdo->exec("INSERT INTO offices (id,name) VALUES (1,'Test Department')");
+$insert=$pdo->prepare('INSERT INTO users (id,username,full_name,password_hash,role_id,committee_id,office_id) VALUES (?,?,?,?,?,?,?)');
+foreach ([[1,'officer','Records Officer',null,null],[2,'deptstaff','Records Assistant',null,1],[4,'viewer','Records Assistant',null,null]] as [$id,$name,$role,$committee,$office]) $insert->execute([$id,$name,$name,'unused-test-hash',$roles[$role],$committee,$office]);
 $user=$pdo->query('SELECT * FROM users WHERE id=1')->fetch();
 $viewer=$pdo->query('SELECT * FROM users WHERE id=4')->fetch();
 $GLOBALS['__lrdms_current_user']=$user;
@@ -32,8 +32,8 @@ function test_document(PDO $pdo,string $number): int {
     $pdo->prepare("INSERT INTO documents (doc_number,title,doc_type,owner_id,status,source_system,records_status,body,file_path) VALUES (?,?,'Ordinance',1,'Under Review','Test intake','Pending Validation','Preserved original','uploads/original-test.pdf')")->execute([$number,'Session workflow test']);
     return (int)$pdo->lastInsertId();
 }
-function test_step(PDO $pdo,array $user,int $id,string $action,?array $upload=null,int $committee=0): void {
-    session_process($pdo,$user,$id,$action,(int)(session_state($pdo,$id)['revision'] ?? 0),'Test reference',$upload,$committee);
+function test_step(PDO $pdo,array $user,int $id,string $action,?array $upload=null,int $office=0): void {
+    session_process($pdo,$user,$id,$action,(int)(session_state($pdo,$id)['revision'] ?? 0),'Test reference',$upload,$office);
 }
 $id=test_document($pdo,'TEST-SESSION');
 test_reject(fn()=>test_step($pdo,$viewer,$id,'send_agenda'));
@@ -52,7 +52,7 @@ $state=session_state($pdo,$id);
 test_check($state['stage']==='amendment','Amendment is in second session.');
 test_check(strtotime($state['amendment_due_at'])-strtotime($state['amendment_started_at'])===15*86400,'15 calendar days.');
 $recipients=$pdo->query("SELECT user_id FROM notifications WHERE type='amendment_day1' ORDER BY user_id")->fetchAll(PDO::FETCH_COLUMN);
-test_check(array_map('intval',$recipients)===[1,2],'Notify officer and assigned secretary only.');
+test_check(array_map('intval',$recipients)===[1,2],'Notify officer and assigned department only.');
 test_reject(fn()=>test_step($pdo,$user,$id,'third_session'));
 test_check(session_send_overdue_reminders($pdo)===0,'No early overdue reminder.');
 $pdo->exec("UPDATE document_sessions SET amendment_due_at=DATE_SUB(NOW(),INTERVAL 1 SECOND) WHERE document_id=$id");

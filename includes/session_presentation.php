@@ -20,7 +20,7 @@ function session_stage_hint(string $stage): string {
         'agenda_sent'=>'Awaiting documents from the 1st session. Record receipt when they return.',
         'first_session'=>'Record the session outcome: request amendments or continue to the 2nd session.',
         'second_session'=>'Request amendments if needed, or continue when the 2nd session is complete.',
-        'amendment'=>'Awaiting the committee submission. Record a follow-up or receive their amended document below.',
+        'amendment'=>'Awaiting the department submission. Record a follow-up or receive their amended document below.',
         'amendment_received'=>'Review the received amendment. Continue when no further changes are needed.',
         'third_session'=>'Upload the official final PDF below, then download and print it as the hard copy. That ends the tracking.',
         'signed_pending'=>'Legacy signed-copy check from before the 3rd-Session final.',

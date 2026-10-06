@@ -11,7 +11,7 @@ $pdo = get_db();
 
 $roles = $pdo->query("SELECT * FROM roles WHERE name <> 'Super Admin' ORDER BY id")->fetchAll();
 $assignableRoles = assignable_roles($roles); // only roles ranking below the signed-in user's own
-$committees = $pdo->query('SELECT * FROM committees ORDER BY name')->fetchAll();
+$offices = $pdo->query('SELECT * FROM offices ORDER BY name')->fetchAll();
 
 $errors = [];
 $success = '';
@@ -31,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $username = trim($_POST['username'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $roleId = (int)($_POST['role_id'] ?? 0);
-        $committeeId = ($_POST['committee_id'] ?? '') !== '' ? (int)$_POST['committee_id'] : null;
         $organizationValues = organization_input($pdo, $_POST, $errors);
         $password = $_POST['password'] ?? '';
         $requireChange = !empty($_POST['must_change_password']);
@@ -45,7 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'email' => $email,
             'password' => '',
             'roleId' => $roleId,
-            'committeeId' => $committeeId,
             'requireChange' => $requireChange,
         ];
 
@@ -71,12 +69,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->beginTransaction();
                 try {
                 $stmt = $pdo->prepare(
-                    'INSERT INTO users (full_name, username, email, password_hash, role_id, committee_id, must_change_password)
-                     VALUES (?,?,?,?,?,?,?)'
+                    'INSERT INTO users (full_name, username, email, password_hash, role_id, must_change_password)
+                     VALUES (?,?,?,?,?,?)'
                 );
                 $stmt->execute([
                     $fullName, $username, $email ?: null,
-                    password_hash($password, PASSWORD_DEFAULT), $roleId, $committeeId,
+                    password_hash($password, PASSWORD_DEFAULT), $roleId,
                     $requireChange ? 1 : 0,
                 ]);
                 organization_save($pdo, (int)$pdo->lastInsertId(), $organizationValues);
@@ -121,7 +119,7 @@ $selectedRoleName = 'All Users';
 foreach ($roles as $roleOption) {
     if ((int)$roleOption['id'] === $roleFilter) $selectedRoleName = $roleOption['name'];
 }
-$committeeFilter = (int)($_GET['committee_id'] ?? 0);
+$officeFilter = (int)($_GET['office_id'] ?? 0);
 $statusFilter = $_GET['status'] ?? 'all';
 if (!in_array($statusFilter, ['all', 'active', 'disabled'], true)) $statusFilter = 'all';
 
@@ -136,10 +134,9 @@ if ($roleFilter) {
     $where[] = 'u.role_id = ?';
     $params[] = $roleFilter;
 }
-if ($committeeFilter) {
-    $where[] = '(u.committee_id = ? OR EXISTS (SELECT 1 FROM user_committees uc WHERE uc.user_id = u.id AND uc.committee_id = ?))';
-    $params[] = $committeeFilter;
-    $params[] = $committeeFilter;
+if ($officeFilter) {
+    $where[] = 'u.office_id = ?';
+    $params[] = $officeFilter;
 }
 if ($statusFilter === 'active') {
     $where[] = 'u.is_active = 1';
@@ -222,13 +219,6 @@ include __DIR__ . '/includes/layout_top.php';
               <select name="role_id" class="form-select" required>
                 <option value="">— Select —</option>
                 <?php foreach ($assignableRoles as $r): ?><option value="<?= $r['id'] ?>" <?= (isset($oldInput['roleId']) && (int)$oldInput['roleId'] === (int)$r['id']) ? 'selected' : '' ?>><?= htmlspecialchars($r['name']) ?></option><?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small">Primary committee (if applicable)</label>
-              <select name="committee_id" class="form-select">
-                <option value="">— None —</option>
-                <?php foreach ($committees as $c): ?><option value="<?= $c['id'] ?>" <?= (isset($oldInput['committeeId']) && $oldInput['committeeId'] !== null && (int)$oldInput['committeeId'] === (int)$c['id']) ? 'selected' : '' ?>><?= htmlspecialchars($c['name']) ?></option><?php endforeach; ?>
               </select>
             </div>
             <?php $organizationValues = $organizationValues ?? []; include __DIR__ . '/includes/organization_form.php'; ?>

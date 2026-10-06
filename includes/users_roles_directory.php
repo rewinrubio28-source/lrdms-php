@@ -25,7 +25,7 @@
         <input type="hidden" name="role_id" value="<?= $roleFilter ?>">
         <label class="users-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" name="q" value="<?= htmlspecialchars($q) ?>" placeholder="Search name or email..." aria-label="Search users"><button type="submit" class="visually-hidden">Search</button></label>
         <select name="status" aria-label="Account status"><option value="all">All statuses</option><option value="active" <?= $statusFilter === 'active' ? 'selected' : '' ?>>Active</option><option value="disabled" <?= $statusFilter === 'disabled' ? 'selected' : '' ?>>Disabled</option></select>
-        <select name="committee_id" aria-label="Committee"><option value="0">All committees</option><?php foreach ($committees as $c): ?><option value="<?= (int)$c['id'] ?>" <?= $committeeFilter === (int)$c['id'] ? 'selected' : '' ?>><?= htmlspecialchars($c['name']) ?></option><?php endforeach; ?></select>
+        <select name="office_id" aria-label="Department"><option value="0">All departments</option><?php foreach ($offices as $o): ?><option value="<?= (int)$o['id'] ?>" <?= $officeFilter === (int)$o['id'] ? 'selected' : '' ?>><?= htmlspecialchars($o['name']) ?></option><?php endforeach; ?></select>
       </form>
     </div>
     <div class="table-responsive">

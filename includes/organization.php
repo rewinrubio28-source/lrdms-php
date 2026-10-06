@@ -32,7 +32,7 @@ function organization_schema_available(PDO $pdo): bool {
 
 function organization_lists(PDO $pdo): array {
     $lists = [];
-    foreach (['offices', 'divisions', 'positions', 'committees'] as $table) {
+    foreach (['offices', 'divisions', 'positions'] as $table) {
         $lists[$table] = $pdo->query("SELECT * FROM $table ORDER BY name")->fetchAll();
     }
     return $lists;
@@ -59,18 +59,6 @@ function organization_input(PDO $pdo, array $input, array &$errors): array {
         }
         $values[$field] = $id;
     }
-    $memberships = $input['committee_ids'] ?? [];
-    if (!is_array($memberships)) { $errors[] = 'Invalid committee memberships.'; $memberships = []; }
-    if (!empty($input['committee_id'])) $memberships[] = $input['committee_id'];
-    $values['committee_ids'] = [];
-    $stmt = $pdo->prepare('SELECT id FROM committees WHERE id = ?');
-    foreach ($memberships as $raw) {
-        $id = is_scalar($raw) ? filter_var($raw, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) : false;
-        $stmt->execute([$id ?: 0]);
-        if (!$id || !$stmt->fetchColumn()) { $errors[] = 'Select a valid committee.'; continue; }
-        $values['committee_ids'][] = (int)$id;
-    }
-    $values['committee_ids'] = array_values(array_unique($values['committee_ids']));
     return $values;
 }
 
@@ -78,18 +66,11 @@ function organization_input(PDO $pdo, array $input, array &$errors): array {
 function organization_save(PDO $pdo, int $userId, array $values): void {
     $pdo->prepare('UPDATE users SET office_id = ?, division_id = ?, position_id = ? WHERE id = ?')
         ->execute([$values['office_id'], $values['division_id'], $values['position_id'], $userId]);
-    $pdo->prepare('DELETE FROM user_committees WHERE user_id = ?')->execute([$userId]);
-    $stmt = $pdo->prepare('INSERT INTO user_committees (user_id, committee_id) VALUES (?, ?)');
-    foreach ($values['committee_ids'] as $id) $stmt->execute([$userId, $id]);
 }
 
 function organization_user(PDO $pdo, int $userId): array {
     $stmt = $pdo->prepare('SELECT u.office_id, u.division_id, u.position_id, o.name AS office_name, d.name AS division_name, p.name AS position_name FROM users u LEFT JOIN offices o ON o.id=u.office_id LEFT JOIN divisions d ON d.id=u.division_id LEFT JOIN positions p ON p.id=u.position_id WHERE u.id=?');
     $stmt->execute([$userId]);
     $values = $stmt->fetch() ?: [];
-    $stmt = $pdo->prepare('SELECT c.id, c.name FROM committees c WHERE c.id IN (SELECT committee_id FROM user_committees WHERE user_id=?) OR c.id=(SELECT committee_id FROM users WHERE id=?) ORDER BY c.name');
-    $stmt->execute([$userId, $userId]);
-    $values['committees'] = $stmt->fetchAll();
-    $values['committee_ids'] = array_map('intval', array_column($values['committees'], 'id'));
     return $values;
 }

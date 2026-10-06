@@ -7,20 +7,15 @@ require_permission('access', 'manage_organization');
 $user = current_user();
 $pdo = get_db();
 $errors = [];
-$types = ['offices' => 'Office / Parent unit', 'divisions' => 'Division / Section', 'positions' => 'Position / Designation', 'committees' => 'Committee'];
+$types = ['offices' => 'Office / Parent unit', 'divisions' => 'Division / Section', 'positions' => 'Position / Designation'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $type = is_string($_POST['type'] ?? null) ? $_POST['type'] : '';
     $name = is_string($_POST['name'] ?? null) ? trim($_POST['name']) : '';
     $officeId = (int)($_POST['office_id'] ?? 0);
     if (!validate_csrf()) $errors[] = 'Security token expired. Refresh the page and try again.';
     if (!isset($types[$type])) $errors[] = 'Choose a valid category.';
-    $maxLength = $type === 'committees' ? 150 : 180;
+    $maxLength = 180;
     if ($name === '' || mb_strlen($name) > $maxLength) $errors[] = 'Enter a name of up to ' . $maxLength . ' characters.';
-    if ($type === 'committees' && !$errors) {
-        $stmt = $pdo->prepare('SELECT id FROM committees WHERE name = ? LIMIT 1');
-        $stmt->execute([$name]);
-        if ($stmt->fetchColumn()) $errors[] = 'That committee already exists.';
-    }
     if ($type === 'divisions') {
         $stmt = $pdo->prepare('SELECT id FROM offices WHERE id=?');
         $stmt->execute([$officeId]);
@@ -57,7 +52,7 @@ include __DIR__ . '/includes/layout_top.php';
       <p class="module-banner-description">Manage offices, divisions, and organizational identity.</p></div>
   <a class="btn btn-outline-primary btn-sm" href="users.php">Back to Users</a>
 </div>
-<p class="text-muted">Maintain official office, division, position, and committee names for staff assignments.</p>
+<p class="text-muted">Maintain official office, division, and position names for staff assignments.</p>
 <?php if (isset($_GET['saved'])): ?><div class="alert alert-success">Entry added.</div><?php endif; ?>
 <?php foreach ($errors as $error): ?><div class="alert alert-danger"><?= htmlspecialchars($error) ?></div><?php endforeach; ?>
 <div class="row g-3">
@@ -76,7 +71,7 @@ include __DIR__ . '/includes/layout_top.php';
         </select>
         <?php endif; ?>
         <label class="form-label small" for="name-<?= $type ?>"><?= $label ?> name</label>
-        <input id="name-<?= $type ?>" name="name" class="form-control mb-2" maxlength="<?= $type === 'committees' ? 150 : 180 ?>" required value="<?= htmlspecialchars($errors && $type === ($_POST['type'] ?? '') ? $name : '') ?>">
+        <input id="name-<?= $type ?>" name="name" class="form-control mb-2" maxlength="180" required value="<?= htmlspecialchars($errors && $type === ($_POST['type'] ?? '') ? $name : '') ?>">
         <button class="btn btn-primary btn-sm">Add <?= $label ?></button>
       </form>
       <ul class="list-group list-group-flush">
@@ -89,5 +84,4 @@ include __DIR__ . '/includes/layout_top.php';
   </div>
 <?php endforeach; ?>
 </div>
-<p class="small text-muted mt-3">Add existing official committees here for staff assignments. Official committee formation and membership are maintained by System 4.</p>
 <?php include __DIR__ . '/includes/layout_bottom.php'; ?>

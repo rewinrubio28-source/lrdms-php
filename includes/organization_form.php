@@ -28,15 +28,8 @@ $chartPositions = organization_chart_positions();
     <?php endforeach; ?>
   </div>
   <p class="form-text">For the supplied chart, select Information and Communication Division, then RMPS or ITTS. Division leadership may leave Section unassigned. Existing position assignments remain available for review.</p>
-  <fieldset class="mt-3">
-    <legend class="small">Committee memberships</legend>
-    <?php foreach ($organizationLists['committees'] as $item): ?>
-    <label class="d-block small mb-1"><input type="checkbox" name="committee_ids[]" value="<?= (int)$item['id'] ?>" <?= in_array((int)$item['id'], $organizationValues['committee_ids'] ?? [], true) ? 'checked' : '' ?>> <?= htmlspecialchars($item['name']) ?></label>
-    <?php endforeach; ?>
-    <p class="form-text">The primary committee is included automatically. Additional memberships grant document access only when the role has View Assigned Committees enabled.</p>
-  </fieldset>
   <?php if (has_permission('access', 'manage_organization')): ?>
-  <a href="organization.php" class="small action-link">Manage offices, divisions, positions, and committees</a>
+  <a href="organization.php" class="small action-link">Manage offices, divisions, and positions</a>
   <?php endif; ?>
 </div>
 <script>

@@ -13,7 +13,7 @@
  *                         action (currently: entering "Under Review",
  *                         which needs the committee secretary's
  *                         action). Created from notify_status_change().
- *   'amendment_day1'    — Day 1 of the 15-day committee amendment period.
+ *   'amendment_day1'    — Day 1 of the 15-day department amendment period.
  *   'amendment_overdue' — the 15-day amendment period elapsed.
  *   'agenda_overdue'    — an intake receipt was not sent to Agenda
  *                         within 24 hours. Created from

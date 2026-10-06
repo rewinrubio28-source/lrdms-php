@@ -16,9 +16,9 @@ function session_stage_labels(): array {
 }
 function session_action_labels(): array {
     return ['send_agenda'=>'Send to Agenda for Session', 'confirm_delivery'=>'Record Manual Agenda Delivery',
-        'receive_session'=>'Receive Session Documents', 'request_amendment'=>'Committee Request for Amendment',
+        'receive_session'=>'Receive Session Documents', 'request_amendment'=>'Department Request for Amendment',
         'second_session'=>'Proceed to 2nd Session', 'receive_amendment'=>'Receive Amended Document',
-        'follow_up'=>'Record Committee Follow-up', 'third_session'=>'Proceed to 3rd Session',
+        'follow_up'=>'Record Department Follow-up', 'third_session'=>'Proceed to 3rd Session',
         'upload_final'=>'Upload Final PDF',
         'upload_signed'=>'Upload Signed Copy (removed)', 'verify_signed'=>'Confirm Signed Copy Checked (removed)'];
 }
@@ -44,11 +44,11 @@ function session_event(PDO $pdo, int $id, ?int $actor, string $action, string $s
 }
 // Notification writes share the workflow transaction: failed delivery can be retried without losing the reminder.
 function session_notify(PDO $pdo, array $doc, string $type, string $message): void {
+    $officeId = (int)($doc['amendment_office_id'] ?? 0);
     $stmt=$pdo->prepare("SELECT DISTINCT u.* FROM users u JOIN roles r ON r.id=u.role_id
         WHERE u.is_active=1 AND (r.name IN ('Records Officer','Records Supervisor','Records Validator','Super Admin') OR
-        (r.name='Committee Secretary' AND (u.committee_id=? OR EXISTS
-        (SELECT 1 FROM user_committees uc WHERE uc.user_id=u.id AND uc.committee_id=?))))");
-    $stmt->execute([$doc['committee_id'],$doc['committee_id']]);
+        (? > 0 AND u.office_id=?))");
+    $stmt->execute([$officeId,$officeId]);
     $insert=$pdo->prepare('INSERT INTO notifications (user_id,type,document_id,message) VALUES (?,?,?,?)');
     foreach ($stmt->fetchAll() as $recipient) {
         if (can_view_document($recipient,$doc)) $insert->execute([$recipient['id'],$type,$doc['id'],mb_substr($message,0,500)]);
@@ -93,7 +93,7 @@ function session_send_agenda_reminders(PDO $pdo): int {
     }
     return $count;
 }
-function session_process(PDO $pdo, array $user, int $id, string $action, int $revision, string $note, ?array $upload=null, int $committeeId=0): void {
+function session_process(PDO $pdo, array $user, int $id, string $action, int $revision, string $note, ?array $upload=null, int $officeId=0): void {
     if (!session_can_manage($user)) throw new RuntimeException('Records validation permission is required.');
     if (!session_tracking_available($pdo)) throw new RuntimeException('Apply the session tracking database migration first.');
     if (trim($note)==='' || mb_strlen($note)>4000) throw new InvalidArgumentException('Provide a reference or note of 1 to 4,000 characters.');
@@ -118,12 +118,13 @@ function session_process(PDO $pdo, array $user, int $id, string $action, int $re
         elseif ($action==='receive_session') $next='first_session';
         elseif ($action==='second_session') $next='second_session';
         elseif ($action==='request_amendment') {
-            $committeeId=$committeeId ?: (int)$doc['committee_id'];
-            $committee=$pdo->prepare('SELECT id FROM committees WHERE id=?'); $committee->execute([$committeeId]);
-            if (!$committee->fetchColumn()) throw new RuntimeException('Select the committee receiving the amendment request.');
-            $pdo->prepare('UPDATE documents SET committee_id=? WHERE id=?')->execute([$committeeId,$id]);
-            $doc['committee_id']=$committeeId;
-            $note='Committee #'.$committeeId.': '.$note;
+            $officeId=$officeId ?: (int)($doc['amendment_office_id'] ?? 0);
+            $office=$pdo->prepare('SELECT id,name FROM offices WHERE id=?'); $office->execute([$officeId]);
+            $officeRow=$office->fetch();
+            if (!$officeRow) throw new RuntimeException('Select the department receiving the amendment request.');
+            $pdo->prepare('UPDATE documents SET amendment_office_id=? WHERE id=?')->execute([$officeId,$id]);
+            $doc['amendment_office_id']=$officeId;
+            $note='Office '.$officeRow['name'].': '.$note;
             $next='amendment';
         } elseif ($action==='third_session') $next='third_session';
         if (in_array($action,['receive_amendment','upload_final'],true) || ($action==='receive_session' && $upload && ($upload['error'] ?? UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_NO_FILE)) {
@@ -189,8 +190,8 @@ function session_send_overdue_reminders(PDO $pdo): int {
             $stmt=$pdo->prepare('SELECT * FROM documents WHERE id=? FOR UPDATE'); $stmt->execute([$id]); $doc=$stmt->fetch();
             $stmt=$pdo->prepare("SELECT * FROM document_sessions WHERE document_id=? AND stage='amendment' AND amendment_due_at<NOW() AND overdue_notified_at IS NULL FOR UPDATE"); $stmt->execute([$id]);
             if ($stmt->fetch()) {
-                session_notify($pdo,$doc,'amendment_overdue',$doc['doc_number'].': Amendment overdue after 15 calendar days. Follow up with the assigned committee.');
-                session_event($pdo,(int)$id,null,'overdue_reminder','amendment','15-day amendment period elapsed; committee follow-up required.');
+                session_notify($pdo,$doc,'amendment_overdue',$doc['doc_number'].': Amendment overdue after 15 calendar days. Follow up with the assigned office.');
+                session_event($pdo,(int)$id,null,'overdue_reminder','amendment','15-day amendment period elapsed; follow-up required.');
                 $pdo->prepare('UPDATE document_sessions SET overdue_notified_at=NOW() WHERE document_id=?')->execute([$id]); $count++;
             }
             $pdo->commit();

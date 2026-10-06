@@ -287,7 +287,6 @@ include __DIR__ . '/includes/layout_top.php';
           <?php foreach (['office_name' => 'Office', 'division_name' => 'Division', 'position_name' => 'Position / Designation'] as $field => $label): ?>
           <dt><?= $label ?></dt><dd><?= htmlspecialchars($identity[$field] ?: 'Not assigned') ?></dd>
           <?php endforeach; ?>
-          <dt>Committee memberships</dt><dd><?= htmlspecialchars(implode(', ', array_column($identity['committees'], 'name')) ?: 'Not assigned') ?></dd>
         </dl>
         <p class="form-text">Contact an administrator to update organizational assignments.</p>
         <button class="btn btn-primary btn-sm w-100">Save profile</button>

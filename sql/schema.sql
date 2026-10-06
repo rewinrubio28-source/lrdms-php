@@ -109,6 +109,7 @@ CREATE TABLE documents (
   doc_type            ENUM('Ordinance','Resolution','Committee Report','Minutes','Other') NOT NULL DEFAULT 'Other',
   sponsor             VARCHAR(150),
   committee_id        INT NULL,
+  amendment_office_id INT NULL,
   owner_id            INT NOT NULL,
   status              ENUM('Draft','Submitted','Under Review','Enacted','Amended','Superseded','Withdrawn','Rejected') NOT NULL DEFAULT 'Draft',
   is_public           TINYINT(1) NOT NULL DEFAULT 0,
@@ -124,6 +125,7 @@ CREATE TABLE documents (
   updated_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (owner_id) REFERENCES users(id),
   FOREIGN KEY (committee_id) REFERENCES committees(id),
+  FOREIGN KEY (amendment_office_id) REFERENCES offices(id),
   FULLTEXT KEY ft_search (title, ocr_text, body),
   KEY idx_next_version (next_version_id)
 ) ENGINE=InnoDB;

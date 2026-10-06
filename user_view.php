@@ -11,7 +11,6 @@ $pdo = get_db();
 
 $roles = $pdo->query('SELECT * FROM roles ORDER BY id')->fetchAll();
 $assignableRoles = assignable_roles($roles); // only roles ranking below the signed-in user's own
-$committees = $pdo->query('SELECT * FROM committees ORDER BY name')->fetchAll();
 
 $errors = [];
 $success = '';
@@ -54,7 +53,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $username = trim($_POST['username'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $roleId = (int)($_POST['role_id'] ?? 0);
-        $committeeId = ($_POST['committee_id'] ?? '') !== '' ? (int)$_POST['committee_id'] : null;
         $organizationValues = organization_input($pdo, $_POST, $errors);
         if ($uid === (int)$me['id']) {
             // Nobody changes their own role (prevents promoting yourself).
@@ -95,9 +93,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->beginTransaction();
                 try {
                 $stmt = $pdo->prepare(
-                    'UPDATE users SET full_name = ?, username = ?, email = ?, role_id = ?, committee_id = ?, is_active = ?, must_change_password = ? WHERE id = ?'
+                    'UPDATE users SET full_name = ?, username = ?, email = ?, role_id = ?, is_active = ?, must_change_password = ? WHERE id = ?'
                 );
-                $stmt->execute([$fullName, $username, $email ?: null, $roleId, $committeeId, $isActive, $mustChange, $uid]);
+                $stmt->execute([$fullName, $username, $email ?: null, $roleId, $isActive, $mustChange, $uid]);
                 revoke_user_sessions($uid);
                 organization_save($pdo, $uid, $organizationValues);
                 log_action('access', 'updated_user', 'user_id=' . $uid . '; organization=' . json_encode($organizationValues));
@@ -167,10 +165,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Load the target user fresh (after any POST handling).
 $stmt = $pdo->prepare(
-    'SELECT u.*, r.name AS role_name, c.name AS committee_name
+    'SELECT u.*, r.name AS role_name
      FROM users u
      JOIN roles r ON r.id = u.role_id
-     LEFT JOIN committees c ON c.id = u.committee_id
      WHERE u.id = ?'
 );
 $stmt->execute([$targetId]);
@@ -269,15 +266,6 @@ include __DIR__ . '/includes/layout_top.php';
                 if (!$allowedHere) continue;
               ?>
               <option value="<?= $r['id'] ?>" <?= (int)$r['id'] === (int)$target['role_id'] ? 'selected' : '' ?>><?= htmlspecialchars($r['name']) ?></option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <div class="mb-2">
-          <label class="form-label small">Primary committee (if applicable)</label>
-          <select name="committee_id" class="form-select form-select-sm">
-            <option value="">— None —</option>
-            <?php foreach ($committees as $c): ?>
-              <option value="<?= $c['id'] ?>" <?= (int)$c['id'] === (int)$target['committee_id'] ? 'selected' : '' ?>><?= htmlspecialchars($c['name']) ?></option>
             <?php endforeach; ?>
           </select>
         </div>
