@@ -388,7 +388,7 @@ function generate_login_otp($user_id) {
     $stmt->execute([$user_id]);
 
     $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-    $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+    $expiresAt = date('Y-m-d H:i:s', strtotime('+2 minutes'));
 
     $stmt = $pdo->prepare(
         'INSERT INTO login_otp_codes (user_id, code, expires_at) VALUES (?, ?, ?)'

@@ -77,7 +77,7 @@ function send_login_otp_email($user) {
                 <p style="text-align: center;">
                     <span class="code-box">' . htmlspecialchars($otpCode) . '</span>
                 </p>
-                <p>This code will expire in 10 minutes.</p>
+                <p>This code will expire in 2 minutes.</p>
                 <p>If you did not try to sign in, you can ignore this email — your account is still safe.</p>
             </div>
             <div class="footer">
@@ -264,7 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if ($otpSent): ?>
           <div class="alert alert-success d-flex align-items-center gap-2 py-2 small mb-3" role="alert">
             <i class="bi bi-envelope-check-fill"></i>
-            <div>We emailed a 6-digit code to <?= htmlspecialchars(mask_email_for_display($user['email'])) ?>. It expires in 10 minutes.</div>
+            <div>We emailed a 6-digit code to <?= htmlspecialchars(mask_email_for_display($user['email'])) ?>. It expires in 2 minutes.</div>
           </div>
         <?php endif; ?>
 
