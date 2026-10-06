@@ -58,6 +58,13 @@ test_check(session_send_overdue_reminders($pdo)===0,'No early overdue reminder.'
 $pdo->exec("UPDATE document_sessions SET amendment_due_at=DATE_SUB(NOW(),INTERVAL 1 SECOND) WHERE document_id=$id");
 test_check(session_send_overdue_reminders($pdo)===1,'Overdue reminder generated.');
 test_check(session_send_overdue_reminders($pdo)===0,'Overdue reminder deduplicated.');
+$agendaId=test_document($pdo,'TEST-AGENDA-24H');
+$pdo->exec("UPDATE documents SET created_at=DATE_SUB(NOW(),INTERVAL 25 HOUR), received_at=DATE_SUB(NOW(),INTERVAL 25 HOUR), pending_since=DATE_SUB(NOW(),INTERVAL 25 HOUR) WHERE id=$agendaId");
+test_check(session_agenda_due($pdo->query("SELECT * FROM documents WHERE id=$agendaId")->fetch(),null)<new DateTimeImmutable(),'24-hour Agenda deadline elapses.');
+test_check(session_send_agenda_reminders($pdo)===1,'Agenda overdue reminder generated.');
+test_check(session_send_agenda_reminders($pdo)===0,'Agenda overdue reminder deduplicated.');
+test_step($pdo,$user,$agendaId,'send_agenda');
+test_check((int)$pdo->query("SELECT COUNT(*) FROM notifications WHERE document_id=$agendaId AND type='agenda_overdue' AND is_read=0")->fetchColumn()===0,'Send to Agenda clears the agenda reminder.');
 test_step($pdo,$user,$id,'follow_up');
 test_reject(fn()=>test_step($pdo,$user,$id,'receive_amendment'));
 test_check(session_state($pdo,$id)['stage']==='amendment','Missing upload preserves stage.');

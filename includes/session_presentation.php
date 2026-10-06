@@ -7,7 +7,7 @@ function session_stage_tone(string $stage): string {
 }
 function session_stage_hint(string $stage): string {
     return [
-        ''=>'Check the document, then prepare its handoff to Agenda.',
+        ''=>'Check the document, then prepare its handoff to Agenda within 24 hours of receipt.',
         'agenda_pending'=>'Record the delivery reference once you have sent the document manually.',
         'agenda_sent'=>'Awaiting documents from the 1st session. Record receipt when they return.',
         'first_session'=>'Record the session outcome: request amendments or continue to the 2nd session.',

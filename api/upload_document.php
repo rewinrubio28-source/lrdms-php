@@ -132,7 +132,7 @@ if ($isMultipart && isset($_FILES['attachment'])) {
 
 $pdo->beginTransaction();
 try {
-$recordValues += ['owner_id'=>$systemUserId, 'is_public'=>0, 'records_status'=>'Pending Validation', 'received_at'=>date('Y-m-d H:i:s'), 'pending_since'=>date('Y-m-d H:i:s'), 'status_last_synced'=>date('Y-m-d H:i:s'), 'file_path'=>$filePath];
+$recordValues += ['owner_id'=>$systemUserId, 'is_public'=>0, 'records_status'=>'Pending Validation', 'received_at'=>date('Y-m-d H:i:s'), 'pending_since'=>date('Y-m-d H:i:s'), 'agenda_monitoring_due_at'=>date('Y-m-d H:i:s', time()+86400), 'status_last_synced'=>date('Y-m-d H:i:s'), 'file_path'=>$filePath];
 $columns = array_keys($recordValues);
 $stmt = $pdo->prepare('INSERT INTO documents (`' . implode('`,`', $columns) . '`) VALUES (' . implode(',', array_fill(0, count($columns), '?')) . ')');
 $stmt->execute(array_values($recordValues));

@@ -198,7 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'rollb
                     $pdo->prepare('INSERT INTO document_attachments (document_id, file_path, display_name, sort_order) SELECT ?, file_path, display_name, sort_order FROM document_attachments WHERE document_id=?')->execute([$newId, $target['id']]);
 
 
-                    $pdo->prepare('UPDATE documents SET records_status=?, classification=?, originating_office=?, originating_division=?, submitter_position=?, responsible_custodian=?, related_legislative_item=?, source_record_id=?, source_status=?, source_status_date=?, status_last_synced=NOW(), received_at=NOW(), pending_since=NOW(), registered_at=NULL WHERE id=?')
+                    $pdo->prepare('UPDATE documents SET records_status=?, classification=?, originating_office=?, originating_division=?, submitter_position=?, responsible_custodian=?, related_legislative_item=?, source_record_id=?, source_status=?, source_status_date=?, status_last_synced=NOW(), received_at=NOW(), pending_since=NOW(), agenda_monitoring_due_at=DATE_ADD(NOW(),INTERVAL 24 HOUR), registered_at=NULL WHERE id=?')
                         ->execute(['Pending Validation', $restoreClassification, $target['originating_office'], $target['originating_division'], $target['submitter_position'], $target['responsible_custodian'], $head['related_legislative_item'], $head['source_record_id'], $head['source_status'], $head['source_status_date'], $newId]);
 
                     $userNote = trim($_POST['rollback_note'] ?? '');

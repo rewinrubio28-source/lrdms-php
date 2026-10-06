@@ -52,6 +52,45 @@ function session_notify(PDO $pdo, array $doc, string $type, string $message): vo
         if (can_view_document($recipient,$doc)) $insert->execute([$recipient['id'],$type,$doc['id'],mb_substr($message,0,500)]);
     }
 }
+// 24-hour Agenda rule: an intake receipt must reach Send to Agenda within 24
+// hours of receipt. The countdown starts at pending_since, falling back to
+// received_at, then created_at; an explicit agenda_monitoring_due_at wins.
+function session_agenda_due(array $doc, ?array $sessionState): ?DateTimeImmutable {
+    if (!empty($sessionState)) return null;
+    if (!empty($doc['verified_at'])) return null;
+    if (($doc['source_system'] ?? '') === 'Manual Encoding') return null;
+    if (in_array($doc['records_status'] ?? '', ['Duplicate','Unauthorized Submission'], true)) return null;
+    try {
+        if (!empty($doc['agenda_monitoring_due_at'])) return new DateTimeImmutable($doc['agenda_monitoring_due_at']);
+        $start = $doc['pending_since'] ?? $doc['received_at'] ?? $doc['created_at'] ?? null;
+        if (!$start) return null;
+        return (new DateTimeImmutable($start))->modify('+24 hours');
+    } catch (Throwable $e) { return null; }
+}
+// Fires once per overdue receipt, same pattern as the amendment reminders:
+// a bell notification plus an immutable history event. Sending to Agenda
+// marks the notification read, which stops further reminders.
+function session_send_agenda_reminders(PDO $pdo): int {
+    if (!session_tracking_available($pdo)) return 0;
+    $ids=$pdo->query("SELECT d.id FROM documents d LEFT JOIN document_sessions s ON s.document_id=d.id WHERE s.document_id IS NULL AND d.verified_at IS NULL AND d.source_system<>'Manual Encoding' AND d.records_status NOT IN ('Duplicate','Unauthorized Submission') AND COALESCE(d.agenda_monitoring_due_at,DATE_ADD(COALESCE(d.pending_since,d.received_at,d.created_at),INTERVAL 24 HOUR))<NOW() AND NOT EXISTS (SELECT 1 FROM notifications n WHERE n.document_id=d.id AND n.type='agenda_overdue') LIMIT 100")->fetchAll(PDO::FETCH_COLUMN);
+    $count=0;
+    foreach ($ids as $id) {
+        $pdo->beginTransaction();
+        try {
+            $stmt=$pdo->prepare('SELECT * FROM documents WHERE id=? FOR UPDATE'); $stmt->execute([$id]); $doc=$stmt->fetch();
+            $state=session_state($pdo,(int)$id);
+            $due=$doc ? session_agenda_due($doc,$state) : null;
+            $nochance=$pdo->prepare("SELECT COUNT(*) FROM notifications WHERE document_id=? AND type='agenda_overdue'"); $nochance->execute([$id]);
+            if ($doc && $due && $due<new DateTimeImmutable() && (int)$nochance->fetchColumn()===0) {
+                session_notify($pdo,$doc,'agenda_overdue',$doc['doc_number'].': Not sent to Agenda within 24 hours of receipt. Send it to Agenda for Session now.');
+                session_event($pdo,(int)$id,null,'agenda_overdue','','24-hour Agenda deadline elapsed; Send to Agenda for Session is overdue.');
+                $count++;
+            }
+            $pdo->commit();
+        } catch (Throwable $e) { if ($pdo->inTransaction()) $pdo->rollBack(); error_log('Agenda reminder: '.$e->getMessage()); }
+    }
+    return $count;
+}
 function session_process(PDO $pdo, array $user, int $id, string $action, int $revision, string $note, ?array $upload=null, int $committeeId=0): void {
     if (!session_can_manage($user)) throw new RuntimeException('Records validation permission is required.');
     if (!session_tracking_available($pdo)) throw new RuntimeException('Apply the session tracking database migration first.');
@@ -119,6 +158,7 @@ function session_process(PDO $pdo, array $user, int $id, string $action, int $re
             require_once __DIR__.'/record_processing.php';
             process_record($pdo,$user,$id,'register_private','Received from 1st session: '.$note);
             $pdo->prepare("UPDATE notifications SET is_read=1 WHERE document_id=? AND type='incoming_document'")->execute([$id]);
+            $pdo->prepare("UPDATE notifications SET is_read=1 WHERE document_id=? AND type='agenda_overdue'")->execute([$id]);
             $doc['verified_at']=date('Y-m-d H:i:s');
         }
         if ($action==='request_amendment') {
@@ -128,6 +168,7 @@ function session_process(PDO $pdo, array $user, int $id, string $action, int $re
             session_notify($pdo,$doc,'amendment_day1',$doc['doc_number'].': Day 1 — amendment requested. Due '.$due->format('M j, Y g:i A').'.');
         }
         if ($action==='receive_amendment') $pdo->prepare("UPDATE notifications SET is_read=1 WHERE document_id=? AND type IN ('amendment_day1','amendment_overdue')")->execute([$id]);
+        if ($action==='send_agenda') $pdo->prepare("UPDATE notifications SET is_read=1 WHERE document_id=? AND type='agenda_overdue'")->execute([$id]);
         if ($action==='upload_final') $pdo->prepare('UPDATE document_sessions SET final_attachment_id=? WHERE document_id=?')->execute([$attachment,$id]);
         if ($action==='upload_signed') $pdo->prepare('UPDATE document_sessions SET signed_attachment_id=? WHERE document_id=?')->execute([$attachment,$id]);
         session_event($pdo,$id,(int)$user['id'],$action,$next,$note,$attachment);

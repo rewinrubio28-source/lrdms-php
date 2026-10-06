@@ -169,7 +169,7 @@ function dataset_save(PDO $pdo, array $user, array $records): int {
         foreach ($records as $i=>$values) {
             $duplicate->execute([$values['doc_number']]);
             if ($duplicate->fetchColumn()) throw new InvalidArgumentException('Record '.($i+1).': document number already exists or is repeated in this batch. Nothing was imported.');
-            $values+=['owner_id'=>(int)$user['id'],'is_public'=>0,'records_status'=>'Pending Validation','received_at'=>date('Y-m-d H:i:s'),'pending_since'=>date('Y-m-d H:i:s'),'status_last_synced'=>date('Y-m-d H:i:s')];
+            $values+=['owner_id'=>(int)$user['id'],'is_public'=>0,'records_status'=>'Pending Validation','received_at'=>date('Y-m-d H:i:s'),'pending_since'=>date('Y-m-d H:i:s'),'agenda_monitoring_due_at'=>date('Y-m-d H:i:s', time()+86400),'status_last_synced'=>date('Y-m-d H:i:s')];
             $columns=array_keys($values);
             $stmt=$pdo->prepare('INSERT INTO documents (`'.implode('`,`',$columns).'`) VALUES ('.implode(',',array_fill(0,count($columns),'?')).')');
             $stmt->execute(array_values($values)); $id=$pdo->lastInsertId();

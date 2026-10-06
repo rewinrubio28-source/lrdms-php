@@ -108,7 +108,7 @@
     var csrfToken     = csrfMeta ? csrfMeta.content : '';
     var loaded        = false;
 
-    var TYPE_ICON = { incoming_document: 'bi-inbox-fill', review_request: 'bi-hourglass-split' };
+    var TYPE_ICON = { incoming_document: 'bi-inbox-fill', review_request: 'bi-hourglass-split', amendment_day1: 'bi-pencil-square', amendment_overdue: 'bi-alarm', agenda_overdue: 'bi-alarm' };
 
     function timeAgo(iso) {
       var then = new Date(iso.replace(' ', 'T'));
@@ -145,7 +145,7 @@
         var icon = TYPE_ICON[n.type] || 'bi-bell';
         var unreadCls = n.is_read ? '' : ' notif-bell__item--unread';
         var href = n.document_id ? ((n.type === 'incoming_document' ? reviewUrl : docUrl) + '?id=' + n.document_id) : '#';
-        if (n.document_id && (n.type === 'amendment_day1' || n.type === 'amendment_overdue')) href += '&tab=tracking';
+        if (n.document_id && (n.type === 'amendment_day1' || n.type === 'amendment_overdue' || n.type === 'agenda_overdue')) href += '&tab=tracking';
         return (
           '<a href="' + href + '" class="notif-bell__item' + unreadCls + '" data-id="' + n.id + '">' +
             '<i class="bi ' + icon + '"></i>' +

@@ -47,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $incomingId = (int)($_POST['doc_id'] ?? 0);
             process_record($pdo, $user, $incomingId, $_POST['action'] === 'release_public' ? 'register_public' : 'register_private');
             mark_notifications_read_for_document($incomingId, 'incoming_document');
+            mark_notifications_read_for_document($incomingId, 'agenda_overdue');
             $_SESSION['flash_success'] = 'Record registered.';
             header('Location: document.php?id=' . $incomingId);
             exit;
@@ -73,6 +74,16 @@ $intakeSessionStates = [];
 if (session_tracking_available($pdo)) {
     foreach ($pdo->query("SELECT s.document_id,s.stage FROM document_sessions s JOIN documents d ON d.id=s.document_id WHERE d.verified_at IS NULL")->fetchAll() as $state) $intakeSessionStates[$state['document_id']] = session_stage_labels()[$state['stage']] ?? $state['stage'];
 }
+$agendaDueByDoc = [];
+if (session_tracking_available($pdo)) {
+    foreach ($awaitingVerification as $record) {
+        if (isset($intakeSessionStates[$record['id']])) continue;
+        $due = session_agenda_due($record, null);
+        if ($due) $agendaDueByDoc[$record['id']] = $due;
+    }
+}
+$agendaOverdueCount = 0;
+foreach ($agendaDueByDoc as $due) if ($due < new DateTimeImmutable()) $agendaOverdueCount++;
 include __DIR__ . '/includes/layout_top.php';
 ?>
 <link rel="stylesheet" href="assets/css/encoding-workspace.css?v=2">
@@ -111,6 +122,9 @@ include __DIR__ . '/includes/layout_top.php';
 <div class="card" id="awaiting-verification">
   <div class="intake-heading"><div><h2>Incoming records</h2><p>Open a record to check its file, validate details, and register it.</p></div><span><i class="bi bi-sort-up me-1" aria-hidden="true"></i>Oldest submissions first</span></div>
   <p class="intake-results" role="status"><?= $intakeTotal ?> records</p>
+  <?php if ($agendaOverdueCount > 0): ?>
+    <div class="alert alert-warning py-2 small" role="alert"><i class="bi bi-alarm me-1" aria-hidden="true"></i><?= $agendaOverdueCount ?> <?= $agendaOverdueCount === 1 ? 'record is' : 'records are' ?> past the 24-hour Agenda deadline — send <?= $agendaOverdueCount === 1 ? 'it' : 'them' ?> to Agenda for Session.</div>
+  <?php endif; ?>
   <?php if (!$awaitingVerification): ?>
     <div class="intake-empty"><i class="bi bi-inbox" aria-hidden="true"></i><h3>No incoming records</h3><p>New submissions will appear here when they are received.</p></div>
   <?php else: ?>
@@ -131,7 +145,11 @@ include __DIR__ . '/includes/layout_top.php';
             <td class="intake-document"><span class="intake-reference"><?= htmlspecialchars($doc['doc_number']) ?></span><a href="document.php?id=<?= (int)$doc['id'] ?>"><?= htmlspecialchars($doc['title']) ?></a><small><?= htmlspecialchars($doc['doc_type']) ?></small></td>
             <td><span class="intake-status <?= $doc['records_status'] === 'Validated' ? 'is-ready' : (in_array($doc['records_status'], ['Returned for Correction', 'Duplicate', 'Unauthorized Submission'], true) ? 'is-attention' : '') ?>"><?= htmlspecialchars($intakeSessionStates[$doc['id']] ?? ($doc['records_status'] ?: 'Under Review')) ?></span></td>
             <td><?= htmlspecialchars($doc['source_system']) ?></td>
-            <td class="text-nowrap text-muted small"><?= htmlspecialchars(date('M j, Y g:i A', strtotime($doc['created_at']))) ?></td>
+            <td class="text-nowrap text-muted small"><?= htmlspecialchars(date('M j, Y g:i A', strtotime($doc['created_at']))) ?>
+              <?php if (!empty($agendaDueByDoc[$doc['id']])): $agendaDue = $agendaDueByDoc[$doc['id']]; $agendaSecs = $agendaDue->getTimestamp() - time(); ?>
+                <br><span class="intake-status <?= $agendaSecs < 0 ? 'is-attention' : '' ?>"><?= $agendaSecs < 0 ? 'Agenda overdue by '.max(1,(int)ceil(-$agendaSecs/3600)).'h — send now' : (int)ceil($agendaSecs/3600).'h left to Agenda' ?></span>
+              <?php endif; ?>
+            </td>
             <td class="text-end">
               <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
                 <a href="document.php?id=<?= (int)$doc['id'] ?>" class="btn btn-outline-primary btn-sm" aria-label="Review <?= htmlspecialchars($doc['doc_number'], ENT_QUOTES, 'UTF-8') ?>">Review <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>

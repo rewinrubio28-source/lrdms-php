@@ -100,7 +100,7 @@ if ($needsReview) {
             } elseif (in_array($reviewAction, ['register_public', 'register_private', 'Validated', 'Returned for Correction', 'Duplicate', 'Unauthorized Submission'], true)) {
                 try {
                     process_record($pdo, $user, (int)$doc['id'], $reviewAction, trim((string)($_POST['review_note'] ?? '')));
-                    if (str_starts_with($reviewAction, 'register_')) mark_notifications_read_for_document($doc['id'], 'incoming_document');
+                    if (str_starts_with($reviewAction, 'register_')) { mark_notifications_read_for_document($doc['id'], 'incoming_document'); mark_notifications_read_for_document($doc['id'], 'agenda_overdue'); }
                     $_SESSION['flash_success'] = 'Record review saved.';
                     header('Location: document.php?id=' . (int)$doc['id'] . $documentReturnSuffix);
                     exit;
@@ -354,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare('UPDATE documents SET council_term=? WHERE id=?')->execute([$doc['council_term'] ?? null, $newId]);
                 if (!$fileChanged) $pdo->prepare('INSERT INTO document_attachments (document_id,file_path,display_name,sort_order) SELECT ?,file_path,display_name,sort_order FROM document_attachments WHERE document_id=?')->execute([$newId,$doc['id']]);
                 else $pdo->prepare('INSERT INTO document_attachments (document_id,file_path,display_name,sort_order) VALUES (?,?,?,0)')->execute([$newId,$filePath,basename($filePath)]);
-                $pdo->prepare('UPDATE documents SET records_status=?, classification=?, originating_office=?, originating_division=?, submitter_position=?, responsible_custodian=?, related_legislative_item=?, source_record_id=?, source_status=?, source_status_date=?, status_last_synced=NOW(), received_at=NOW(), pending_since=NOW(), registered_at=NULL WHERE id=?')
+                $pdo->prepare('UPDATE documents SET records_status=?, classification=?, originating_office=?, originating_division=?, submitter_position=?, responsible_custodian=?, related_legislative_item=?, source_record_id=?, source_status=?, source_status_date=?, status_last_synced=NOW(), received_at=NOW(), pending_since=NOW(), agenda_monitoring_due_at=DATE_ADD(NOW(),INTERVAL 24 HOUR), registered_at=NULL WHERE id=?')
                     ->execute(['Pending Validation', $doc['classification'], $doc['originating_office'], $doc['originating_division'], $doc['submitter_position'], $doc['responsible_custodian'], $doc['related_legislative_item'], $doc['source_record_id'], $doc['source_status'], $doc['source_status_date'], $newId]);
 
                 if ($note !== '') {

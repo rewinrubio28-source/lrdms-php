@@ -30,6 +30,8 @@ if ($method === 'GET') {
     require_once __DIR__ . '/../includes/session_workflow.php';
     try { session_send_overdue_reminders(get_db()); }
     catch (Throwable $e) { error_log('Session reminders: ' . $e->getMessage()); }
+    try { session_send_agenda_reminders(get_db()); }
+    catch (Throwable $e) { error_log('Agenda reminders: ' . $e->getMessage()); }
     $action = $_GET['action'] ?? 'list';
 
     if ($action === 'count') {
