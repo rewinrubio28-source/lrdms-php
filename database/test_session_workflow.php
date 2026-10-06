@@ -79,19 +79,17 @@ try {
         test_reject(fn()=>test_step($pdo,$user,$id,'upload_signed',$pdf));
         $fake=$pdf; $fake['name']='wrong.txt'; test_reject(fn()=>test_step($pdo,$user,$id,'upload_final',$fake));
         test_step($pdo,$user,$id,'upload_final',$pdf);
+        test_check(session_state($pdo,$id)['stage']==='third_session','Final upload keeps third session.');
+        test_check(session_stage_completed(session_state($pdo,$id)),'Final PDF completes the tracking.');
         $firstFinal=session_state($pdo,$id)['final_attachment_id'];
         test_step($pdo,$user,$id,'upload_final',$pdf);
         test_check(session_state($pdo,$id)['final_attachment_id']!==$firstFinal,'Final replacement keeps previous file.');
-        test_step($pdo,$user,$id,'upload_signed',$pdf);
-        test_check(session_state($pdo,$id)['stage']==='signed_pending','Signed upload requires checking.');
-        test_step($pdo,$user,$id,'verify_signed');
-        test_check(session_state($pdo,$id)['stage']==='signed','Checked signed copy recorded.');
-        test_reject(fn()=>test_step($pdo,$user,$id,'upload_final',$pdf));
-        test_check((int)$pdo->query("SELECT COUNT(*) FROM document_attachments WHERE document_id=$id")->fetchColumn()===5,'Legacy original, amendment, both final versions and signed copy preserved.');
+        test_reject(fn()=>test_step($pdo,$user,$id,'verify_signed'));
+        test_check((int)$pdo->query("SELECT COUNT(*) FROM document_attachments WHERE document_id=$id")->fetchColumn()===4,'Legacy original, amendment and both final versions preserved.');
         $doc=$pdo->query("SELECT * FROM documents WHERE id=$id")->fetch();
         test_check($doc['body']==='Preserved original' && $doc['file_path']==='uploads/original-test.pdf' && $doc['status']==='Under Review' && !$doc['is_public'],'Original content and legal/public status preserved.');
-        test_check(can_download_record($user,$doc) && !can_download_record($viewer,$doc),'Final and signed downloads respect existing permissions.');
-        echo "PASS: real multipart amendment/final/signed uploads, file preservation, signed review and download permissions.\n";
+        test_check(can_download_record($user,$doc) && !can_download_record($viewer,$doc),'Final downloads respect existing permissions.');
+        echo "PASS: real multipart amendment/final uploads, file preservation and download permissions.\n";
     }
     $plain=test_document($pdo,'TEST-NO-AMENDMENT');
     foreach (['send_agenda','confirm_delivery','receive_session','second_session','third_session'] as $action) test_step($pdo,$user,$plain,$action);
@@ -100,6 +98,10 @@ try {
     $doc=$pdo->query("SELECT d.*, 'Test Officer' AS owner_name FROM documents d WHERE id=$plain")->fetch();
     ob_start(); include __DIR__.'/../includes/session_tracking_view.php'; $html=ob_get_clean();
     test_check(str_contains($html,'Upload Final PDF') && !str_contains($html,'name="session_action" value="upload_signed"'),'Third session renders final PDF action before signed upload.');
+    test_check(str_contains($html,'Step 4 of 4'),'Third session shows step 4 of 4.');
+    $pdo->exec("UPDATE document_sessions SET final_attachment_id=1 WHERE document_id=$plain");
+    ob_start(); include __DIR__.'/../includes/session_tracking_view.php'; $doneHtml=ob_get_clean();
+    test_check(str_contains($doneHtml,'Completed') && !str_contains($doneHtml,'Step 4 of 4') && !str_contains($doneHtml,'Signed Copy'),'Final PDF completes the rendered tracking without a signed step.');
     test_check(!$pdo->inTransaction(),'No dangling transactions.');
     echo "PASS: agenda delivery, receiving/registration, stale and invalid actions, permissions, amendment deadlines, notification recipients/deduplication, no-amendment route and rendered controls.\n";
 } finally {

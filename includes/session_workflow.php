@@ -11,21 +11,23 @@ function session_stage_labels(): array {
     return ['agenda_pending'=>'For Agenda — Pending External Delivery', 'agenda_sent'=>'Agenda — Manually Sent',
         'first_session'=>'1st Session — Documents Received', 'second_session'=>'2nd Session',
         'amendment'=>'2nd Session — Documents for Amendment', 'amendment_received'=>'2nd Session — Amendment Received',
-        'third_session'=>'3rd Session — Final Document', 'signed_pending'=>'Signed Copy — Pending Check', 'signed'=>'Signed Copy on File'];
+        'third_session'=>'3rd Session — Final Document',
+        'signed_pending'=>'Signed Copy — Pending Check (legacy)', 'signed'=>'Signed Copy on File (legacy)'];
 }
 function session_action_labels(): array {
     return ['send_agenda'=>'Send to Agenda for Session', 'confirm_delivery'=>'Record Manual Agenda Delivery',
         'receive_session'=>'Receive Session Documents', 'request_amendment'=>'Committee Request for Amendment',
         'second_session'=>'Proceed to 2nd Session', 'receive_amendment'=>'Receive Amended Document',
         'follow_up'=>'Record Committee Follow-up', 'third_session'=>'Proceed to 3rd Session',
-        'upload_final'=>'Upload Final PDF', 'upload_signed'=>'Upload Signed Copy', 'verify_signed'=>'Confirm Signed Copy Checked'];
+        'upload_final'=>'Upload Final PDF',
+        'upload_signed'=>'Upload Signed Copy (removed)', 'verify_signed'=>'Confirm Signed Copy Checked (removed)'];
 }
 function session_actions(string $stage): array {
     return [
         ''=>['send_agenda'], 'agenda_pending'=>['confirm_delivery'], 'agenda_sent'=>['receive_session'],
         'first_session'=>['request_amendment','second_session'], 'second_session'=>['request_amendment','third_session'],
         'amendment'=>['receive_amendment','follow_up'], 'amendment_received'=>['request_amendment','third_session'],
-        'third_session'=>['upload_final','upload_signed'], 'signed_pending'=>['upload_signed','verify_signed'], 'signed'=>[]
+        'third_session'=>['upload_final']
     ][$stage] ?? [];
 }
 function session_can_manage(array $user): bool {
@@ -124,16 +126,11 @@ function session_process(PDO $pdo, array $user, int $id, string $action, int $re
             $note='Committee #'.$committeeId.': '.$note;
             $next='amendment';
         } elseif ($action==='third_session') $next='third_session';
-        elseif ($action==='verify_signed') {
-            if (empty($state['signed_attachment_id'])) throw new RuntimeException('Upload the signed copy first.');
-            $next='signed';
-        }
-        if (in_array($action,['receive_amendment','upload_final','upload_signed'],true) || ($action==='receive_session' && $upload && ($upload['error'] ?? UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_NO_FILE)) {
-            if ($action==='upload_signed' && empty($state['final_attachment_id'])) throw new RuntimeException('Upload the final PDF before its signed copy.');
+        if (in_array($action,['receive_amendment','upload_final'],true) || ($action==='receive_session' && $upload && ($upload['error'] ?? UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_NO_FILE)) {
             require_once __DIR__.'/upload_validation.php';
             if (!$upload || ($upload['error'] ?? UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK || !is_string($upload['name'] ?? null) || !is_string($upload['tmp_name'] ?? null)) throw new RuntimeException('Select a document file up to 25 MB.');
             $name=basename($upload['name']);
-            if (in_array($action,['upload_final','upload_signed'],true) && strtolower(pathinfo($name,PATHINFO_EXTENSION))!=='pdf') throw new RuntimeException('Use a PDF for the final or scanned signed document.');
+            if ($action==='upload_final' && strtolower(pathinfo($name,PATHINFO_EXTENSION))!=='pdf') throw new RuntimeException('Use a PDF for the final printable document.');
             $error=document_upload_error($upload['tmp_name'],$name);
             if ($error) throw new RuntimeException($error);
             // Older records may store their only original in documents.file_path.
@@ -150,7 +147,6 @@ function session_process(PDO $pdo, array $user, int $id, string $action, int $re
             $pdo->prepare('INSERT INTO document_attachments (document_id,file_path,display_name,sort_order) VALUES (?,?,?,?)')->execute([$id,$stored,$name,$order->fetchColumn()]);
             $attachment=(int)$pdo->lastInsertId();
             if ($action==='receive_amendment') $next='amendment_received';
-            if ($action==='upload_signed') $next='signed_pending';
         }
         if (!$state) $pdo->prepare('INSERT INTO document_sessions (document_id,stage) VALUES (?,?)')->execute([$id,$next]);
         else $pdo->prepare('UPDATE document_sessions SET stage=?,revision=revision+1,updated_at=NOW() WHERE document_id=?')->execute([$next,$id]);
@@ -170,7 +166,6 @@ function session_process(PDO $pdo, array $user, int $id, string $action, int $re
         if ($action==='receive_amendment') $pdo->prepare("UPDATE notifications SET is_read=1 WHERE document_id=? AND type IN ('amendment_day1','amendment_overdue')")->execute([$id]);
         if ($action==='send_agenda') $pdo->prepare("UPDATE notifications SET is_read=1 WHERE document_id=? AND type='agenda_overdue'")->execute([$id]);
         if ($action==='upload_final') $pdo->prepare('UPDATE document_sessions SET final_attachment_id=? WHERE document_id=?')->execute([$attachment,$id]);
-        if ($action==='upload_signed') $pdo->prepare('UPDATE document_sessions SET signed_attachment_id=? WHERE document_id=?')->execute([$attachment,$id]);
         session_event($pdo,$id,(int)$user['id'],$action,$next,$note,$attachment);
         log_action('repository','session_'.$action,$doc['doc_number'].': '.$note);
         $pdo->commit();
