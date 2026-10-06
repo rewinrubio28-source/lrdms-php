@@ -39,7 +39,7 @@ $sessionEscape=static fn($value)=>htmlspecialchars((string)$value,ENT_QUOTES,'UT
 ?>
 <link rel="stylesheet" href="assets/css/session-tracking.css?v=1">
 <section class="session-workspace" aria-labelledby="session-heading">
- <header class="session-header"><div><p class="session-eyebrow">Document journey</p><h2 id="session-heading">Session Tracking</h2></div><span class="session-badge session-badge--<?= session_stage_tone($sessionStage) ?>"><i class="bi <?= $sessionStage==='signed' ? 'bi-check-circle':'bi-circle-half' ?>" aria-hidden="true"></i><?= $sessionStage==='signed' ? 'Completed' : 'Step '.($sessionPosition+1).' of 5' ?></span></header>
+ <header class="session-header"><div><p class="session-eyebrow">Document journey</p><h2 id="session-heading">Document Tracking</h2></div><span class="session-badge session-badge--<?= session_stage_tone($sessionStage) ?>"><i class="bi <?= $sessionStage==='signed' ? 'bi-check-circle':'bi-circle-half' ?>" aria-hidden="true"></i><?= $sessionStage==='signed' ? 'Completed' : 'Step '.($sessionPosition+1).' of 5' ?></span></header>
  <?php foreach (['session_success'=>'success','session_error'=>'danger'] as $key=>$style): if (!empty($_SESSION[$key])): ?><div class="alert alert-<?= $style ?> mx-3" role="<?= $style==='danger' ? 'alert':'status' ?>"><?= $sessionEscape($_SESSION[$key]) ?></div><?php unset($_SESSION[$key]); endif; endforeach; ?>
  <ol class="session-steps" aria-label="Document progress">
  <?php foreach (['Agenda','1st Session','2nd Session','3rd Session','Signed Copy'] as $step=>$stepLabel): $completed=$step<$sessionPosition || $sessionStage==='signed'; ?>
